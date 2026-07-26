@@ -1,0 +1,15 @@
+.account-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.8rem; margin:1rem 0; padding:.8rem 1rem; background:#fffdf8; border:1px solid var(--line); border-radius:12px; }
+.account-bar p { margin:0; }
+.classroom-card select { width:100%; color:var(--ink); background:#fffdf8; border:1px solid var(--line); border-radius:11px; padding:.78rem; margin-bottom:1rem; }
+.classroom-grid { display:grid; grid-template-columns:minmax(240px,.7fr) minmax(0,1.3fr); gap:1rem; }
+.classroom-card { padding:1.1rem; border:1px solid var(--line); border-radius:14px; background:#fffdf8; }
+.classroom-card h3 { margin-top:0; }
+.auth-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.auth-message { min-height:1.5rem; color:#843322; font-weight:700; }
+.live-dot { display:inline-block; width:.65rem; height:.65rem; margin-right:.35rem; border-radius:50%; background:#4e6754; }
+.roster { display:grid; gap:.55rem; padding:0; list-style:none; }
+.roster li { padding:.65rem; background:#f4f0e7; border-radius:9px; }
+.cloud-state { color:#4e6754; font-size:.88rem; font-weight:750; }
+.instructor-team { margin:.7rem 0; padding:.8rem; border:1px solid var(--line); border-radius:10px; background:#faf6ee; }
+.classroom-hidden { display:none !important; }
+@media (max-width:760px) { .classroom-grid,.auth-grid { grid-template-columns:1fr; } }
