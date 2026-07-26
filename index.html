@@ -111,6 +111,25 @@
     .callout li + li { margin-top: .35rem; }
     .decision { margin-top: 1rem; padding: 1rem; border-left: 3px solid var(--amber); background: rgba(255,200,104,.055); border-radius: 0 12px 12px 0; }
     .decision strong { color: var(--amber); }
+    .evidence-room { margin-top: 1rem; padding: 1rem; border: 1px solid rgba(69,230,208,.28); border-radius: 14px; background: rgba(4,20,29,.55); }
+    .evidence-room[hidden] { display: none; }
+    .evidence-room > h4 { margin: 0; color: var(--cyan); font-size: 1.1rem; }
+    .evidence-intro { margin: .3rem 0 1rem; color: var(--muted); }
+    .artifact { margin-top: .7rem; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025); overflow: hidden; }
+    .artifact summary { padding: .85rem 1rem; cursor: pointer; font-weight: 800; color: #d8e9fa; }
+    .artifact summary:hover, .artifact summary:focus-visible { background: rgba(69,230,208,.06); }
+    .artifact-body { padding: 0 1rem 1rem; color: #c3d3e3; overflow-wrap: anywhere; }
+    .artifact-body p { margin: .45rem 0; }
+    .artifact-body code, .log-block { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .86rem; }
+    .log-block { white-space: pre-wrap; padding: .8rem; color: #cfe7f4; background: #06101c; border: 1px solid var(--line); border-radius: 9px; overflow-x: auto; }
+    .email-sheet { color: #172233; background: #f7f9fc; border-radius: 10px; padding: 1rem; }
+    .email-sheet p { margin: .35rem 0; }
+    .email-head { padding-bottom: .75rem; margin-bottom: .75rem; border-bottom: 1px solid #d6dde7; }
+    .email-sheet .warning-link { color: #9d1c2c; font-weight: 750; text-decoration: underline; }
+    .clue-note { padding: .7rem; color: #ffe8b8; background: rgba(255,200,104,.08); border-left: 3px solid var(--amber); border-radius: 0 8px 8px 0; }
+    .artifact-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .artifact-table th, .artifact-table td { padding: .6rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    .artifact-table th { color: var(--cyan); }
     .roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
     .role { padding: 1.1rem; box-shadow: none; }
     .role-icon { font-size: 1.4rem; }
@@ -305,6 +324,108 @@
       }
     ];
 
+    const missionOneEvidence = `
+      <section class="evidence-room" id="evidenceRoom" aria-labelledby="evidence-title" hidden>
+        <h4 id="evidence-title">Mission 1 Evidence Room</h4>
+        <p class="evidence-intro">Open every artifact. Record what you observe before deciding whether it is suspicious. All names, domains, addresses, and events are fictional training data.</p>
+
+        <details class="artifact" open>
+          <summary>Artifact 1 — Reported email</summary>
+          <div class="artifact-body">
+            <div class="email-sheet">
+              <div class="email-head">
+                <p><strong>From:</strong> Apex Office Supply &lt;billing@apexofficesupply.example&gt;</p>
+                <p><strong>To:</strong> Maya Chen &lt;mchen@coolhack.example&gt;</p>
+                <p><strong>Reply-To:</strong> accounts@apex-billing.example</p>
+                <p><strong>Date:</strong> Tuesday, September 8, 2026, 9:12 AM CDT</p>
+                <p><strong>Subject:</strong> ACTION REQUIRED: Invoice CH-8841 overdue</p>
+              </div>
+              <p>Hello Maya,</p>
+              <p>Your account is scheduled for suspension today because invoice CH-8841 remains unpaid. Review the attached invoice through our secure billing portal within 30 minutes to prevent interruption of your company orders.</p>
+              <p><span class="warning-link">REVIEW INVOICE</span></p>
+              <p>Regards,<br>Daniel Ortiz<br>Accounts Receivable, Apex Office Supply</p>
+            </div>
+            <p class="clue-note"><strong>Link inspection:</strong> The button displays <code>portal.apexofficesupply.example</code>, but its stored destination is <code>hxxps://apexoffice-invoice.example/login</code>. The safe <code>hxxps</code> format prevents accidental opening.</p>
+          </div>
+        </details>
+
+        <details class="artifact">
+          <summary>Artifact 2 — Email headers</summary>
+          <div class="artifact-body">
+            <div class="log-block">Return-Path: &lt;notice@mailer.apex-billing.example&gt;
+Received: from mail.apex-billing.example (203.0.113.77)
+  by mx.coolhack.example with ESMTPS; Tue, 08 Sep 2026 09:12:18 -0500
+From: "Apex Office Supply" &lt;billing@apexofficesupply.example&gt;
+Reply-To: accounts@apex-billing.example
+Message-ID: &lt;8841.0908@mailer.apex-billing.example&gt;
+Authentication-Results: mx.coolhack.example;
+  spf=fail smtp.mailfrom=mailer.apex-billing.example;
+  dkim=none;
+  dmarc=fail header.from=apexofficesupply.example
+X-Spam-Score: 7.4</div>
+            <p>Documentation address <code>203.0.113.77</code> is reserved for examples and is not a real attacker system.</p>
+          </div>
+        </details>
+
+        <details class="artifact">
+          <summary>Artifact 3 — Employee statement</summary>
+          <div class="artifact-body">
+            <p><strong>Interview time:</strong> 10:02 AM CDT</p>
+            <p>“I was expecting an Apex invoice this week, so the sender name looked normal. I clicked the REVIEW INVOICE button at about 9:17. A Microsoft-looking page asked me to sign in. I entered my work email and password once. The page then showed ‘Service unavailable.’ I did not approve an MFA prompt and did not download a file. I called the help desk after I noticed the Reply-To address was different.”</p>
+          </div>
+        </details>
+
+        <details class="artifact">
+          <summary>Artifact 4 — Authentication activity</summary>
+          <div class="artifact-body">
+            <table class="artifact-table">
+              <thead><tr><th>Time (CDT)</th><th>Source</th><th>Device / result</th></tr></thead>
+              <tbody>
+                <tr><td>9:03 AM</td><td>198.51.100.24 — Houston, TX</td><td>Known laptop; password + MFA; success</td></tr>
+                <tr><td>9:21 AM</td><td>192.0.2.146 — Ashburn, VA</td><td>Unknown browser; password accepted; MFA denied</td></tr>
+                <tr><td>9:23 AM</td><td>192.0.2.146 — Ashburn, VA</td><td>Unknown browser; password accepted; MFA timed out</td></tr>
+                <tr><td>9:29 AM</td><td>198.51.100.24 — Houston, TX</td><td>Known laptop; existing session</td></tr>
+              </tbody>
+            </table>
+            <p>All IP addresses are documentation-only ranges used for this simulation.</p>
+          </div>
+        </details>
+
+        <details class="artifact">
+          <summary>Artifact 5 — Web-filter and endpoint alerts</summary>
+          <div class="artifact-body">
+            <div class="log-block">09:17:41  WEB FILTER  host=FIN-LT-044  user=mchen
+destination=apexoffice-invoice.example/login
+category=Newly Registered Domain  action=ALLOWED  risk=HIGH
+
+09:18:06  ENDPOINT  host=FIN-LT-044
+event=Browser connection to low-reputation domain
+process=msedge.exe  download_detected=NO
+
+09:24:12  IDENTITY  user=mchen
+event=Repeated MFA challenge from new device
+action=CHALLENGE DENIED  severity=HIGH
+
+09:31:55  ENDPOINT  host=FIN-LT-044
+malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
+          </div>
+        </details>
+
+        <details class="artifact">
+          <summary>Investigation worksheet — questions only</summary>
+          <div class="artifact-body">
+            <ol>
+              <li>Which observations indicate deception? Cite the exact artifact.</li>
+              <li>What is confirmed, and what is still only an assumption?</li>
+              <li>Build a timeline from 9:12 AM through 10:02 AM.</li>
+              <li>What account, endpoint, email, and user-containment actions are proportionate?</li>
+              <li>What evidence would you collect next?</li>
+            </ol>
+            <p class="clue-note">The public evidence room intentionally contains no answer key. Your team must justify its conclusion from the artifacts.</p>
+          </div>
+        </details>
+      </section>`;
+
     const list = document.querySelector("#missionList");
     const panel = document.querySelector("#missionPanel");
     let activeMission = Number(localStorage.getItem("coolhack-active-mission") || 0);
@@ -330,10 +451,22 @@
           <div class="callout"><h4>Portfolio deliverables</h4><ul>${mission.deliverables.map(item => `<li>${item}</li>`).join("")}</ul></div>
         </div>
         <div class="decision"><strong>Your decision point</strong><br>${mission.decision}</div>
+        ${index === 0 ? `<div class="hero-actions"><button class="btn primary" type="button" id="openEvidence" aria-expanded="false" aria-controls="evidenceRoom">Open Mission 1 evidence <span aria-hidden="true">→</span></button></div>${missionOneEvidence}` : ""}
         <div class="hero-actions">
-          <a class="btn primary" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
+          <a class="btn ${index === 0 ? "" : "primary"}" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
           ${index < missions.length - 1 ? `<button class="btn" type="button" id="nextMission">Next mission</button>` : ""}
         </div>`;
+      const evidenceButton = document.querySelector("#openEvidence");
+      if (evidenceButton) {
+        evidenceButton.addEventListener("click", () => {
+          const room = document.querySelector("#evidenceRoom");
+          const opening = room.hidden;
+          room.hidden = !opening;
+          evidenceButton.setAttribute("aria-expanded", String(opening));
+          evidenceButton.firstChild.textContent = opening ? "Close Mission 1 evidence " : "Open Mission 1 evidence ";
+          if (opening) room.scrollIntoView({behavior: "smooth", block: "start"});
+        });
+      }
       const next = document.querySelector("#nextMission");
       if (next) next.addEventListener("click", () => renderMission(index + 1, true));
       if (moveFocus) panel.focus();
