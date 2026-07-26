@@ -13,29 +13,44 @@ key. Never place a database password or `service_role` key in this repository.
 1. Open the project's **SQL Editor**.
 2. For a new database, paste and run `supabase/schema.sql`.
 3. If the original schema was installed before nickname access was added, paste
-   and run `supabase/nickname-auth-migration.sql` once instead.
-4. In **Authentication → URL Configuration**, add:
+   and run `supabase/nickname-auth-migration.sql` once.
+4. Paste and run `supabase/admin-sections-migration.sql` once to add the
+   platform administrator dashboard, professor-owned sections, secure team
+   management, and section-scoped access controls.
+5. In **Authentication → URL Configuration**, add:
    `https://emilyemo.github.io/coolhack-cyber-academy/`
-5. Enable email/password authentication. In **Authentication → Providers →
+6. Enable email/password authentication. In **Authentication → Providers →
    Email**, turn off **Confirm email** before students create access. Student
    accounts use a generated, non-deliverable internal identifier; the site
    never asks students for an email address.
-6. Keep registration open only during the classroom pilot.
+7. Keep registration open only during the classroom pilot.
 
-## Instructor account
+## Platform administrator account
 
 Use a dedicated non-institutional CoolHack project email. Create the account in
-Supabase Authentication, then promote only that account in the SQL Editor:
+the private instructor portal, then promote only your account in the SQL Editor:
 
 ```sql
 update public.profiles
-set app_role = 'instructor'
+set app_role = 'platform_admin'
 where id = (
-  select id from auth.users where email = 'INSTRUCTOR-EMAIL-HERE'
+  select id from auth.users where email = 'YOUR-COOLHACK-PROJECT-EMAIL-HERE'
 );
 ```
 
 Never use or request an HCC password.
+
+## Professor accounts and three sections
+
+1. Each professor creates a dedicated, non-institutional CoolHack project
+   account through the private instructor portal.
+2. In the platform administrator dashboard, use **Authorize a professor** with
+   that project email.
+3. Create each Capstone section and assign its professor.
+4. Professors can see and manage only their assigned section. The platform
+   administrator can see all sections.
+5. Create teams inside the correct section and use **Generate code**. Give each
+   private team code only to that team's four students.
 
 ## First classroom test
 
@@ -54,11 +69,15 @@ Never use or request an HCC password.
 
 - Students use invented screen names, private passwords, and instructor-issued
   team codes; no student email is requested.
-- The instructor creates teams and assigns four distinct roles.
+- The platform administrator creates sections and authorizes professors.
+- Each professor creates teams only in the assigned section and assigns four
+  distinct roles.
 - Each student edits a separate role-notes area.
 - The team shares one report and AI transcript.
 - Each student owns a private individual reflection.
-- The instructor can read every team and reflection and lock a mission.
+- A professor can read teams and reflections only in the assigned section and
+  control its missions.
+- The platform administrator can review and support all sections.
 - Row-level security prevents students from reading another team's work.
 
 ## Privacy rule
