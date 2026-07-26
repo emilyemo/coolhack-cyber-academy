@@ -55,7 +55,9 @@ as $$
   );
 $$;
 
-create or replace function public.authorize_professor(project_email text)
+drop function if exists public.authorize_professor(text);
+
+create or replace function public.authorize_professor(professor_username text)
 returns text
 language plpgsql security definer set search_path = public, auth
 as $$
@@ -69,10 +71,11 @@ begin
 
   select u.id into target_id
   from auth.users u
-  where lower(u.email) = lower(trim(project_email));
+  where u.raw_user_meta_data ->> 'account_kind' = 'professor_alias_pending'
+    and lower(u.raw_user_meta_data ->> 'display_name') = lower(trim(professor_username));
 
   if target_id is null then
-    raise exception 'No CoolHack account exists for that project email';
+    raise exception 'No pending professor account exists for that username';
   end if;
 
   update public.profiles
