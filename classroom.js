@@ -33,9 +33,10 @@
         <div class="instructions-lead"><strong>Instructor portal</strong><br>Use the dedicated CoolHack project account created for this simulation—not an institutional email or password.</div>
         <form class="classroom-card" id="instructorSignInForm">
           <h3>Instructor sign-in</h3>
+          <p>Use a dedicated CoolHack project account. New professors create the account here, then the platform administrator authorizes it.</p>
           <label for="instructorEmail">Project email</label><input id="instructorEmail" type="email" autocomplete="email" required>
           <label for="instructorPassword">Password</label><input id="instructorPassword" type="password" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn primary" type="submit">Sign in</button></div>
+          <div class="hero-actions"><button class="btn primary" type="submit" name="staffAction" value="signin">Sign in</button><button class="btn" type="submit" name="staffAction" value="create">Create project account</button></div>
         </form>
         <p class="auth-message" id="authMessage" role="status"></p>`;
       field("instructorSignInForm").addEventListener("submit", instructorSignIn);
@@ -57,8 +58,18 @@
   }
 
   async function instructorSignIn(event) {
-    event.preventDefault(); say("Signing in…");
-    const { error } = await db.auth.signInWithPassword({email:field("instructorEmail").value.trim(), password:field("instructorPassword").value});
+    event.preventDefault();
+    const action=event.submitter?.value||"signin";
+    const email=field("instructorEmail").value.trim();
+    const password=field("instructorPassword").value;
+    say(action==="create"?"Creating project account…":"Signing in…");
+    if(action==="create"){
+      const displayName=email.split("@")[0].slice(0,80);
+      const {error}=await db.auth.signUp({email,password,options:{data:{display_name:displayName,account_kind:"staff_pending"}}});
+      say(error?error.message:"Project account created. Confirm the project email if requested, then ask the platform administrator to authorize it.");
+      return;
+    }
+    const { error } = await db.auth.signInWithPassword({email,password});
     if (error) say(error.message);
   }
   async function studentAccess(event) {
@@ -166,42 +177,191 @@
       }).subscribe();
   }
 
-  async function instructorScreen() {
-    const [teams, profiles, members] = await Promise.all([
+  function secureTeamCode() {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const bytes = crypto.getRandomValues(new Uint8Array(8));
+    return Array.from(bytes, value => alphabet[value % alphabet.length]).join("");
+  }
+
+  const sectionOptions = (sections, selected="") =>
+    `<option value="">Choose a section</option>${sections.map(s=>`<option value="${s.id}" ${s.id===selected?"selected":""}>${esc(s.name)}</option>`).join("")}`;
+
+  async function staffScreen() {
+    const isAdmin = profile.app_role === "platform_admin";
+    const [sectionsResult, teamsResult, profilesResult, membersResult] = await Promise.all([
+      db.from("sections").select("id,name,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)").order("name"),
       db.from("teams").select("*").order("name"),
       db.from("profiles").select("id,display_name,app_role").order("display_name"),
       db.from("team_members").select("team_id,user_id,assigned_role,profiles(display_name)")
     ]);
-    const studentProfiles=(profiles.data||[]).filter(p=>p.app_role==="student");
+    const queryError = [sectionsResult,teamsResult,profilesResult,membersResult].find(result=>result.error)?.error;
+    if (queryError) throw queryError;
+    const sections = sectionsResult.data || [];
+    const teams = teamsResult.data || [];
+    const profiles = profilesResult.data || [];
+    const members = membersResult.data || [];
+    const professors = profiles.filter(p=>p.app_role==="instructor");
+    const students = profiles.filter(p=>p.app_role==="student");
+    const assignedIds = new Set(members.map(m=>m.user_id));
+    const unassigned = students.filter(p=>!assignedIds.has(p.id));
+    const assignedSection = sections[0]?.id || "";
+    const title = isAdmin ? "Platform administrator dashboard" : "Professor dashboard";
+    const lead = isAdmin
+      ? "Manage every Capstone section, authorize professors, create teams, and supervise live mission activity across the academy."
+      : "Manage only your assigned Capstone section, create teams, assign seats, and review live mission work.";
+
     mount.innerHTML = accountBar() + `
-      <div class="instructions-lead"><strong>Instructor dashboard</strong><br>Create teams and their private codes, assign one of four seats to each screen name, and review live team work. No student email or official identity is shown or needed.</div>
-      <div class="classroom-grid">
-        <div>
-          <form class="classroom-card" id="createTeam"><h3>Create a team</h3><label for="teamName">Team name</label><input id="teamName" required maxlength="50"><label for="joinCode">Internal team code</label><input id="joinCode" required minlength="6" maxlength="12" pattern="[A-Z0-9]+"><div class="hero-actions"><button class="btn primary">Create team</button></div><p id="instructorMessage" role="status"></p></form>
-          <form class="classroom-card" id="assignStudent"><h3>Assign a student and seat</h3>
-            <label for="assignUser">Student</label><select id="assignUser" required><option value="">Choose a student</option>${studentProfiles.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select>
-            <label for="assignTeam">Team</label><select id="assignTeam" required><option value="">Choose a team</option>${(teams.data||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select>
-            <label for="assignRole">Seat (role)</label><select id="assignRole" required><option value="">Choose a role</option>${["SOC Analyst","Incident Responder","Security Lead","Communications Lead"].map(r=>`<option>${r}</option>`).join("")}</select>
-            <div class="hero-actions"><button class="btn primary">Save assignment</button></div><p id="assignmentMessage" role="status"></p>
-          </form>
-        </div>
-        <div class="classroom-card"><h3>Teams and assignments</h3>${(teams.data||[]).map(t=>`<div class="instructor-team"><strong>${esc(t.name)}</strong> · Mission ${t.active_mission} · ${t.mission_locked?"Locked":"Open"}<ul>${(members.data||[]).filter(m=>m.team_id===t.id).map(m=>`<li>${esc(m.profiles?.display_name)} — ${esc(m.assigned_role||"Role pending")}</li>`).join("")||"<li>No students assigned yet.</li>"}</ul><button class="btn" type="button" data-team-review="${t.id}" data-team-name="${esc(t.name)}" data-mission="${t.active_mission}">Review live work</button></div>`).join("")||"<p>No teams created yet.</p>"}<div id="instructorReview"></div><h3>Unassigned student accounts</h3><ul>${studentProfiles.filter(p=>!(members.data||[]).some(m=>m.user_id===p.id)).map(p=>`<li>${esc(p.display_name)}</li>`).join("")||"<li>None</li>"}</ul></div>
-      </div>`;
+      <div class="admin-hero">
+        <div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div>
+        <span class="privacy-badge">De-identified classroom data only</span>
+      </div>
+      <div class="admin-stats" aria-label="Classroom overview">
+        <div><strong>${sections.length}</strong><span>Active sections</span></div>
+        <div><strong>${teams.length}</strong><span>Teams</span></div>
+        <div><strong>${members.length}</strong><span>Student accounts</span></div>
+        <div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div>
+      </div>
+      ${isAdmin?`
+      <div class="admin-panel-grid">
+        <form class="classroom-card" id="authorizeProfessor">
+          <span class="card-kicker">Access control</span><h3>Authorize a professor</h3>
+          <p>The professor must first create a dedicated CoolHack account through your private instructor portal.</p>
+          <label for="professorEmail">CoolHack project email</label><input id="professorEmail" type="email" autocomplete="off" required>
+          <div class="hero-actions"><button class="btn primary">Authorize professor</button></div><p id="professorMessage" class="form-message" role="status"></p>
+        </form>
+        <form class="classroom-card" id="createSection">
+          <span class="card-kicker">Three-section setup</span><h3>Create a Capstone section</h3>
+          <label for="sectionName">Section label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required>
+          <label for="sectionProfessor">Assigned professor</label><select id="sectionProfessor"><option value="">Assign later</option>${professors.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select>
+          <div class="hero-actions"><button class="btn primary">Create section</button></div><p id="sectionMessage" class="form-message" role="status"></p>
+        </form>
+      </div>`:""}
+      <div class="admin-panel-grid">
+        <form class="classroom-card" id="createTeam">
+          <span class="card-kicker">Team setup</span><h3>Create a team</h3>
+          <label for="teamSection">Capstone section</label><select id="teamSection" required>${sectionOptions(sections,assignedSection)}</select>
+          <label for="teamName">Team name</label><input id="teamName" placeholder="Example: Team Phoenix" required maxlength="50">
+          <label for="joinCode">Private team code</label>
+          <div class="code-builder"><input id="joinCode" required minlength="8" maxlength="12" pattern="[A-Z0-9]+" readonly><button class="btn" id="generateCode" type="button">Generate code</button></div>
+          <small>Give this code only to the four students assigned to this team.</small>
+          <div class="hero-actions"><button class="btn primary">Create team</button></div><p id="teamMessage" class="form-message" role="status"></p>
+        </form>
+        <form class="classroom-card" id="assignStudent">
+          <span class="card-kicker">Roster</span><h3>Assign a student and seat</h3>
+          <label for="assignUser">Unassigned screen name</label><select id="assignUser" required><option value="">Choose a student</option>${unassigned.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select>
+          <label for="assignTeam">Team</label><select id="assignTeam" required><option value="">Choose a team</option>${teams.map(t=>`<option value="${t.id}">${esc(t.name)} · ${esc(sections.find(s=>s.id===t.section_id)?.name||"Section pending")}</option>`).join("")}</select>
+          <label for="assignRole">Seat (role)</label><select id="assignRole" required><option value="">Choose a role</option>${["SOC Analyst","Incident Responder","Security Lead","Communications Lead"].map(r=>`<option>${r}</option>`).join("")}</select>
+          <div class="hero-actions"><button class="btn primary">Save assignment</button></div><p id="assignmentMessage" class="form-message" role="status"></p>
+        </form>
+      </div>
+      <section class="classroom-card operations-board">
+        <div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
+        <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${esc(section.profiles?.display_name||"Professor not assigned")}</span><small>${teams.filter(t=>t.section_id===section.id).length} teams</small></article>`).join("")||"<p>Create a section to begin.</p>"}</div>
+        <div id="teamOperations">${renderTeamOperations(teams,sections,members)}</div>
+        <div id="staffReview" aria-live="polite"></div>
+      </section>`;
+
     bindSignOut();
-    field("createTeam").addEventListener("submit",async event=>{event.preventDefault();const {error}=await db.from("teams").insert({name:field("teamName").value.trim(),join_code:field("joinCode").value.trim().toUpperCase(),created_by:currentUser.id});field("instructorMessage").textContent=error?error.message:"Team created.";if(!error)instructorScreen();});
-    field("assignStudent").addEventListener("submit",async event=>{event.preventDefault();const userId=field("assignUser").value;const {error}=await db.from("team_members").upsert({team_id:field("assignTeam").value,user_id:userId,assigned_role:field("assignRole").value},{onConflict:"team_id,user_id"});field("assignmentMessage").textContent=error?error.message:"Student assigned.";if(!error)instructorScreen();});
-    document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",async()=>{
-      const result=await db.from("team_reports").select("*").eq("team_id",button.dataset.teamReview).eq("mission_number",Number(button.dataset.mission)).maybeSingle();
-      const report=result.data||{};
-      field("instructorReview").innerHTML=`<div class="instructor-team"><h3>${esc(button.dataset.teamName)} live report</h3>${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback"].map(k=>`<p><strong>${k.replaceAll("_"," ")}:</strong><br>${esc(report[k]||"No entry yet.")}</p>`).join("")}</div>`;
-    }));
+    const newCode = () => { field("joinCode").value = secureTeamCode(); };
+    newCode();
+    field("generateCode")?.addEventListener("click",newCode);
+    field("sectionFilter")?.addEventListener("change",event=>{
+      const visible = event.target.value==="all" ? teams : teams.filter(t=>t.section_id===event.target.value);
+      field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members);
+      bindOperationButtons();
+    });
+    field("authorizeProfessor")?.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const result=await db.rpc("authorize_professor",{project_email:field("professorEmail").value.trim()});
+      field("professorMessage").textContent=result.error?result.error.message:`${result.data} is now authorized as a professor.`;
+      if(!result.error)setTimeout(staffScreen,700);
+    });
+    field("createSection")?.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const payload={name:field("sectionName").value.trim(),created_by:currentUser.id};
+      if(field("sectionProfessor").value)payload.instructor_id=field("sectionProfessor").value;
+      const result=await db.from("sections").insert(payload);
+      field("sectionMessage").textContent=result.error?result.error.message:"Section created.";
+      if(!result.error)setTimeout(staffScreen,500);
+    });
+    field("createTeam")?.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const payload={name:field("teamName").value.trim(),join_code:field("joinCode").value,section_id:field("teamSection").value,created_by:currentUser.id};
+      const result=await db.from("teams").insert(payload);
+      field("teamMessage").textContent=result.error?result.error.message:"Team created and its code is ready to share.";
+      if(!result.error)setTimeout(staffScreen,500);
+    });
+    field("assignStudent")?.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const result=await db.from("team_members").upsert({team_id:field("assignTeam").value,user_id:field("assignUser").value,assigned_role:field("assignRole").value},{onConflict:"team_id,user_id"});
+      field("assignmentMessage").textContent=result.error?result.error.message:"Student and seat assigned.";
+      if(!result.error)setTimeout(staffScreen,500);
+    });
+    bindOperationButtons();
+
+    function bindOperationButtons() {
+      document.querySelectorAll("[data-copy-code]").forEach(button=>button.addEventListener("click",async()=>{
+        await navigator.clipboard.writeText(button.dataset.copyCode);
+        button.textContent="Code copied";
+        setTimeout(()=>button.textContent="Copy code",1200);
+      }));
+      document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
+      document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{
+        const changes={};
+        if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";
+        if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);
+        const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);
+        if(result.error)field("staffReview").innerHTML=`<p class="auth-message">${esc(result.error.message)}</p>`;
+        else staffScreen();
+      }));
+    }
+  }
+
+  function renderTeamOperations(teams,sections,members) {
+    if(!teams.length)return "<p>No teams are available in this view.</p>";
+    return `<div class="team-operations">${teams.map(team=>{
+      const teamMembers=members.filter(m=>m.team_id===team.id);
+      const section=sections.find(s=>s.id===team.section_id);
+      return `<article class="team-operation">
+        <div class="team-operation-title"><div><span>${esc(section?.name||"Section pending")}</span><h4>${esc(team.name)}</h4></div><span class="status-pill ${team.mission_locked?"locked":"open"}">${team.mission_locked?"Locked":"Open"}</span></div>
+        <div class="mission-progress" aria-label="Mission ${team.active_mission} of 6"><span style="width:${team.active_mission/6*100}%"></span></div>
+        <p><strong>Mission ${team.active_mission} of 6</strong> · ${teamMembers.length} of 4 seats filled</p>
+        <ul>${teamMembers.map(m=>`<li>${esc(m.profiles?.display_name)} — ${esc(m.assigned_role||"Seat pending")}</li>`).join("")||"<li>No student accounts yet.</li>"}</ul>
+        <div class="team-code-row"><code>${esc(team.join_code)}</code><button class="btn compact" type="button" data-copy-code="${esc(team.join_code)}">Copy code</button></div>
+        <div class="mission-controls">
+          <button class="btn compact" type="button" data-team-review="${team.id}" data-team-name="${esc(team.name)}" data-mission="${team.active_mission}">Review live work</button>
+          <button class="btn compact" type="button" data-team-control="lock" data-team-id="${team.id}" data-locked="${team.mission_locked}">${team.mission_locked?"Reopen mission":"Lock mission"}</button>
+          <label>Active mission<select data-mission-select="${team.id}">${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===team.active_mission?"selected":""}>${n}</option>`).join("")}</select></label>
+          <button class="btn compact" type="button" data-team-control="mission" data-team-id="${team.id}" data-mission-target="${team.active_mission}">Apply</button>
+        </div>
+      </article>`;
+    }).join("")}</div>`;
+  }
+
+  async function reviewTeam(teamId,teamName,mission) {
+    const [reportResult,notesResult,reflectionsResult]=await Promise.all([
+      db.from("team_reports").select("*").eq("team_id",teamId).eq("mission_number",mission).maybeSingle(),
+      db.from("role_notes").select("note_text,updated_at,profiles!role_notes_author_id_fkey(display_name)").eq("team_id",teamId).eq("mission_number",mission),
+      db.from("reflections").select("reflection_text,submitted_at,profiles!reflections_student_id_fkey(display_name)").eq("team_id",teamId).eq("mission_number",mission)
+    ]);
+    const error=[reportResult,notesResult,reflectionsResult].find(result=>result.error)?.error;
+    if(error){field("staffReview").innerHTML=`<p class="auth-message">${esc(error.message)}</p>`;return;}
+    const report=reportResult.data||{};
+    field("staffReview").innerHTML=`<div class="review-drawer">
+      <div class="operations-head"><div><span class="card-kicker">Mission ${mission} review</span><h3>${esc(teamName)}</h3></div><button class="btn compact" id="closeReview" type="button">Close review</button></div>
+      <h4>Shared team report</h4>${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback"].map(k=>`<div class="review-entry"><strong>${k.replaceAll("_"," ")}</strong><p>${esc(report[k]||"No entry yet.")}</p></div>`).join("")}
+      <h4>Role notes</h4>${(notesResult.data||[]).map(n=>`<div class="review-entry"><strong>${esc(n.profiles?.display_name||"Team member")}</strong><p>${esc(n.note_text||"No entry yet.")}</p></div>`).join("")||"<p>No role notes yet.</p>"}
+      <h4>Private reflections</h4>${(reflectionsResult.data||[]).map(r=>`<div class="review-entry"><strong>${esc(r.profiles?.display_name||"Student")} · ${r.submitted_at?"Submitted":"Draft"}</strong><p>${esc(r.reflection_text||"No entry yet.")}</p></div>`).join("")||"<p>No reflections yet.</p>"}
+    </div>`;
+    field("closeReview")?.addEventListener("click",()=>field("staffReview").innerHTML="");
+    field("staffReview").scrollIntoView({behavior:"smooth",block:"start"});
   }
 
   function bindSignOut(){field("signOut")?.addEventListener("click",()=>db.auth.signOut());}
   async function render() {
     if(channel){await db.removeChannel(channel);channel=null;}
     if(!currentUser){authScreen();return;}
-    try { await loadProfile(); profile.app_role==="instructor" ? await instructorScreen() : await studentScreen(); }
+    try { await loadProfile(); ["instructor","platform_admin"].includes(profile.app_role) ? await staffScreen() : await studentScreen(); }
     catch(error){mount.innerHTML=`<div class="classroom-card"><h3>Classroom setup is not finished</h3><p>${esc(error.message)}</p><p>The instructor must run the supplied Supabase database setup script once before accounts can use the workspace.</p></div>`;}
   }
   db.auth.getSession().then(({data})=>{currentUser=data.session?.user||null;render();});
