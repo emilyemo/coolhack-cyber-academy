@@ -10,6 +10,7 @@
   let channel = null;
   let saveTimer = null;
   let roster = [];
+  const instructorPortal = new URLSearchParams(window.location.search).get("portal") === "instructor";
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
@@ -23,28 +24,36 @@
   }
 
   function authScreen() {
-    mount.innerHTML = `
-      <div class="instructions-lead"><strong>Independent classroom simulation</strong><br>CoolHack is not an HCC system. Students use an invented screen name—never an HCC email, student ID, official password, grade, or other personal information. A private CoolHack password connects you to your team and restores your work after a refresh.</div>
-      <div class="auth-grid">
-        <form class="classroom-card" id="studentAccessForm">
-          <h3>Student access</h3>
-          <p>No student email is collected. Use the team code from your instructor and an invented screen name.</p>
-          <label for="studentTeamCode">Team code</label><input id="studentTeamCode" minlength="6" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
-          <label for="studentAlias">Screen name</label><input id="studentAlias" minlength="2" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" aria-describedby="aliasHelp" required>
-          <small id="aliasHelp">Use letters, numbers, underscores, or hyphens. Do not use your real full name or student ID.</small>
-          <label for="studentPassword">Private CoolHack password</label><input id="studentPassword" type="password" minlength="10" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn primary" type="submit" name="studentAction" value="signin">Sign in</button><button class="btn" type="submit" name="studentAction" value="create">First visit: create access</button></div>
-        </form>
+    if (instructorPortal) {
+      const title = document.querySelector("#classroom-title");
+      const intro = title?.nextElementSibling;
+      if (title) title.textContent = "CoolHack instructor portal";
+      if (intro) intro.textContent = "Sign in to manage teams and review live classroom work.";
+      mount.innerHTML = `
+        <div class="instructions-lead"><strong>Instructor portal</strong><br>Use the dedicated CoolHack project account created for this simulation—not an institutional email or password.</div>
         <form class="classroom-card" id="instructorSignInForm">
           <h3>Instructor sign-in</h3>
-          <p>For the instructor only. Use a dedicated CoolHack project email—not an institutional email.</p>
           <label for="instructorEmail">Project email</label><input id="instructorEmail" type="email" autocomplete="email" required>
           <label for="instructorPassword">Password</label><input id="instructorPassword" type="password" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn" type="submit">Instructor sign in</button></div>
+          <div class="hero-actions"><button class="btn primary" type="submit">Sign in</button></div>
         </form>
-      </div><p class="auth-message" id="authMessage" role="status"></p>`;
+        <p class="auth-message" id="authMessage" role="status"></p>`;
+      field("instructorSignInForm").addEventListener("submit", instructorSignIn);
+      return;
+    }
+    mount.innerHTML = `
+      <div class="instructions-lead"><strong>Independent classroom simulation</strong><br>CoolHack is not an HCC system. Students use an invented screen name—never an HCC email, student ID, official password, grade, or other personal information. A private CoolHack password connects you to your team and restores your work after a refresh.</div>
+      <form class="classroom-card" id="studentAccessForm">
+        <h3>Student access</h3>
+        <p>No student email is collected. Use the team code from your instructor and an invented screen name.</p>
+        <label for="studentTeamCode">Team code</label><input id="studentTeamCode" minlength="6" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
+        <label for="studentAlias">Screen name</label><input id="studentAlias" minlength="2" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" aria-describedby="aliasHelp" required>
+        <small id="aliasHelp">Use letters, numbers, underscores, or hyphens. Do not use your real full name or student ID.</small>
+        <label for="studentPassword">Private CoolHack password</label><input id="studentPassword" type="password" minlength="10" autocomplete="current-password" required>
+        <div class="hero-actions"><button class="btn primary" type="submit" name="studentAction" value="signin">Sign in</button><button class="btn" type="submit" name="studentAction" value="create">First visit: create access</button></div>
+      </form>
+      <p class="auth-message" id="authMessage" role="status"></p>`;
     field("studentAccessForm").addEventListener("submit", studentAccess);
-    field("instructorSignInForm").addEventListener("submit", instructorSignIn);
   }
 
   async function instructorSignIn(event) {
