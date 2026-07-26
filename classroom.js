@@ -9,47 +9,72 @@
   let membership = null;
   let channel = null;
   let saveTimer = null;
+  let roster = [];
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
   const field = id => document.querySelector(`#${id}`);
+  const normalizeAlias = value => value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  async function aliasEmail(displayName, teamCode) {
+    const bytes = new TextEncoder().encode(`${teamCode.trim().toUpperCase()}:${normalizeAlias(displayName)}`);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+    return `${token}@students.coolhack.invalid`;
+  }
 
   function authScreen() {
     mount.innerHTML = `
-      <div class="instructions-lead"><strong>Why sign in?</strong> Your account connects you to your assigned team, saves work in the shared classroom database, and lets the instructor see progress. Never reuse an important personal password.</div>
+      <div class="instructions-lead"><strong>Independent classroom simulation</strong><br>CoolHack is not an HCC system. Students use an invented screen name—never an HCC email, student ID, official password, grade, or other personal information. A private CoolHack password connects you to your team and restores your work after a refresh.</div>
       <div class="auth-grid">
-        <form class="classroom-card" id="signInForm">
-          <h3>Sign in</h3>
-          <label for="loginEmail">Email address</label><input id="loginEmail" type="email" autocomplete="email" required>
-          <label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn primary" type="submit">Sign in</button></div>
+        <form class="classroom-card" id="studentAccessForm">
+          <h3>Student access</h3>
+          <p>No student email is collected. Use the team code from your instructor and an invented screen name.</p>
+          <label for="studentTeamCode">Team code</label><input id="studentTeamCode" minlength="6" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
+          <label for="studentAlias">Screen name</label><input id="studentAlias" minlength="2" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" aria-describedby="aliasHelp" required>
+          <small id="aliasHelp">Use letters, numbers, underscores, or hyphens. Do not use your real full name or student ID.</small>
+          <label for="studentPassword">Private CoolHack password</label><input id="studentPassword" type="password" minlength="10" autocomplete="current-password" required>
+          <div class="hero-actions"><button class="btn primary" type="submit" name="studentAction" value="signin">Sign in</button><button class="btn" type="submit" name="studentAction" value="create">First visit: create access</button></div>
         </form>
-        <form class="classroom-card" id="signUpForm">
-          <h3>Create a student account</h3>
-          <p>Your instructor may ask you to use a course-created or school-approved email.</p>
-          <label for="displayName">Name shown to your team</label><input id="displayName" maxlength="80" required>
-          <label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required>
-          <label for="signupPassword">Create a password</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required>
-          <div class="hero-actions"><button class="btn" type="submit">Create account</button></div>
+        <form class="classroom-card" id="instructorSignInForm">
+          <h3>Instructor sign-in</h3>
+          <p>For the instructor only. Use a dedicated CoolHack project email—not an institutional email.</p>
+          <label for="instructorEmail">Project email</label><input id="instructorEmail" type="email" autocomplete="email" required>
+          <label for="instructorPassword">Password</label><input id="instructorPassword" type="password" autocomplete="current-password" required>
+          <div class="hero-actions"><button class="btn" type="submit">Instructor sign in</button></div>
         </form>
       </div><p class="auth-message" id="authMessage" role="status"></p>`;
-    field("signInForm").addEventListener("submit", signIn);
-    field("signUpForm").addEventListener("submit", signUp);
+    field("studentAccessForm").addEventListener("submit", studentAccess);
+    field("instructorSignInForm").addEventListener("submit", instructorSignIn);
   }
 
-  async function signIn(event) {
+  async function instructorSignIn(event) {
     event.preventDefault(); say("Signing in…");
-    const { error } = await db.auth.signInWithPassword({email:field("loginEmail").value.trim(), password:field("loginPassword").value});
+    const { error } = await db.auth.signInWithPassword({email:field("instructorEmail").value.trim(), password:field("instructorPassword").value});
     if (error) say(error.message);
   }
-  async function signUp(event) {
-    event.preventDefault(); say("Creating account…");
-    const { error } = await db.auth.signUp({
-      email:field("signupEmail").value.trim(),
-      password:field("signupPassword").value,
-      options:{data:{display_name:field("displayName").value.trim()}}
-    });
-    say(error ? error.message : "Account created. Check your email if confirmation is required, then sign in.");
+  async function studentAccess(event) {
+    event.preventDefault();
+    const action = event.submitter?.value || "signin";
+    const displayName = field("studentAlias").value.trim();
+    const joinCode = field("studentTeamCode").value.trim().toUpperCase();
+    const password = field("studentPassword").value;
+    say(action === "create" ? "Creating private student access…" : "Signing in…");
+    try {
+      const email = await aliasEmail(displayName, joinCode);
+      if (action === "create") {
+        const { error } = await db.auth.signUp({
+          email,
+          password,
+          options:{data:{display_name:displayName, join_code:joinCode, account_kind:"student_alias"}}
+        });
+        say(error ? error.message : "Access created. If the workspace does not open automatically, choose Sign in.");
+      } else {
+        const { error } = await db.auth.signInWithPassword({email, password});
+        if (error) say("That team code, screen name, or password did not match.");
+      }
+    } catch (_error) {
+      say("Student access could not be created. Check the entries and try again.");
+    }
   }
 
   async function loadProfile() {
@@ -78,12 +103,13 @@
       db.from("team_reports").select("*").eq("team_id",teamId).eq("mission_number",mission).maybeSingle(),
       db.from("reflections").select("*").eq("team_id",teamId).eq("mission_number",mission).eq("student_id",currentUser.id).maybeSingle()
     ]);
+    roster = rosterResult.data || [];
     const report = reportResult.data || {};
     const myNote = (notesResult.data || []).find(n => n.author_id === currentUser.id)?.note_text || "";
     mount.innerHTML = accountBar(`<span class="cloud-state" id="cloudState">Cloud connected</span> `) + `
       <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Your seat: ${esc(membership.assigned_role || "Not assigned")}. Each member writes in a separate role-notes box; the team report is shared.</div>
       <div class="classroom-grid">
-        <aside class="classroom-card"><h3>Team roster</h3><ul class="roster">${(rosterResult.data||[]).map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong><br>${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><h3>Live role notes</h3><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc((rosterResult.data||[]).find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No notes yet.</p>"}</div></aside>
+        <aside class="classroom-card"><h3>Team roster</h3><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong><br>${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><h3>Live role notes</h3><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc(roster.find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No notes yet.</p>"}</div></aside>
         <div>
           <div class="classroom-card"><h3>My role notes</h3><label for="liveRoleNotes">What I observe and recommend</label><textarea id="liveRoleNotes" ${membership.teams.mission_locked?"disabled":""}>${esc(myNote)}</textarea></div>
           <form class="classroom-card" id="sharedReport">
@@ -118,7 +144,7 @@
     channel=db.channel(`team-${teamId}-${mission}`)
       .on("postgres_changes",{event:"*",schema:"public",table:"role_notes",filter:`team_id=eq.${teamId}`},payload=>{
         if(payload.new.author_id===currentUser.id)return;
-        const author=(rosterResult.data||[]).find(r=>r.user_id===payload.new.author_id)?.profiles?.display_name||"Team member";
+        const author=roster.find(r=>r.user_id===payload.new.author_id)?.profiles?.display_name||"Team member";
         let row=document.querySelector(`[data-note-author="${payload.new.author_id}"]`);
         if(!row){row=document.createElement("p");row.dataset.noteAuthor=payload.new.author_id;field("teamNotes").appendChild(row);}
         row.innerHTML=`<strong>${esc(author)}:</strong> ${esc(payload.new.note_text)}`;
@@ -139,7 +165,7 @@
     ]);
     const studentProfiles=(profiles.data||[]).filter(p=>p.app_role==="student");
     mount.innerHTML = accountBar() + `
-      <div class="instructions-lead"><strong>Instructor dashboard</strong><br>Create teams, assign students, and open a team to review its live work. Students appear here after creating their accounts.</div>
+      <div class="instructions-lead"><strong>Instructor dashboard</strong><br>Create teams and their private codes, assign one of four seats to each screen name, and review live team work. No student email or official identity is shown or needed.</div>
       <div class="classroom-grid">
         <div>
           <form class="classroom-card" id="createTeam"><h3>Create a team</h3><label for="teamName">Team name</label><input id="teamName" required maxlength="50"><label for="joinCode">Internal team code</label><input id="joinCode" required minlength="6" maxlength="12" pattern="[A-Z0-9]+"><div class="hero-actions"><button class="btn primary">Create team</button></div><p id="instructorMessage" role="status"></p></form>
