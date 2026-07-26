@@ -297,6 +297,26 @@
       transform: translateY(-1px); border-color: #4e6754;
       box-shadow: 0 4px 0 rgba(58,48,35,.14);
     }
+    .acronym-guide {
+      margin: 0 0 1rem; padding: .75rem .9rem; color: #4f5149;
+      background: #fffdf8; border: 1px solid #d2c7b5; border-radius: 11px;
+      font-size: .9rem;
+    }
+    .cyber-term {
+      display: inline-flex; align-items: center; gap: .18em; padding: 0 .12em;
+      color: inherit; background: rgba(163,66,47,.07); border: 0;
+      border-bottom: 2px dotted #a3422f; border-radius: 3px;
+      font: inherit; font-weight: 850; line-height: 1.25; cursor: help;
+    }
+    .cyber-term::after {
+      content: "?"; display: inline-grid; place-items: center;
+      width: 1em; height: 1em; color: #fffdf8; background: #a3422f;
+      border-radius: 50%; font-size: .62em; font-weight: 900; line-height: 1;
+    }
+    .cyber-term:hover, .cyber-term:focus-visible {
+      color: #6f2d20; background: rgba(163,66,47,.14);
+      outline: 2px solid rgba(163,66,47,.32); outline-offset: 2px;
+    }
     .brief-status-button {
       border: 1px solid #d7b5a8; box-shadow: 0 2px 0 rgba(58,48,35,.12);
       transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
@@ -423,6 +443,7 @@
       <button class="app-tab" id="view-tab-missions" type="button" role="tab" aria-selected="false" aria-controls="missions" data-open-view="missions">2. Missions<small>Briefing, evidence, and AI role-play</small></button>
       <button class="app-tab" id="view-tab-workspace" type="button" role="tab" aria-selected="false" aria-controls="workspace" data-open-view="workspace">3. Team Workspace<small>Complete and download the report</small></button>
     </div>
+    <p class="acronym-guide"><strong>Cybersecurity refresher:</strong> Select any underlined acronym marked with a <strong>?</strong> to review its full meaning, what it does, and why an analyst should care about it.</p>
 
     <section id="missions" data-view="missions" aria-labelledby="missions-title" hidden>
       <div class="section-head">
@@ -454,7 +475,7 @@
       <div class="section-head"><div><h2 id="team-title">Choose your seat</h2><p>Form a team of four. Each member takes one role so every professional responsibility is represented.</p></div></div>
       <div class="notice"><strong>How your team works:</strong> All four members examine the same evidence and discuss each decision. One member shares the AI chat on screen and types the team's agreed responses while everyone watches. Rotate the person typing in later missions. Your team submits one shared incident report and AI transcript. Each member submits a separate personal reflection in the course assignment.</div>
       <div class="roles">
-        <button class="role explainable" type="button" data-info-title="SOC Analyst" data-info="Your job is to connect the clues. Review alerts and logs, identify patterns, build the timeline, state what the evidence proves, and recommend an incident severity."><span class="role-icon" aria-hidden="true">⌁</span><h3>SOC Analyst</h3><p>Review alerts, correlate evidence, build the incident timeline, and recommend severity.</p><small class="tap-hint">Tap for the full role</small></button>
+        <button class="role explainable" type="button" data-info-title="SOC Analyst — Security Operations Center Analyst" data-info="SOC means Security Operations Center. As the SOC Analyst, your job is to connect the clues: review alerts and logs, identify patterns, build the timeline, state what the evidence proves, and recommend an incident severity. This role matters because a SOC turns separate security alerts into a coordinated investigation and response."><span class="role-icon" aria-hidden="true">⌁</span><h3>SOC Analyst</h3><p>Review alerts, correlate evidence, build the incident timeline, and recommend severity.</p><small class="tap-hint">Tap for the full role</small></button>
         <button class="role explainable" type="button" data-info-title="Incident Responder" data-info="Your job is to control the incident safely. Recommend how to contain the threat, preserve evidence, remove the cause, restore normal operations, and confirm that recovery worked."><span class="role-icon" aria-hidden="true">⌕</span><h3>Incident Responder</h3><p>Plan containment, preserve evidence, remove the threat, and validate recovery.</p><small class="tap-hint">Tap for the full role</small></button>
         <button class="role explainable" type="button" data-info-title="Security Lead" data-info="Your job is to make and defend the final security decision. Consider technical risk and business impact, approve proportionate actions, and decide when the incident must be escalated."><span class="role-icon" aria-hidden="true">◎</span><h3>Security Lead</h3><p>Balance business risk with security, approve actions, and manage escalation.</p><small class="tap-hint">Tap for the full role</small></button>
         <button class="role explainable" type="button" data-info-title="Communications Lead" data-info="Your job is to explain the incident clearly to different audiences. Turn technical findings into accurate updates for the affected user, the help desk, managers, and executives without exaggerating what is known."><span class="role-icon" aria-hidden="true">✎</span><h3>Communications Lead</h3><p>Turn technical findings into clear updates for users, managers, and executives.</p><small class="tap-hint">Tap for the full role</small></button>
@@ -538,6 +559,104 @@
       infoDialog.showModal();
     }
 
+    const acronymGlossary = {
+      "AI": {
+        title: "AI — Artificial Intelligence",
+        info: "Artificial Intelligence describes computer systems that perform tasks associated with human intelligence, such as interpreting language, finding patterns, or generating content. In this academy, AI acts as a questioning supervisor—not as the investigator. Analysts must verify its output, protect private information, and remain responsible for every decision."
+      },
+      "AAS": {
+        title: "AAS — Associate of Applied Science",
+        info: "An Associate of Applied Science is a career-focused college degree that combines technical knowledge with practical workplace skills. In this academy, AAS-level work means applying what you learned to evidence, decisions, communication, and professional documentation—not merely recalling definitions."
+      },
+      "SOC": {
+        title: "SOC — Security Operations Center",
+        info: "A Security Operations Center is the team or function that monitors security activity, investigates alerts, coordinates incident response, and helps protect an organization. Analysts care because the SOC connects separate logs and alerts into one evidence-based understanding of an incident."
+      },
+      "IAM": {
+        title: "IAM — Identity and Access Management",
+        info: "Identity and Access Management controls who can sign in, how identity is verified, and what each user or system is allowed to access. Analysts examine IAM evidence when investigating suspicious logins, excessive permissions, account misuse, or possible credential theft."
+      },
+      "DFIR": {
+        title: "DFIR — Digital Forensics and Incident Response",
+        info: "Digital Forensics and Incident Response combines careful collection and analysis of digital evidence with actions to contain, remove, and recover from a threat. Analysts must preserve evidence while acting quickly enough to reduce harm."
+      },
+      "NET": {
+        title: "NET — Network Security track",
+        info: "NET is CoolHack's short label for the Network Security mission track; it is not a universal industry acronym. In this track, analysts examine traffic, connections, devices, protocols, and network controls to understand suspicious activity and protect availability."
+      },
+      "SPF": {
+        title: "SPF — Sender Policy Framework",
+        info: "Sender Policy Framework is an email-authentication control that publishes which mail servers are authorized to send messages for a domain. Analysts compare the SPF result with the visible sender, other header checks, and the remaining evidence. SPF helps detect some spoofing, but one result alone does not prove whether a message is safe or malicious."
+      },
+      "DKIM": {
+        title: "DKIM — DomainKeys Identified Mail",
+        info: "DomainKeys Identified Mail adds a cryptographic signature to an email so the receiving system can check whether an authorized domain signed it and whether signed content changed in transit. Analysts interpret DKIM together with SPF, DMARC, routing details, and message context."
+      },
+      "DMARC": {
+        title: "DMARC — Domain-based Message Authentication, Reporting, and Conformance",
+        info: "DMARC is an email policy and reporting standard built on SPF and DKIM. It checks whether authentication aligns with the domain visible to the recipient and tells receiving systems how the domain owner wants failures handled. Analysts still compare DMARC with all other evidence before deciding what occurred."
+      },
+      "MFA": {
+        title: "MFA — Multi-Factor Authentication",
+        info: "Multi-Factor Authentication requires more than one type of proof before granting access, such as a password plus an authenticator approval. Analysts examine MFA prompts, approvals, denials, devices, and timing to understand whether an account login was legitimate or suspicious."
+      },
+      "IP": {
+        title: "IP — Internet Protocol",
+        info: "Internet Protocol provides addressing and routing so data can travel between networks. An IP address identifies a network connection and may provide useful location or provider context, but it does not by itself prove which person used the connection."
+      },
+      "URL": {
+        title: "URL — Uniform Resource Locator",
+        info: "A Uniform Resource Locator is the address used to locate a resource on the web. Analysts inspect the complete URL—including the real domain, spelling, path, and protocol—because link text can hide a different destination."
+      },
+      "CDT": {
+        title: "CDT — Central Daylight Time",
+        info: "Central Daylight Time is the daylight-saving time zone used for the timestamps in this simulation. Analysts must record time zones because events from different systems cannot be placed in the correct order until their timestamps use a common reference."
+      },
+      "ESMTPS": {
+        title: "ESMTPS — Extended Simple Mail Transfer Protocol Secure",
+        info: "ESMTPS is a mail-server notation indicating that Extended SMTP features were used over an encrypted TLS connection. It describes how one part of the email transfer was protected; it does not by itself prove who authored the message or whether the message was trustworthy."
+      },
+      "TLS": {
+        title: "TLS — Transport Layer Security",
+        info: "Transport Layer Security encrypts data while it travels between systems and helps verify the server involved in a connection. Analysts remember that encryption protects a connection in transit; it does not automatically make the content, sender, or destination trustworthy."
+      }
+    };
+    const acronymPattern = new RegExp(`\\b(${Object.keys(acronymGlossary).sort((a, b) => b.length - a.length).join("|")})\\b`, "g");
+    const acronymSkipSelector = "script, style, textarea, input, select, option, button, a, code, [data-info], .cyber-term, dialog";
+
+    function decorateAcronyms(root = document.body) {
+      if (!root || root.nodeType !== Node.ELEMENT_NODE || root.matches?.(acronymSkipSelector)) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!node.nodeValue?.trim() || node.parentElement?.closest(acronymSkipSelector)) return NodeFilter.FILTER_REJECT;
+          acronymPattern.lastIndex = 0;
+          return acronymPattern.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+      });
+      const matches = [];
+      while (walker.nextNode()) matches.push(walker.currentNode);
+      matches.forEach(node => {
+        const fragment = document.createDocumentFragment();
+        let cursor = 0;
+        acronymPattern.lastIndex = 0;
+        for (const match of node.nodeValue.matchAll(acronymPattern)) {
+          fragment.append(node.nodeValue.slice(cursor, match.index));
+          const term = acronymGlossary[match[0]];
+          const trigger = document.createElement("button");
+          trigger.type = "button";
+          trigger.className = "cyber-term";
+          trigger.dataset.infoTitle = term.title;
+          trigger.dataset.info = term.info;
+          trigger.setAttribute("aria-label", `${match[0]}: open definition`);
+          trigger.textContent = match[0];
+          fragment.append(trigger);
+          cursor = match.index + match[0].length;
+        }
+        fragment.append(node.nodeValue.slice(cursor));
+        node.replaceWith(fragment);
+      });
+    }
+
     document.addEventListener("click", event => {
       const infoTrigger = event.target.closest("[data-info]");
       if (infoTrigger) {
@@ -550,6 +669,13 @@
       if (event.target === infoDialog) infoDialog.close();
     });
     infoDialog.addEventListener("close", () => lastInfoTrigger?.focus());
+    decorateAcronyms();
+    const acronymObserver = new MutationObserver(records => {
+      records.forEach(record => record.addedNodes.forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE) decorateAcronyms(node);
+      }));
+    });
+    acronymObserver.observe(document.body, {childList: true, subtree: true});
 
     const clockToggle = document.querySelector("#clockToggle");
     const clockDisplay = document.querySelector("#clockDisplay");
