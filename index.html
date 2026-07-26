@@ -80,6 +80,9 @@
     .brief-card { padding: 1.25rem; transform: rotate(1.2deg); }
     .brief-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
     .brief-top strong { color: var(--red); font-size: .78rem; letter-spacing: .08em; }
+    .brief-status-button {
+      font: inherit; cursor: pointer;
+    }
     .brief-heading { margin: 1rem 0 0; font-size: 1rem; }
     .brief-intro { margin: .25rem 0 0; color: var(--muted); font-size: .9rem; }
     .metric { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1rem; padding-top: 1rem; }
@@ -294,6 +297,32 @@
       transform: translateY(-1px); border-color: #4e6754;
       box-shadow: 0 4px 0 rgba(58,48,35,.14);
     }
+    .brief-status-button {
+      border: 1px solid #d7b5a8; box-shadow: 0 2px 0 rgba(58,48,35,.12);
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .brief-mode-button {
+      display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .58rem;
+      color: #84402f; background: #fff8f2; border: 1px solid #d7b5a8;
+      border-radius: 999px; font-size: .76rem; font-weight: 850; letter-spacing: .07em;
+      cursor: pointer; box-shadow: 0 2px 0 rgba(58,48,35,.12);
+    }
+    .brief-status-button::after, .brief-mode-button::after {
+      content: "?"; display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem;
+      color: #fffdf8; background: #a3422f; border-radius: 50%;
+      font-size: .7rem; font-weight: 900; line-height: 1;
+    }
+    .brief-status-button:hover, .brief-status-button:focus-visible,
+    .brief-mode-button:hover, .brief-mode-button:focus-visible {
+      transform: translateY(-1px); border-color: #a3422f;
+      box-shadow: 0 4px 0 rgba(58,48,35,.14);
+    }
+    .label-guide {
+      margin: 0 0 .85rem; padding: .8rem .9rem; color: #4f5149;
+      background: #f4f0e7; border-left: 4px solid #4e6754; border-radius: 0 10px 10px 0;
+    }
+    .label-guide strong { display: block; margin-bottom: .18rem; color: #344238; }
+    .label-guide p { margin: 0; font-size: .9rem; }
     .chip-help { margin: 0 0 .55rem; color: #68675f; font-size: .82rem; font-weight: 700; }
     .clock-panel {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -350,7 +379,18 @@
         </div>
       </div>
       <aside class="brief-card" aria-label="Current incident summary">
-        <div class="brief-top"><span class="status"><span class="pulse"></span> Training range online</span><strong>PRACTICE MODE</strong></div>
+        <div class="brief-top">
+          <button class="status brief-status-button" type="button"
+            data-info-title="Training Range Online"
+            data-info="Training Range Online means the practice environment is available and ready to use. A training range is a safe, simulated workplace where your team can investigate fictional incidents without affecting a real organization.">
+            <span class="pulse" aria-hidden="true"></span> Training range online
+          </button>
+          <button class="brief-mode-button" type="button"
+            data-info-title="Practice Mode"
+            data-info="Practice Mode means every case is a learning simulation, not a real emergency. Your team should still work professionally, but mistakes become opportunities to review the evidence, improve the decision, and try again.">
+            PRACTICE MODE
+          </button>
+        </div>
         <h2 class="brief-heading">Your training plan at a glance</h2>
         <p class="brief-intro">These numbers describe how the academy activity is organized.</p>
         <div class="metric"><b>6</b><span>Workplace missions</span><small>Complete six cases, beginning with phishing and ending with an executive briefing.</small></div>
@@ -676,6 +716,7 @@
         <details class="artifact">
           <summary>Artifact 2 — Email headers</summary>
           <div class="artifact-body">
+            <p class="clue-note"><strong>Before reading the header:</strong> An email header is technical routing information recorded as a message travels between mail systems. <strong>SPF</strong>, <strong>DKIM</strong>, and <strong>DMARC</strong> are email-authentication checks that help determine whether a message was authorized by the domain it claims to represent. “Pass,” “fail,” or “none” reports the result of each check; your team must compare those results with the other evidence.</p>
             <div class="log-block">Return-Path: &lt;notice@mailer.apex-billing.example&gt;
 Received: from mail.apex-billing.example (203.0.113.77)
   by mx.coolhack.example with ESMTPS; Tue, 08 Sep 2026 09:12:18 -0500
@@ -694,6 +735,7 @@ X-Spam-Score: 7.4</div>
         <details class="artifact">
           <summary>Artifact 3 — Employee statement</summary>
           <div class="artifact-body">
+            <p class="clue-note"><strong>Terms used here:</strong> <strong>CDT</strong> means Central Daylight Time. <strong>MFA</strong> means multifactor authentication—an additional identity check, such as approving a phone notification, after a password is entered.</p>
             <p><strong>Interview time:</strong> 10:02 AM CDT</p>
             <p>“I was expecting an Apex invoice this week, so the sender name looked normal. I clicked the REVIEW INVOICE button at about 9:17. A Microsoft-looking page asked me to sign in. I entered my work email and password once. The page then showed ‘Service unavailable.’ I did not approve an MFA prompt and did not download a file. I called the help desk after I noticed the Reply-To address was different.”</p>
           </div>
@@ -702,6 +744,7 @@ X-Spam-Score: 7.4</div>
         <details class="artifact">
           <summary>Artifact 4 — Authentication activity</summary>
           <div class="artifact-body">
+            <p class="clue-note"><strong>How to read this table:</strong> An <strong>IP address</strong> identifies a network connection and can provide location context. It does not, by itself, identify the person using the connection. Compare the time, location, device, password result, and MFA result before reaching a conclusion.</p>
             <table class="artifact-table">
               <thead><tr><th>Time (CDT)</th><th>Source</th><th>Device / result</th></tr></thead>
               <tbody>
@@ -718,6 +761,7 @@ X-Spam-Score: 7.4</div>
         <details class="artifact">
           <summary>Artifact 5 — Web-filter and endpoint alerts</summary>
           <div class="artifact-body">
+            <p class="clue-note"><strong>How to read these alerts:</strong> A <strong>web filter</strong> records or controls website access. An <strong>endpoint alert</strong> reports activity on a device such as a laptop. An <strong>identity alert</strong> reports sign-in activity. Review all three sources together; one alert alone may not tell the complete story.</p>
             <div class="log-block">09:17:41  WEB FILTER  host=FIN-LT-044  user=mchen
 destination=apexoffice-invoice.example/login
 category=Newly Registered Domain  action=ALLOWED  risk=HIGH
@@ -857,11 +901,14 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
       });
       const mission = missions[index];
       panel.innerHTML = `
+        <div class="label-guide">
+          <strong>How these mission labels help your team</strong>
+          <p>The priority label helps you decide how quickly to review the case. The other labels identify the cybersecurity work areas and skills you will practice. Select any label marked with a <strong>?</strong> for its definition.</p>
+        </div>
         <div class="mission-meta">
           <button class="chip high info-chip" type="button" data-info-title="${mission.severity} priority" data-info="${priorityExplanation(mission.severity)}">${mission.severity} priority</button>
           ${mission.tracks.map(track => `<button class="chip info-chip" type="button" data-info-title="${track}" data-info="${trackExplanations[track]}">${track}</button>`).join("")}
         </div>
-        <p class="chip-help">Select any label with a <strong>?</strong> to learn what it means.</p>
         <h3>Mission ${index + 1}: ${mission.title}</h3>
         <p class="scenario">${mission.scenario}</p>
         <div class="grid-2">
