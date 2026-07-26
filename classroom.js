@@ -10,7 +10,8 @@
   let channel = null;
   let saveTimer = null;
   let roster = [];
-  const instructorPortal = new URLSearchParams(window.location.search).get("portal") === "instructor";
+  const portal = new URLSearchParams(window.location.search).get("portal");
+  const staffPortal = portal === "admin" || portal === "professor" || portal === "instructor";
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
@@ -22,24 +23,46 @@
     const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
     return `${token}@students.coolhack.invalid`;
   }
+  async function professorAliasEmail(userName) {
+    const bytes = new TextEncoder().encode(`professor:${normalizeAlias(userName)}`);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+    return `${token}@professors.coolhack.invalid`;
+  }
 
   function authScreen() {
-    if (instructorPortal) {
+    if (staffPortal) {
       const title = document.querySelector("#classroom-title");
       const intro = title?.nextElementSibling;
-      if (title) title.textContent = "CoolHack instructor portal";
-      if (intro) intro.textContent = "Sign in to manage teams and review live classroom work.";
-      mount.innerHTML = `
-        <div class="instructions-lead"><strong>Instructor portal</strong><br>Use the dedicated CoolHack project account created for this simulation—not an institutional email or password.</div>
+      if (portal === "admin") {
+        if (title) title.textContent = "CoolHack administrator portal";
+        if (intro) intro.textContent = "Sign in with the dedicated CoolHack project account used only by the platform administrator.";
+        mount.innerHTML = `
+        <div class="instructions-lead"><strong>Platform administrator only</strong><br>This is the only CoolHack account that uses an email address. Use the dedicated project email—not an institutional email or password.</div>
         <form class="classroom-card" id="instructorSignInForm">
-          <h3>Instructor sign-in</h3>
-          <p>Use a dedicated CoolHack project account. New professors create the account here, then the platform administrator authorizes it.</p>
-          <label for="instructorEmail">Project email</label><input id="instructorEmail" type="email" autocomplete="email" required>
+          <h3>Administrator sign-in</h3>
+          <label for="instructorEmail">Dedicated CoolHack email</label><input id="instructorEmail" type="email" autocomplete="email" required>
           <label for="instructorPassword">Password</label><input id="instructorPassword" type="password" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn primary" type="submit" name="staffAction" value="signin">Sign in</button><button class="btn" type="submit" name="staffAction" value="create">Create project account</button></div>
+          <div class="hero-actions"><button class="btn primary" type="submit" name="staffAction" value="signin">Sign in</button><button class="btn" type="submit" name="staffAction" value="create">First visit: create administrator account</button></div>
         </form>
         <p class="auth-message" id="authMessage" role="status"></p>`;
-      field("instructorSignInForm").addEventListener("submit", instructorSignIn);
+        field("instructorSignInForm").addEventListener("submit", administratorAccess);
+      } else {
+        if (title) title.textContent = "CoolHack professor portal";
+        if (intro) intro.textContent = "Create or sign in to a dedicated CoolHack professor account. No email address is required.";
+        mount.innerHTML = `
+        <div class="instructions-lead"><strong>Professor access</strong><br>Choose a CoolHack-only username and password. Do not use an institutional email, employee ID, or institutional password.</div>
+        <form class="classroom-card" id="professorAccessForm">
+          <h3>Professor sign-in</h3>
+          <p>New accounts remain pending until the platform administrator authorizes the username and assigns a section.</p>
+          <label for="professorAlias">Professor username</label><input id="professorAlias" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" required>
+          <small>Use letters, numbers, underscores, or hyphens. This is a CoolHack username—not an email address.</small>
+          <label for="professorPassword">CoolHack password</label><input id="professorPassword" type="password" minlength="12" autocomplete="current-password" required>
+          <div class="hero-actions"><button class="btn primary" type="submit" name="staffAction" value="signin">Sign in</button><button class="btn" type="submit" name="staffAction" value="create">First visit: request access</button></div>
+        </form>
+        <p class="auth-message" id="authMessage" role="status"></p>`;
+        field("professorAccessForm").addEventListener("submit", professorAccess);
+      }
       return;
     }
     mount.innerHTML = `
@@ -57,7 +80,7 @@
     field("studentAccessForm").addEventListener("submit", studentAccess);
   }
 
-  async function instructorSignIn(event) {
+  async function administratorAccess(event) {
     event.preventDefault();
     const action=event.submitter?.value||"signin";
     const email=field("instructorEmail").value.trim();
@@ -71,6 +94,29 @@
     }
     const { error } = await db.auth.signInWithPassword({email,password});
     if (error) say(error.message);
+  }
+  async function professorAccess(event) {
+    event.preventDefault();
+    const action=event.submitter?.value||"signin";
+    const displayName=field("professorAlias").value.trim();
+    const password=field("professorPassword").value;
+    say(action==="create"?"Creating professor access request…":"Signing in…");
+    try {
+      const email=await professorAliasEmail(displayName);
+      if(action==="create"){
+        const {error}=await db.auth.signUp({
+          email,
+          password,
+          options:{data:{display_name:displayName,account_kind:"professor_alias_pending"}}
+        });
+        say(error?error.message:"Request created. The platform administrator must authorize this username before any section is visible.");
+      } else {
+        const {error}=await db.auth.signInWithPassword({email,password});
+        if(error)say("That professor username or password did not match.");
+      }
+    } catch (_error) {
+      say("Professor access could not be created. Check the entries and try again.");
+    }
   }
   async function studentAccess(event) {
     event.preventDefault();
@@ -225,8 +271,8 @@
       <div class="admin-panel-grid">
         <form class="classroom-card" id="authorizeProfessor">
           <span class="card-kicker">Access control</span><h3>Authorize a professor</h3>
-          <p>The professor must first create a dedicated CoolHack account through your private instructor portal.</p>
-          <label for="professorEmail">CoolHack project email</label><input id="professorEmail" type="email" autocomplete="off" required>
+          <p>The professor must first request access with a CoolHack username. No professor email is collected.</p>
+          <label for="professorUsername">Pending professor username</label><input id="professorUsername" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="off" required>
           <div class="hero-actions"><button class="btn primary">Authorize professor</button></div><p id="professorMessage" class="form-message" role="status"></p>
         </form>
         <form class="classroom-card" id="createSection">
@@ -272,7 +318,7 @@
     });
     field("authorizeProfessor")?.addEventListener("submit",async event=>{
       event.preventDefault();
-      const result=await db.rpc("authorize_professor",{project_email:field("professorEmail").value.trim()});
+      const result=await db.rpc("authorize_professor",{professor_username:field("professorUsername").value.trim()});
       field("professorMessage").textContent=result.error?result.error.message:`${result.data} is now authorized as a professor.`;
       if(!result.error)setTimeout(staffScreen,700);
     });
@@ -361,7 +407,15 @@
   async function render() {
     if(channel){await db.removeChannel(channel);channel=null;}
     if(!currentUser){authScreen();return;}
-    try { await loadProfile(); ["instructor","platform_admin"].includes(profile.app_role) ? await staffScreen() : await studentScreen(); }
+    try {
+      await loadProfile();
+      if (currentUser.user_metadata?.account_kind === "professor_alias_pending" && profile.app_role === "student") {
+        mount.innerHTML = accountBar() + `<div class="classroom-card"><h3>Professor authorization pending</h3><p>Your CoolHack account is secure, but no classroom information is available yet. Ask the platform administrator to authorize the username <strong>${esc(profile.display_name)}</strong> and assign your section.</p></div>`;
+        bindSignOut();
+      } else {
+        ["instructor","platform_admin"].includes(profile.app_role) ? await staffScreen() : await studentScreen();
+      }
+    }
     catch(error){mount.innerHTML=`<div class="classroom-card"><h3>Classroom setup is not finished</h3><p>${esc(error.message)}</p><p>The instructor must run the supplied Supabase database setup script once before accounts can use the workspace.</p></div>`;}
   }
   db.auth.getSession().then(({data})=>{currentUser=data.session?.user||null;render();});
