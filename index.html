@@ -264,10 +264,49 @@
       padding: 1rem 1.15rem; margin-bottom: 1rem; border-left: 5px solid #a3422f;
       background: #fffdf8; border-radius: 0 12px 12px 0;
     }
+    .explainable {
+      width: 100%; color: inherit; text-align: left; font: inherit; cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .explainable:hover, .explainable:focus-visible {
+      transform: translateY(-2px); border-color: #a3422f;
+      box-shadow: 0 10px 24px rgba(58,48,35,.10);
+    }
+    .path-step.explainable, .step.explainable, .role.explainable { display: block; }
+    .path-step.explainable, .step.explainable { border-left: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .role.explainable { border: 1px solid var(--line); }
+    .tap-hint { display: block; margin-top: .55rem; color: #84402f; font-size: .78rem; font-weight: 800; }
+    .info-chip {
+      border: 1px solid #becdbd; cursor: pointer; font: inherit;
+    }
+    .info-chip:hover, .info-chip:focus-visible { border-color: #4e6754; filter: brightness(.98); }
+    .clock-panel {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      margin: 0 0 1rem; padding: .8rem 1rem; color: #f8f2e8; background: #292c27;
+      border: 1px solid #42463f; border-radius: 14px;
+    }
+    .clock-copy { display: flex; align-items: center; gap: .75rem; }
+    .clock-display { min-width: 5.6rem; color: #e6b35e; font: 800 1.3rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
+    .clock-panel p { margin: .2rem 0 0; color: #d6d0c5; font-size: .86rem; }
+    .clock-controls { display: flex; flex-wrap: wrap; gap: .55rem; }
+    .clock-panel .btn { color: #f8f2e8; background: #383c35; border-color: #62675c; }
+    .clock-panel .btn[aria-pressed="true"] { color: #292c27; background: #e6b35e; border-color: #e6b35e; }
+    dialog {
+      width: min(560px, calc(100% - 2rem)); color: var(--ink); background: #fffdf8;
+      border: 1px solid #c9c1b2; border-radius: 18px; padding: 0; box-shadow: 0 24px 80px rgba(32,28,22,.32);
+    }
+    dialog::backdrop { background: rgba(41,42,37,.58); backdrop-filter: blur(3px); }
+    .dialog-head { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; border-bottom: 1px solid #ded7ca; }
+    .dialog-head h2 { margin: 0; font-size: 1.25rem; }
+    .dialog-close { width: 2.2rem; height: 2.2rem; border: 0; border-radius: 50%; color: #fffdf8; background: #4e6754; font-weight: 900; }
+    .dialog-body { padding: 1rem 1.15rem 1.2rem; }
+    .dialog-body p { margin: 0; }
+    .dialog-body p + p { margin-top: .75rem; }
     @media (max-width: 600px) {
       .nav-links { display: none; }
       .app-tabs { grid-template-columns: 1fr; }
       .app-tab { text-align: left; }
+      .clock-panel { align-items: flex-start; flex-direction: column; }
     }
   </style>
 </head>
@@ -305,6 +344,17 @@
   </div>
 
   <main id="main" class="shell">
+    <aside class="clock-panel" aria-label="Optional mission clock">
+      <div class="clock-copy">
+        <span class="clock-display" id="clockDisplay" aria-live="off">00:00</span>
+        <div><strong>Mission Clock</strong><p>Optional suspense pulse for classroom role-play. It does not affect your grade.</p></div>
+      </div>
+      <div class="clock-controls">
+        <button class="btn" type="button" id="clockToggle" aria-pressed="false">Start clock + sound</button>
+        <button class="btn" type="button" data-info-title="What is the Mission Clock?" data-info="The Mission Clock adds an original suspenseful pulse while your team investigates. It is only for atmosphere: there is no automatic deadline, penalty, or connection to the television series 24. Press the start button again to stop and reset it.">What is this?</button>
+      </div>
+    </aside>
+
     <div class="app-tabs" role="tablist" aria-label="Academy sections">
       <button class="app-tab" id="view-tab-instructions" type="button" role="tab" aria-selected="true" aria-controls="instructions-view" data-open-view="instructions">1. How It Works<small>Read this before beginning</small></button>
       <button class="app-tab" id="view-tab-missions" type="button" role="tab" aria-selected="false" aria-controls="missions" data-open-view="missions">2. Missions<small>Briefing, evidence, and AI role-play</small></button>
@@ -327,35 +377,35 @@
       <section aria-labelledby="student-path-title">
         <div class="section-head"><div><h2 id="student-path-title">What your team will do</h2><p>Follow these steps in order for every mission.</p></div></div>
         <div class="path-steps">
-          <div class="path-step"><b>Step 1</b><span>Read the mission briefing</span></div>
-          <div class="path-step"><b>Step 2</b><span>Choose one role per member</span></div>
-          <div class="path-step"><b>Step 3</b><span>Examine every artifact</span></div>
-          <div class="path-step"><b>Step 4</b><span>Agree on an initial decision</span></div>
-          <div class="path-step"><b>Step 5</b><span>Complete one AI role-play</span></div>
-          <div class="path-step"><b>Step 6</b><span>Improve the team report</span></div>
-          <div class="path-step"><b>Step 7</b><span>Write individual reflections</span></div>
-          <div class="path-step"><b>Step 8</b><span>Download the portfolio file</span></div>
+          <button class="path-step explainable" type="button" data-info-title="Step 1 — Read the mission briefing" data-info="Read the case background, the reported problem, and your decision point. Make sure every team member can explain what the team has been asked to investigate before opening the evidence."><b>Step 1</b><span>Read the mission briefing</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 2 — Choose one role per member" data-info="Assign the four different roles: SOC Analyst, Incident Responder, Security Lead, and Communications Lead. Each person contributes from that role, but the whole team still examines all evidence."><b>Step 2</b><span>Choose one role per member</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 3 — Examine every artifact" data-info="Open every evidence item and record what you observe. Cite the artifact number, separate confirmed facts from assumptions, and do not skip evidence that appears unimportant."><b>Step 3</b><span>Examine every artifact</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 4 — Agree on an initial decision" data-info="Discuss the evidence and write the team's first decision before using AI. Explain what action you recommend and identify the evidence that supports it."><b>Step 4</b><span>Agree on an initial decision</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 5 — Complete one AI role-play" data-info="One member shares a permitted AI tool on screen and types the team's agreed responses. The AI acts as a SOC supervisor who questions your reasoning; it should not complete the investigation for you."><b>Step 5</b><span>Complete one AI role-play</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 6 — Improve the team report" data-info="Use the supervisor's questions and feedback to correct weak reasoning, add missing evidence, and make the team's final report clearer. Do not replace your work with an AI-generated answer."><b>Step 6</b><span>Improve the team report</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 7 — Write individual reflections" data-info="Each person writes at least 100 words explaining their own contribution, what they initially missed, how the AI challenged the team, and what they would do differently next time."><b>Step 7</b><span>Write individual reflections</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 8 — Download the portfolio file" data-info="The team recorder downloads the completed report before leaving the page. Each member keeps a sanitized copy, with no passwords, private information, or real employer data."><b>Step 8</b><span>Download the portfolio file</span><small class="tap-hint">Tap for instructions</small></button>
         </div>
       </section>
     <section id="team" aria-labelledby="team-title">
       <div class="section-head"><div><h2 id="team-title">Choose your seat</h2><p>Form a team of four. Each member takes one role so every professional responsibility is represented.</p></div></div>
       <div class="notice"><strong>How your team works:</strong> All four members examine the same evidence and discuss each decision. One member shares the AI chat on screen and types the team's agreed responses while everyone watches. Rotate the person typing in later missions. Your team submits one shared incident report and AI transcript. Each member submits a separate personal reflection in the course assignment.</div>
       <div class="roles">
-        <article class="role"><span class="role-icon" aria-hidden="true">⌁</span><h3>SOC Analyst</h3><p>Review alerts, correlate evidence, build the incident timeline, and recommend severity.</p></article>
-        <article class="role"><span class="role-icon" aria-hidden="true">⌕</span><h3>Incident Responder</h3><p>Plan containment, preserve evidence, remove the threat, and validate recovery.</p></article>
-        <article class="role"><span class="role-icon" aria-hidden="true">◎</span><h3>Security Lead</h3><p>Balance business risk with security, approve actions, and manage escalation.</p></article>
-        <article class="role"><span class="role-icon" aria-hidden="true">✎</span><h3>Communications Lead</h3><p>Turn technical findings into clear updates for users, managers, and executives.</p></article>
+        <button class="role explainable" type="button" data-info-title="SOC Analyst" data-info="Your job is to connect the clues. Review alerts and logs, identify patterns, build the timeline, state what the evidence proves, and recommend an incident severity."><span class="role-icon" aria-hidden="true">⌁</span><h3>SOC Analyst</h3><p>Review alerts, correlate evidence, build the incident timeline, and recommend severity.</p><small class="tap-hint">Tap for the full role</small></button>
+        <button class="role explainable" type="button" data-info-title="Incident Responder" data-info="Your job is to control the incident safely. Recommend how to contain the threat, preserve evidence, remove the cause, restore normal operations, and confirm that recovery worked."><span class="role-icon" aria-hidden="true">⌕</span><h3>Incident Responder</h3><p>Plan containment, preserve evidence, remove the threat, and validate recovery.</p><small class="tap-hint">Tap for the full role</small></button>
+        <button class="role explainable" type="button" data-info-title="Security Lead" data-info="Your job is to make and defend the final security decision. Consider technical risk and business impact, approve proportionate actions, and decide when the incident must be escalated."><span class="role-icon" aria-hidden="true">◎</span><h3>Security Lead</h3><p>Balance business risk with security, approve actions, and manage escalation.</p><small class="tap-hint">Tap for the full role</small></button>
+        <button class="role explainable" type="button" data-info-title="Communications Lead" data-info="Your job is to explain the incident clearly to different audiences. Turn technical findings into accurate updates for the affected user, the help desk, managers, and executives without exaggerating what is known."><span class="role-icon" aria-hidden="true">✎</span><h3>Communications Lead</h3><p>Turn technical findings into clear updates for users, managers, and executives.</p><small class="tap-hint">Tap for the full role</small></button>
       </div>
     </section>
 
     <section id="workflow" aria-labelledby="workflow-title">
       <div class="section-head"><div><h2 id="workflow-title">The workplace investigation cycle</h2><p>These five professional phases guide the technical investigation. Each mission also gives you a numbered student pathway.</p></div></div>
       <div class="workflow">
-        <div class="step"><b>Phase 1</b><span>Triage</span><small>What happened?</small></div>
-        <div class="step"><b>Phase 2</b><span>Investigate</span><small>What does the evidence prove?</small></div>
-        <div class="step"><b>Phase 3</b><span>Decide</span><small>What action is justified?</small></div>
-        <div class="step"><b>Phase 4</b><span>Respond</span><small>Contain, eradicate, recover.</small></div>
-        <div class="step"><b>Phase 5</b><span>Report</span><small>Explain impact and lessons.</small></div>
+        <button class="step explainable" type="button" data-info-title="Phase 1 — Triage" data-info="Triage is the first review of an alert or report. Confirm what was reported, identify who or what may be affected, judge the possible urgency, and decide what evidence to examine first."><b>Phase 1</b><span>Triage</span><small>What happened?</small><small class="tap-hint">Tap for definition</small></button>
+        <button class="step explainable" type="button" data-info-title="Phase 2 — Investigate" data-info="Investigation means examining the available artifacts to determine what actually happened. Build a timeline, connect related events, and distinguish verified evidence from guesses."><b>Phase 2</b><span>Investigate</span><small>What does the evidence prove?</small><small class="tap-hint">Tap for definition</small></button>
+        <button class="step explainable" type="button" data-info-title="Phase 3 — Decide" data-info="Decide means selecting the safest proportionate action based on the evidence. Your team must explain why acting, waiting, escalating, or collecting more evidence is justified."><b>Phase 3</b><span>Decide</span><small>What action is justified?</small><small class="tap-hint">Tap for definition</small></button>
+        <button class="step explainable" type="button" data-info-title="Phase 4 — Respond" data-info="Response includes containment, eradication, and recovery: limit the damage, remove the threat, restore normal operations, and verify that the problem has not returned."><b>Phase 4</b><span>Respond</span><small>Contain, eradicate, recover.</small><small class="tap-hint">Tap for definition</small></button>
+        <button class="step explainable" type="button" data-info-title="Phase 5 — Report" data-info="Reporting creates a clear record of what happened, the evidence reviewed, actions taken, business impact, remaining uncertainty, and lessons for preventing a similar incident."><b>Phase 5</b><span>Report</span><small>Explain impact and lessons.</small><small class="tap-hint">Tap for definition</small></button>
       </div>
     </section>
     </div>
@@ -392,12 +442,106 @@
     </section>
   </main>
 
+  <dialog id="infoDialog" aria-labelledby="infoDialogTitle">
+    <div class="dialog-head">
+      <h2 id="infoDialogTitle">Explanation</h2>
+      <button class="dialog-close" type="button" id="closeInfoDialog" aria-label="Close explanation">×</button>
+    </div>
+    <div class="dialog-body" id="infoDialogBody"></div>
+  </dialog>
+
   <footer>
     <div class="shell footer-row"><span>CoolHack Solutions is a fictional training organization.</span><span>Think like an analyst. Write like a professional.</span></div>
   </footer>
 
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
+    const infoDialog = document.querySelector("#infoDialog");
+    const infoDialogTitle = document.querySelector("#infoDialogTitle");
+    const infoDialogBody = document.querySelector("#infoDialogBody");
+    const closeInfoDialog = document.querySelector("#closeInfoDialog");
+    let lastInfoTrigger = null;
+
+    function openInfo(trigger) {
+      lastInfoTrigger = trigger;
+      infoDialogTitle.textContent = trigger.dataset.infoTitle || "Explanation";
+      infoDialogBody.replaceChildren();
+      const paragraph = document.createElement("p");
+      paragraph.textContent = trigger.dataset.info || "More information will be added here.";
+      infoDialogBody.appendChild(paragraph);
+      infoDialog.showModal();
+    }
+
+    document.addEventListener("click", event => {
+      const infoTrigger = event.target.closest("[data-info]");
+      if (infoTrigger) {
+        event.preventDefault();
+        openInfo(infoTrigger);
+      }
+    });
+    closeInfoDialog.addEventListener("click", () => infoDialog.close());
+    infoDialog.addEventListener("click", event => {
+      if (event.target === infoDialog) infoDialog.close();
+    });
+    infoDialog.addEventListener("close", () => lastInfoTrigger?.focus());
+
+    const clockToggle = document.querySelector("#clockToggle");
+    const clockDisplay = document.querySelector("#clockDisplay");
+    let clockAudio = null;
+    let clockInterval = null;
+    let clockSeconds = 0;
+
+    function soundPulse() {
+      if (!clockAudio) return;
+      const now = clockAudio.currentTime;
+      [[0, 560], [.16, 760]].forEach(([delay, frequency]) => {
+        const oscillator = clockAudio.createOscillator();
+        const gain = clockAudio.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(.0001, now + delay);
+        gain.gain.exponentialRampToValueAtTime(.085, now + delay + .008);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + delay + .065);
+        oscillator.connect(gain).connect(clockAudio.destination);
+        oscillator.start(now + delay);
+        oscillator.stop(now + delay + .075);
+      });
+    }
+
+    function renderClock() {
+      const minutes = String(Math.floor(clockSeconds / 60)).padStart(2, "0");
+      const seconds = String(clockSeconds % 60).padStart(2, "0");
+      clockDisplay.textContent = `${minutes}:${seconds}`;
+    }
+
+    clockToggle.addEventListener("click", async () => {
+      const running = clockToggle.getAttribute("aria-pressed") === "true";
+      if (running) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+        clockSeconds = 0;
+        renderClock();
+        clockToggle.setAttribute("aria-pressed", "false");
+        clockToggle.textContent = "Start clock + sound";
+        if (clockAudio?.state === "running") await clockAudio.suspend();
+        return;
+      }
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        clockToggle.textContent = "Sound is not supported in this browser";
+        return;
+      }
+      clockAudio ||= new AudioContextClass();
+      await clockAudio.resume();
+      clockToggle.setAttribute("aria-pressed", "true");
+      clockToggle.textContent = "Stop and reset clock";
+      soundPulse();
+      clockInterval = setInterval(() => {
+        clockSeconds += 1;
+        renderClock();
+        if (clockSeconds % 2 === 0) soundPulse();
+      }, 1000);
+    });
 
     function openAcademyView(viewName, moveFocus = false) {
       if (!academyViews.includes(viewName)) return;
@@ -594,14 +738,14 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
         <h4 id="path-title">Mission 1 — What to do, in order</h4>
         <p class="evidence-intro">Do not jump straight to the AI. Your first analysis must be your own.</p>
         <div class="path-steps">
-          <div class="path-step"><b>Step 1</b><span>Learn the case</span></div>
-          <div class="path-step"><b>Step 2</b><span>Examine all evidence</span></div>
-          <div class="path-step"><b>Step 3</b><span>Discuss with your team</span></div>
-          <div class="path-step"><b>Step 4</b><span>Write your initial decision</span></div>
-          <div class="path-step"><b>Step 5</b><span>Meet the AI supervisor</span></div>
-          <div class="path-step"><b>Step 6</b><span>Improve your report</span></div>
-          <div class="path-step"><b>Step 7</b><span>Write your reflection</span></div>
-          <div class="path-step"><b>Step 8</b><span>Download your portfolio file</span></div>
+          <button class="path-step explainable" type="button" data-info-title="Step 1 — Learn the case" data-info="Read the Mission 1 scenario and decision point. Make sure the team understands what was reported and what decision it must eventually make."><b>Step 1</b><span>Learn the case</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 2 — Examine all evidence" data-info="Open every artifact in the evidence room. Record exact observations and artifact numbers before deciding what they mean."><b>Step 2</b><span>Examine all evidence</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 3 — Discuss with your team" data-info="Each role shares what it noticed and recommends. Resolve disagreements by returning to the evidence, not by voting or guessing."><b>Step 3</b><span>Discuss with your team</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 4 — Write your initial decision" data-info="Before opening an AI tool, enter the team's first decision and justification in the workspace. This preserves your own reasoning for comparison later."><b>Step 4</b><span>Write your initial decision</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 5 — Meet the AI supervisor" data-info="Copy the prepared prompt into one permitted AI tool. Share the screen, discuss every question as a team, and have the operator type only the team's agreed response."><b>Step 5</b><span>Meet the AI supervisor</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 6 — Improve your report" data-info="Review the supervisor's challenges and feedback. Correct weak claims, add missing evidence, and clearly label anything the team still cannot confirm."><b>Step 6</b><span>Improve your report</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 7 — Write your reflection" data-info="Each member writes a separate reflection of at least 100 words. Explain your contribution, what changed in your thinking, and what you would improve next time."><b>Step 7</b><span>Write your reflection</span><small class="tap-hint">Tap for instructions</small></button>
+          <button class="path-step explainable" type="button" data-info-title="Step 8 — Download your portfolio file" data-info="The team recorder downloads the final report. Every member keeps a sanitized copy after checking that it contains no private information, passwords, or real employer data."><b>Step 8</b><span>Download your portfolio file</span><small class="tap-hint">Tap for instructions</small></button>
         </div>
         <div class="hero-actions">
           <button class="btn primary" type="button" id="openRoleplay" aria-expanded="false" aria-controls="roleplayRoom">Start AI SOC role-play <span aria-hidden="true">→</span></button>
