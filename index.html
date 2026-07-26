@@ -130,6 +130,19 @@
     .artifact-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
     .artifact-table th, .artifact-table td { padding: .6rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
     .artifact-table th { color: var(--cyan); }
+    .learning-path { margin-top: 1rem; padding: 1rem; border: 1px solid rgba(103,169,255,.28); border-radius: 14px; background: rgba(7,22,40,.72); }
+    .learning-path h4, .roleplay-room h4 { margin: 0 0 .35rem; color: var(--cyan); font-size: 1.1rem; }
+    .path-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: .55rem; margin-top: .8rem; }
+    .path-step { padding: .7rem; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.025); }
+    .path-step b { display: block; color: var(--blue); font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+    .path-step span { display: block; margin-top: .2rem; font-weight: 750; }
+    .roleplay-room { margin-top: 1rem; padding: 1rem; border: 1px solid rgba(255,200,104,.3); border-radius: 14px; background: rgba(35,25,8,.28); }
+    .roleplay-room[hidden] { display: none; }
+    .student-steps { padding-left: 1.25rem; }
+    .student-steps li + li { margin-top: .55rem; }
+    .prompt-box { min-height: 360px; color: #dcecff; background: #06101c; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .86rem; }
+    .notice { padding: .8rem; color: #d7e8fa; background: rgba(103,169,255,.08); border-left: 3px solid var(--blue); border-radius: 0 9px 9px 0; }
+    .submission-list { margin: .6rem 0 0; padding-left: 1.2rem; }
     .roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
     .role { padding: 1.1rem; box-shadow: none; }
     .role-icon { font-size: 1.4rem; }
@@ -174,6 +187,7 @@
       .mission-list { display: flex; overflow-x: auto; padding-bottom: .25rem; scroll-snap-type: x mandatory; }
       .mission-tab { min-width: 240px; scroll-snap-align: start; }
       .grid-2, .roles, .workflow, .checklist { grid-template-columns: 1fr; }
+      .path-steps { grid-template-columns: 1fr 1fr; }
       .footer-row { flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -208,7 +222,7 @@
       <aside class="brief-card" aria-label="Current incident summary">
         <div class="brief-top"><span class="status"><span class="pulse"></span> Training range online</span><strong>SEV-2</strong></div>
         <div class="metric"><b>06</b><span>Cases in the mission queue</span><small>Phishing → final executive briefing</small></div>
-        <div class="metric"><b>05</b><span>Investigation phases</span><small>Triaging through reporting</small></div>
+        <div class="metric"><b>08</b><span>Student learning stages</span><small>Learn through portfolio building</small></div>
         <div class="metric"><b>01</b><span>Professional portfolio</span><small>Evidence, tickets, and final reports</small></div>
       </aside>
     </section>
@@ -237,7 +251,7 @@
     </section>
 
     <section id="workflow" aria-labelledby="workflow-title">
-      <div class="section-head"><div><h2 id="workflow-title">The investigation workflow</h2><p>Follow the same disciplined path on every case.</p></div></div>
+      <div class="section-head"><div><h2 id="workflow-title">The workplace investigation cycle</h2><p>These five professional phases guide the technical investigation. Each mission also gives you a numbered student pathway.</p></div></div>
       <div class="workflow">
         <div class="step"><b>Phase 1</b><span>Triage</span><small>What happened?</small></div>
         <div class="step"><b>Phase 2</b><span>Investigate</span><small>What does the evidence prove?</small></div>
@@ -248,25 +262,30 @@
     </section>
 
     <section id="workspace" aria-labelledby="workspace-title">
-      <div class="section-head"><div><h2 id="workspace-title">Case notes workspace</h2><p>Draft your reasoning here, then download it for your submission and portfolio.</p></div></div>
+      <div class="section-head"><div><h2 id="workspace-title">Mission report workspace</h2><p>Complete this after examining the evidence and finishing the AI supervisor role-play. Your work saves automatically in this browser.</p></div></div>
       <form class="panel workspace" id="caseForm">
         <div class="grid-2">
           <div class="field"><label for="studentName">Student or team name</label><input id="studentName" autocomplete="name" placeholder="Enter a name"></div>
           <div class="field"><label for="selectedRole">Assigned role</label><input id="selectedRole" placeholder="Example: SOC Analyst"></div>
         </div>
-        <div class="field"><label for="finding">Key finding</label><textarea id="finding" placeholder="What does the evidence show? Separate facts from assumptions."></textarea></div>
-        <div class="field"><label for="decision">Decision and justification</label><textarea id="decision" placeholder="What should the team do next, and why is that action proportionate?"></textarea></div>
+        <div class="field"><label for="finding">1. Evidence-based findings</label><textarea id="finding" placeholder="List the suspicious indicators you found. Name the artifact that supports each finding. Separate confirmed facts from assumptions."></textarea></div>
+        <div class="field"><label for="timeline">2. Incident timeline</label><textarea id="timeline" placeholder="Put the important events in time order. Example: 9:12 AM — employee received the email."></textarea></div>
+        <div class="field"><label for="decision">3. Decision and justification</label><textarea id="decision" placeholder="State what the team should do next and explain which evidence supports each action."></textarea></div>
+        <div class="field"><label for="unknowns">4. Remaining questions</label><textarea id="unknowns" placeholder="What is still unknown? What additional evidence would you collect?"></textarea></div>
+        <div class="field"><label for="aiTranscript">5. AI role-play transcript</label><textarea id="aiTranscript" placeholder="Paste the complete conversation with the AI SOC supervisor here. Do not include private information, passwords, or real company data."></textarea></div>
+        <div class="field"><label for="aiFeedback">6. AI supervisor feedback and readiness score</label><textarea id="aiFeedback" placeholder="Paste the AI supervisor's final feedback and score here."></textarea></div>
+        <div class="field"><label for="reflection">7. Personal reflection (at least 100 words)</label><textarea id="reflection" placeholder="Explain what you learned, what you initially missed, how the AI supervisor challenged your reasoning, and what you would do differently in a real SOC."></textarea></div>
         <fieldset style="border:0;padding:0;margin:0">
-          <legend style="font-weight:750">Evidence package</legend>
+          <legend style="font-weight:750">Submission check</legend>
           <div class="checklist">
-            <label class="check"><input type="checkbox" value="Timeline completed"><span>Incident timeline completed</span></label>
-            <label class="check"><input type="checkbox" value="Screenshots or logs captured"><span>Screenshots or logs captured</span></label>
-            <label class="check"><input type="checkbox" value="Ticket or case notes updated"><span>Ticket or case notes updated</span></label>
-            <label class="check"><input type="checkbox" value="Stakeholder update drafted"><span>Stakeholder update drafted</span></label>
+            <label class="check"><input type="checkbox" value="All evidence artifacts examined"><span>I examined every evidence artifact</span></label>
+            <label class="check"><input type="checkbox" value="Initial decision made before AI role-play"><span>I made my initial decision before using AI</span></label>
+            <label class="check"><input type="checkbox" value="Complete AI transcript included"><span>I included the complete AI transcript</span></label>
+            <label class="check"><input type="checkbox" value="Reflection is at least 100 words"><span>My reflection is at least 100 words</span></label>
           </div>
         </fieldset>
         <div class="workspace-actions">
-          <button class="btn primary" type="button" id="downloadBtn">Download case notes</button>
+          <button class="btn primary" type="button" id="downloadBtn">Download mission report</button>
           <button class="btn" type="button" id="clearBtn">Clear saved draft</button>
         </div>
         <p class="save-note" id="saveNote">Your draft is saved only in this browser. Do not enter passwords or private personal information.</p>
@@ -426,6 +445,81 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
         </details>
       </section>`;
 
+    const missionOneRoleplay = `
+      <section class="learning-path" aria-labelledby="path-title">
+        <h4 id="path-title">Mission 1 — What to do, in order</h4>
+        <p class="evidence-intro">Do not jump straight to the AI. Your first analysis must be your own.</p>
+        <div class="path-steps">
+          <div class="path-step"><b>Step 1</b><span>Learn the case</span></div>
+          <div class="path-step"><b>Step 2</b><span>Examine all evidence</span></div>
+          <div class="path-step"><b>Step 3</b><span>Discuss with your team</span></div>
+          <div class="path-step"><b>Step 4</b><span>Write your initial decision</span></div>
+          <div class="path-step"><b>Step 5</b><span>Meet the AI supervisor</span></div>
+          <div class="path-step"><b>Step 6</b><span>Improve your report</span></div>
+          <div class="path-step"><b>Step 7</b><span>Write your reflection</span></div>
+          <div class="path-step"><b>Step 8</b><span>Download your portfolio file</span></div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn primary" type="button" id="openRoleplay" aria-expanded="false" aria-controls="roleplayRoom">Start AI SOC role-play <span aria-hidden="true">→</span></button>
+        </div>
+      </section>
+
+      <section class="roleplay-room" id="roleplayRoom" aria-labelledby="roleplay-title" hidden>
+        <h4 id="roleplay-title">AI SOC Supervisor Role-play</h4>
+        <p>This is a simulated workplace conversation. The AI supervisor will ask questions one at a time, challenge unsupported claims, and make you explain your decisions. It should not complete the investigation for you.</p>
+        <div class="notice"><strong>Before you begin:</strong> Complete your initial findings and decision in the Mission Report Workspace. Use only this fictional case. Never enter a real name, password, email, employer detail, or other private information into an AI tool.</div>
+
+        <h5>Student instructions</h5>
+        <ol class="student-steps">
+          <li>Click <strong>Copy role-play prompt</strong> below.</li>
+          <li>Open the AI tool approved by your instructor and start a new chat.</li>
+          <li>Paste the prompt into the chat and send it.</li>
+          <li>When asked, type your assigned role and your own initial findings. Refer to artifacts by number.</li>
+          <li>Answer the supervisor's questions in complete professional sentences. Do not ask the AI to “give me the answer.”</li>
+          <li>Continue until the supervisor gives final feedback and a readiness score.</li>
+          <li>Copy the complete conversation into the <strong>AI role-play transcript</strong> box in the report workspace.</li>
+        </ol>
+
+        <label for="roleplayPrompt">Prompt to paste into the approved AI tool</label>
+        <textarea class="prompt-box" id="roleplayPrompt" readonly>You are the SOC supervisor at CoolHack Solutions, a fictional training organization. Conduct a beginner-friendly workplace role-play with an AAS cybersecurity student investigating Mission 1, “The Urgent Invoice.”
+
+RULES FOR THE ROLE-PLAY
+1. Do not give the student the solution or list the phishing indicators for them.
+2. Ask only one question at a time and wait for the student's response.
+3. Begin by asking for the student's assigned role and initial evidence-based conclusion.
+4. Require the student to identify the exact artifact supporting each important claim.
+5. Challenge guesses, vague statements, unsafe actions, and conclusions that are not supported by evidence.
+6. Ask the student to separate confirmed facts from assumptions.
+7. Cover these workplace areas during the conversation: incident timeline, email indicators, account risk, endpoint risk, containment, evidence to collect next, escalation, and a plain-language update to the affected employee.
+8. If the student is stuck, give a small hint or ask them which artifact they should recheck. Do not reveal the answer.
+9. Keep your language clear for a beginning workforce student. Briefly explain any technical term you introduce.
+10. Do not request or accept real passwords, personal data, or employer information.
+
+ENDING THE ROLE-PLAY
+After the student has answered the major questions, ask them for one final incident decision and justification. Then provide:
+- two things the student did well;
+- two specific improvements;
+- a readiness score for Evidence Use, Reasoning, Response Decision, and Professional Communication, with each category scored from 1 to 5;
+- a total score out of 20;
+- one realistic next skill for the student to practice.
+
+Start now. Introduce yourself as the student's SOC supervisor and ask only the first question.</textarea>
+        <div class="workspace-actions">
+          <button class="btn primary" type="button" id="copyPrompt">Copy role-play prompt</button>
+          <a class="btn" href="#workspace">Go to Mission Report Workspace <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="save-note" id="copyStatus" role="status" aria-live="polite">The prompt will be copied to your clipboard.</p>
+
+        <h5>What you will submit</h5>
+        <ul class="submission-list">
+          <li>Evidence-based findings and incident timeline</li>
+          <li>Final decision with justification</li>
+          <li>Complete AI role-play transcript and supervisor feedback</li>
+          <li>Personal reflection of at least 100 words</li>
+          <li>Downloaded mission report for submission or a sanitized portfolio</li>
+        </ul>
+      </section>`;
+
     const list = document.querySelector("#missionList");
     const panel = document.querySelector("#missionPanel");
     let activeMission = Number(localStorage.getItem("coolhack-active-mission") || 0);
@@ -451,7 +545,7 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
           <div class="callout"><h4>Portfolio deliverables</h4><ul>${mission.deliverables.map(item => `<li>${item}</li>`).join("")}</ul></div>
         </div>
         <div class="decision"><strong>Your decision point</strong><br>${mission.decision}</div>
-        ${index === 0 ? `<div class="hero-actions"><button class="btn primary" type="button" id="openEvidence" aria-expanded="false" aria-controls="evidenceRoom">Open Mission 1 evidence <span aria-hidden="true">→</span></button></div>${missionOneEvidence}` : ""}
+        ${index === 0 ? `<div class="hero-actions"><button class="btn primary" type="button" id="openEvidence" aria-expanded="false" aria-controls="evidenceRoom">Open Mission 1 evidence <span aria-hidden="true">→</span></button></div>${missionOneEvidence}${missionOneRoleplay}` : ""}
         <div class="hero-actions">
           <a class="btn ${index === 0 ? "" : "primary"}" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
           ${index < missions.length - 1 ? `<button class="btn" type="button" id="nextMission">Next mission</button>` : ""}
@@ -465,6 +559,32 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
           evidenceButton.setAttribute("aria-expanded", String(opening));
           evidenceButton.firstChild.textContent = opening ? "Close Mission 1 evidence " : "Open Mission 1 evidence ";
           if (opening) room.scrollIntoView({behavior: "smooth", block: "start"});
+        });
+      }
+      const roleplayButton = document.querySelector("#openRoleplay");
+      if (roleplayButton) {
+        roleplayButton.addEventListener("click", () => {
+          const room = document.querySelector("#roleplayRoom");
+          const opening = room.hidden;
+          room.hidden = !opening;
+          roleplayButton.setAttribute("aria-expanded", String(opening));
+          roleplayButton.firstChild.textContent = opening ? "Close AI SOC role-play " : "Start AI SOC role-play ";
+          if (opening) room.scrollIntoView({behavior: "smooth", block: "start"});
+        });
+      }
+      const copyPrompt = document.querySelector("#copyPrompt");
+      if (copyPrompt) {
+        copyPrompt.addEventListener("click", async () => {
+          const prompt = document.querySelector("#roleplayPrompt");
+          const status = document.querySelector("#copyStatus");
+          try {
+            await navigator.clipboard.writeText(prompt.value);
+            status.textContent = "Prompt copied. Open your instructor-approved AI tool and paste it into a new chat.";
+          } catch (_) {
+            prompt.focus();
+            prompt.select();
+            status.textContent = "Clipboard access was blocked. The prompt is selected; press Ctrl+C (or Command+C on a Mac) to copy it.";
+          }
         });
       }
       const next = document.querySelector("#nextMission");
@@ -507,7 +627,12 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
         studentName: document.querySelector("#studentName").value,
         selectedRole: document.querySelector("#selectedRole").value,
         finding: document.querySelector("#finding").value,
+        timeline: document.querySelector("#timeline").value,
         decision: document.querySelector("#decision").value,
+        unknowns: document.querySelector("#unknowns").value,
+        aiTranscript: document.querySelector("#aiTranscript").value,
+        aiFeedback: document.querySelector("#aiFeedback").value,
+        reflection: document.querySelector("#reflection").value,
         checks: [...document.querySelectorAll('.check input:checked')].map(item => item.value)
       };
       localStorage.setItem(storageKey, JSON.stringify(draft));
@@ -516,7 +641,7 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
     formFields.forEach(field => field.addEventListener("input", saveDraft));
     try {
       const draft = JSON.parse(localStorage.getItem(storageKey) || "{}");
-      ["studentName", "selectedRole", "finding", "decision"].forEach(id => {
+      ["studentName", "selectedRole", "finding", "timeline", "decision", "unknowns", "aiTranscript", "aiFeedback", "reflection"].forEach(id => {
         if (draft[id]) document.querySelector(`#${id}`).value = draft[id];
       });
       (draft.checks || []).forEach(value => {
@@ -536,10 +661,25 @@ Assigned Role: ${document.querySelector("#selectedRole").value || "Not entered"}
 KEY FINDING
 ${document.querySelector("#finding").value || "Not entered"}
 
+INCIDENT TIMELINE
+${document.querySelector("#timeline").value || "Not entered"}
+
 DECISION AND JUSTIFICATION
 ${document.querySelector("#decision").value || "Not entered"}
 
-EVIDENCE PACKAGE
+REMAINING QUESTIONS AND EVIDENCE TO COLLECT
+${document.querySelector("#unknowns").value || "Not entered"}
+
+AI SOC SUPERVISOR ROLE-PLAY TRANSCRIPT
+${document.querySelector("#aiTranscript").value || "Not entered"}
+
+AI SUPERVISOR FEEDBACK AND READINESS SCORE
+${document.querySelector("#aiFeedback").value || "Not entered"}
+
+PERSONAL REFLECTION
+${document.querySelector("#reflection").value || "Not entered"}
+
+SUBMISSION CHECK
 ${checked}
 
 Reminder: Verify every claim against the evidence and clearly label any remaining assumptions.
@@ -548,7 +688,7 @@ Reminder: Verify every claim against the evidence and clearly label any remainin
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `coolhack-mission-${activeMission + 1}-case-notes.txt`;
+      link.download = `coolhack-mission-${activeMission + 1}-report.txt`;
       link.click();
       URL.revokeObjectURL(url);
     });
