@@ -30,23 +30,35 @@
     return `${token}@professors.coolhack.invalid`;
   }
 
+  function renderAdministratorAccess(mode = "create") {
+    const creating = mode === "create";
+    mount.innerHTML = `
+      <div class="instructions-lead"><strong>Platform administrator only</strong><br>This is the only CoolHack account that uses an email address. Use a dedicated project email—not an institutional email or password.</div>
+      <form class="classroom-card" id="administratorAccessForm" data-action="${mode}">
+        <h3>${creating ? "Create administrator account" : "Administrator sign-in"}</h3>
+        <p>${creating
+          ? "First visit? Create your private CoolHack administrator account below."
+          : "Use the dedicated CoolHack account you already created."}</p>
+        <label for="instructorEmail">Dedicated CoolHack email</label><input id="instructorEmail" type="email" autocomplete="email" required>
+        <label for="instructorPassword">${creating ? "Create a CoolHack password" : "CoolHack password"}</label><input id="instructorPassword" type="password" minlength="12" autocomplete="${creating ? "new-password" : "current-password"}" required>
+        ${creating ? `<label for="instructorPasswordConfirm">Confirm CoolHack password</label><input id="instructorPasswordConfirm" type="password" minlength="12" autocomplete="new-password" required>
+        <small>Use a new password made only for CoolHack. Do not reuse your email, HCC, or Supabase password.</small>` : ""}
+        <div class="hero-actions"><button class="btn primary" type="submit">${creating ? "Create administrator account" : "Sign in"}</button></div>
+        <button class="auth-switch" id="administratorModeSwitch" type="button">${creating ? "Already created your account? Sign in" : "First visit? Create administrator account"}</button>
+      </form>
+      <p class="auth-message" id="authMessage" role="status"></p>`;
+    field("administratorAccessForm").addEventListener("submit", administratorAccess);
+    field("administratorModeSwitch").addEventListener("click", () => renderAdministratorAccess(creating ? "signin" : "create"));
+  }
+
   function authScreen() {
     if (staffPortal) {
       const title = document.querySelector("#classroom-title");
       const intro = title?.nextElementSibling;
       if (portal === "admin") {
         if (title) title.textContent = "CoolHack administrator portal";
-        if (intro) intro.textContent = "Sign in with the dedicated CoolHack project account used only by the platform administrator.";
-        mount.innerHTML = `
-        <div class="instructions-lead"><strong>Platform administrator only</strong><br>This is the only CoolHack account that uses an email address. Use the dedicated project email—not an institutional email or password.</div>
-        <form class="classroom-card" id="instructorSignInForm">
-          <h3>Administrator sign-in</h3>
-          <label for="instructorEmail">Dedicated CoolHack email</label><input id="instructorEmail" type="email" autocomplete="email" required>
-          <label for="instructorPassword">Password</label><input id="instructorPassword" type="password" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn primary" type="submit" name="staffAction" value="signin">Sign in</button><button class="btn" type="submit" name="staffAction" value="create">First visit: create administrator account</button></div>
-        </form>
-        <p class="auth-message" id="authMessage" role="status"></p>`;
-        field("instructorSignInForm").addEventListener("submit", administratorAccess);
+        if (intro) intro.textContent = "Create or sign in to the dedicated CoolHack project account used only by the platform administrator.";
+        renderAdministratorAccess();
       } else {
         if (title) title.textContent = "CoolHack professor portal";
         if (intro) intro.textContent = "Create or sign in to a dedicated CoolHack professor account. No email address is required.";
@@ -82,14 +94,18 @@
 
   async function administratorAccess(event) {
     event.preventDefault();
-    const action=event.submitter?.value||"signin";
+    const action=event.currentTarget.dataset.action||"create";
     const email=field("instructorEmail").value.trim();
     const password=field("instructorPassword").value;
     say(action==="create"?"Creating project account…":"Signing in…");
     if(action==="create"){
+      if(password!==field("instructorPasswordConfirm").value){
+        say("The two CoolHack passwords do not match.");
+        return;
+      }
       const displayName=email.split("@")[0].slice(0,80);
       const {error}=await db.auth.signUp({email,password,options:{data:{display_name:displayName,account_kind:"staff_pending"}}});
-      say(error?error.message:"Project account created. Confirm the project email if requested, then ask the platform administrator to authorize it.");
+      say(error?error.message:"Administrator account created. Confirm the project email if requested. We will then activate this account as the platform administrator in Supabase.");
       return;
     }
     const { error } = await db.auth.signInWithPassword({email,password});
