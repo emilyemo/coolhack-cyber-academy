@@ -25,6 +25,8 @@
 .admin-stats strong { color:var(--cyan); font-size:1.75rem; line-height:1; }
 .admin-stats span { margin-top:.4rem; color:#b8c9dc; font-size:.82rem; font-weight:750; }
 .admin-panel-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin:1rem 0; }
+.auth-switch { display:block; margin:.85rem auto 0; padding:.35rem; color:var(--cyan); background:transparent; border:0; text-decoration:underline; text-underline-offset:3px; cursor:pointer; font:inherit; font-weight:750; }
+.auth-switch:hover,.auth-switch:focus-visible { color:#fff; }
 .code-builder { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.55rem; align-items:start; }
 .code-builder input { letter-spacing:.14em; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-weight:850; }
 .form-message { min-height:1.35rem; color:var(--amber); font-weight:750; }
