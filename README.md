@@ -1,40 +1,99 @@
 # CoolHack Cyber Academy
 
-A mobile-friendly, student-facing cybersecurity role-play dashboard for the fictional organization **CoolHack Solutions**.
+CoolHack Cyber Academy is an open, mobile-friendly cybersecurity role-play
+environment for the fictional organization **CoolHack Solutions**. Teams of four
+investigate realistic incidents, work from assigned professional roles, use an
+AI tool as a questioning supervisor, produce one shared report, and complete
+individual reflections.
 
-Students work through realistic incident-response missions, rotate through professional team roles, follow a five-phase investigation workflow, and download case notes for their course submissions and employment portfolios.
+> **Independent instructional simulation:** CoolHack is not an HCC system.
+> Never enter institutional credentials, grades, student IDs, real incident
+> data, or other personal information.
 
-## Student workflow
+## What is included
 
-1. Select a mission.
-2. Review the scenario, evidence sources, deliverables, and decision point.
-3. Work through the case in an assigned professional role.
-4. Draft findings and decisions in the case-notes workspace.
-5. Download the notes and submit them through the instructor-approved course system.
+- Six-mission student dashboard and evidence rooms
+- Clickable cybersecurity acronym refreshers
+- Downloadable browser-only case notes
+- Optional Supabase-backed live classroom
+- Platform-administrator, professor, section, team, and student role separation
+- Nickname-only student access and username-only professor access
+- Row-level security and live team updates
 
-## Privacy and instructor materials
+The public repository intentionally contains **no instructor answer keys,
+grading keys, model solutions, production secrets, or real student data**.
 
-The public GitHub Pages site contains student-facing content only. Instructor answer keys, grading notes, and model responses must not be committed to this public repository.
+## Start here
 
-The signed-in classroom uses nickname-based student access, Supabase
-authentication, row-level security, cloud
-saving, and real-time team updates. The older downloadable case-notes area
-remains available as a backup. Students should never enter passwords, grades,
-real incident data, or unnecessary private information in mission content.
-The classroom does not request student email addresses, student IDs, or real
-full names and is explicitly presented as an independent simulation.
+| Goal | Guide |
+|---|---|
+| Understand the system | [Architecture](docs/ARCHITECTURE.md) |
+| Deploy a new copy | [Installation](docs/INSTALLATION.md) |
+| Operate the academy | [Administrator guide](docs/ADMIN_GUIDE.md) |
+| Run a class section | [Professor guide](docs/PROFESSOR_GUIDE.md) |
+| Join and complete a mission | [Student guide](docs/STUDENT_GUIDE.md) |
+| Review privacy and access controls | [Security and privacy](docs/SECURITY_PRIVACY.md) |
+| Test before classroom use | [Security test checklist](docs/SECURITY_TESTING.md) |
+| Fix a problem | [Troubleshooting](docs/TROUBLESHOOTING.md) |
+| Back up, restore, or retire a deployment | [Backup and recovery](docs/BACKUP_RECOVERY.md) |
 
-## Supabase classroom
+## Quick start
 
-Run `supabase/schema.sql` once in the project's Supabase SQL Editor, then follow
-`SUPABASE_SETUP.md`. Browser-safe connection values live in
-`supabase-config.js`; never place a database password or `service_role` key in
-the public repository.
+The simplest public version needs only GitHub Pages:
 
-## Publish with GitHub Pages
+1. Fork or copy this repository.
+2. In GitHub, open **Settings → Pages**.
+3. Under **Build and deployment**, select **Deploy from a branch**.
+4. Select `main` and `/(root)`, then save.
+5. Open the Pages address shown by GitHub.
 
-In the repository, open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, select **main** and **/(root)**, then save.
+This publishes the missions and browser-only workspace. To enable accounts,
+sections, cloud saving, live updates, and staff dashboards, complete the
+[Supabase installation](docs/INSTALLATION.md).
 
-The expected site address is:
+## Account model
 
-`https://emilyemo.github.io/coolhack-cyber-academy/`
+| Person | Sign-in information | Access |
+|---|---|---|
+| Platform administrator | One dedicated project email and CoolHack-only password | All sections |
+| Professor | CoolHack username and CoolHack-only password; no email requested | Assigned section only, after approval |
+| Student | Private team code, invented screen name, and CoolHack-only password; no email requested | Assigned team only |
+
+The application internally converts professor usernames and student
+team-code/screen-name combinations into non-deliverable authentication
+identifiers. Those identifiers are implementation details and are not presented
+as real email addresses.
+
+## Classroom learning model
+
+- Four students take four distinct roles.
+- Each student maintains separate role notes.
+- The team maintains one shared report and one shared AI transcript.
+- Each student completes a private reflection of at least 100 words.
+- The public evidence does not reveal the mission answer.
+- Private instructor materials must be stored outside this repository.
+
+## Configuration safety
+
+`supabase-config.example.js` is the safe template. A deployed copy needs a
+`supabase-config.js` containing only:
+
+- the Supabase project URL; and
+- the Supabase publishable/anonymous browser key.
+
+These two values are designed to be public. Security depends on Supabase
+authentication and row-level security. Never commit a database password,
+JWT secret, access token, or `service_role` key.
+
+## Project status
+
+CoolHack is an instructional pilot. Review the [known limitations](docs/SECURITY_PRIVACY.md#known-limitations)
+and complete the full [security test checklist](docs/SECURITY_TESTING.md) before
+using a fork with students.
+
+## Contributing and license
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for safe contribution rules and
+[CHANGELOG.md](CHANGELOG.md) for notable changes. The source is available under
+the [MIT License](LICENSE). Mission content and third-party material remain
+subject to any separately stated rights.
