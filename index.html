@@ -353,6 +353,7 @@
       .clock-panel { align-items: flex-start; flex-direction: column; }
     }
   </style>
+  <link rel="stylesheet" href="classroom.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to missions</a>
@@ -411,6 +412,11 @@
         <button class="btn" type="button" data-info-title="What is the Mission Clock?" data-info="The Mission Clock adds an original suspenseful pulse while your team investigates. It is only for atmosphere: there is no automatic deadline, penalty, or connection to the television series 24. Press the start button again to stop and reset it.">What is this?</button>
       </div>
     </aside>
+
+    <section id="classroom-access" aria-labelledby="classroom-title">
+      <div class="section-head"><div><h2 id="classroom-title">Classroom sign-in and live workspace</h2><p>Students sign in to reach their assigned team. The instructor can view every team from one dashboard.</p></div></div>
+      <div id="classroomApp" aria-live="polite"><div class="classroom-card"><p>Loading the secure classroom…</p></div></div>
+    </section>
 
     <div class="app-tabs" role="tablist" aria-label="Academy sections">
       <button class="app-tab" id="view-tab-instructions" type="button" role="tab" aria-selected="true" aria-controls="instructions-view" data-open-view="instructions">1. How It Works<small>Read this before beginning</small></button>
@@ -511,6 +517,9 @@
     <div class="shell footer-row"><span>CoolHack Solutions is a fictional training organization.</span><span>Think like an analyst. Write like a professional.</span></div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="classroom.js"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
