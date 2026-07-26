@@ -80,6 +80,8 @@
     .brief-card { padding: 1.25rem; transform: rotate(1.2deg); }
     .brief-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
     .brief-top strong { color: var(--red); font-size: .78rem; letter-spacing: .08em; }
+    .brief-heading { margin: 1rem 0 0; font-size: 1rem; }
+    .brief-intro { margin: .25rem 0 0; color: var(--muted); font-size: .9rem; }
     .metric { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1rem; padding-top: 1rem; }
     .metric b { color: var(--cyan); font-size: 1.6rem; grid-row: span 2; }
     .metric span { font-weight: 700; }
@@ -348,10 +350,12 @@
         </div>
       </div>
       <aside class="brief-card" aria-label="Current incident summary">
-        <div class="brief-top"><span class="status"><span class="pulse"></span> Training range online</span><strong>SEV-2</strong></div>
-        <div class="metric"><b>06</b><span>Cases in the mission queue</span><small>Phishing → final executive briefing</small></div>
-        <div class="metric"><b>08</b><span>Student learning stages</span><small>Learn through portfolio building</small></div>
-        <div class="metric"><b>01</b><span>Professional portfolio</span><small>Evidence, tickets, and final reports</small></div>
+        <div class="brief-top"><span class="status"><span class="pulse"></span> Training range online</span><strong>PRACTICE MODE</strong></div>
+        <h2 class="brief-heading">Your training plan at a glance</h2>
+        <p class="brief-intro">These numbers describe how the academy activity is organized.</p>
+        <div class="metric"><b>6</b><span>Workplace missions</span><small>Complete six cases, beginning with phishing and ending with an executive briefing.</small></div>
+        <div class="metric"><b>8</b><span>Steps in each mission</span><small>Follow the same eight-step learning process from preparation to portfolio.</small></div>
+        <div class="metric"><b>4</b><span>Students in each team</span><small>Each team member takes a different workplace role and contributes to one shared report.</small></div>
       </aside>
     </section>
   </div>
