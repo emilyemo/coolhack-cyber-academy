@@ -16,7 +16,17 @@ Students work through realistic incident-response missions, rotate through profe
 
 The public GitHub Pages site contains student-facing content only. Instructor answer keys, grading notes, and model responses must not be committed to this public repository.
 
-Case-note drafts use browser storage and are not uploaded to GitHub or a server. Students should not enter passwords or private personal information.
+The signed-in classroom uses Supabase authentication, row-level security, cloud
+saving, and real-time team updates. The older downloadable case-notes area
+remains available as a backup. Students should never enter passwords, grades,
+real incident data, or unnecessary private information in mission content.
+
+## Supabase classroom
+
+Run `supabase/schema.sql` once in the project's Supabase SQL Editor, then follow
+`SUPABASE_SETUP.md`. Browser-safe connection values live in
+`supabase-config.js`; never place a database password or `service_role` key in
+the public repository.
 
 ## Publish with GitHub Pages
 
