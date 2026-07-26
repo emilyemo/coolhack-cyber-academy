@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="CoolHack Cyber Academy student incident-response simulation dashboard.">
+  <title>CoolHack Cyber Academy</title>
+  <style>
+    :root {
+      --ink: #eaf4ff;
+      --muted: #9db0c7;
+      --panel: rgba(15, 31, 50, .88);
+      --line: rgba(154, 181, 211, .18);
+      --cyan: #45e6d0;
+      --cyan-dark: #092f31;
+      --amber: #ffc868;
+      --red: #ff7385;
+      --blue: #67a9ff;
+      --shadow: 0 20px 60px rgba(0, 0, 0, .28);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 82% 4%, rgba(69, 230, 208, .13), transparent 28rem),
+        radial-gradient(circle at 8% 30%, rgba(103, 169, 255, .09), transparent 26rem),
+        #07111f;
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .skip-link {
+      position: fixed; top: -4rem; left: 1rem; z-index: 20;
+      padding: .7rem 1rem; background: white; color: #07111f; border-radius: 8px;
+    }
+    .skip-link:focus { top: 1rem; }
+    .shell { width: min(1180px, calc(100% - 2rem)); margin: auto; }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(7, 17, 31, .82); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: .75rem; font-weight: 800; letter-spacing: -.02em; }
+    .mark {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
+      color: #041415; background: var(--cyan); box-shadow: 0 0 24px rgba(69, 230, 208, .25);
+    }
+    .nav-links { display: flex; align-items: center; gap: .4rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; padding: .55rem .75rem; border-radius: 9px; }
+    .nav-links a:hover, .nav-links a:focus-visible { color: var(--ink); background: rgba(255,255,255,.05); }
+    .hero { padding: 74px 0 48px; display: grid; grid-template-columns: 1.25fr .75fr; gap: 2rem; align-items: center; }
+    .eyebrow, .status {
+      display: inline-flex; align-items: center; gap: .5rem; width: fit-content;
+      color: var(--cyan); background: rgba(69,230,208,.08); border: 1px solid rgba(69,230,208,.23);
+      padding: .42rem .75rem; border-radius: 999px; font-size: .79rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .09em;
+    }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 5px rgba(69,230,208,.1); }
+    h1 { max-width: 760px; margin: 1rem 0; font-size: clamp(2.65rem, 7vw, 5.5rem); line-height: .98; letter-spacing: -.06em; }
+    h1 span { color: var(--cyan); }
+    .lede { max-width: 710px; margin: 0; color: #b8c9dc; font-size: clamp(1.05rem, 2vw, 1.25rem); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.6rem; }
+    .btn {
+      display: inline-flex; justify-content: center; align-items: center; gap: .5rem;
+      border: 1px solid var(--line); border-radius: 11px; padding: .78rem 1rem;
+      color: var(--ink); background: rgba(255,255,255,.04); text-decoration: none; font-weight: 750;
+    }
+    .btn.primary { color: #041415; background: var(--cyan); border-color: var(--cyan); }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.07); }
+    .brief-card, .panel, .mission, .role {
+      border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .brief-card { padding: 1.25rem; transform: rotate(1.2deg); }
+    .brief-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+    .brief-top strong { color: var(--red); font-size: .78rem; letter-spacing: .08em; }
+    .metric { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1rem; padding-top: 1rem; }
+    .metric b { color: var(--cyan); font-size: 1.6rem; grid-row: span 2; }
+    .metric span { font-weight: 700; }
+    .metric small { color: var(--muted); }
+    main { padding-bottom: 72px; }
+    section { scroll-margin-top: 92px; margin-top: 42px; }
+    .section-head { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: 1rem; }
+    .section-head h2 { margin: 0; font-size: clamp(1.65rem, 3vw, 2.25rem); letter-spacing: -.035em; }
+    .section-head p { margin: .35rem 0 0; color: var(--muted); }
+    .mission-layout { display: grid; grid-template-columns: minmax(270px, .85fr) minmax(0, 1.65fr); gap: 1rem; align-items: start; }
+    .mission-list { display: grid; gap: .65rem; position: sticky; top: 90px; }
+    .mission-tab {
+      width: 100%; text-align: left; color: var(--ink); background: rgba(14,29,47,.72);
+      border: 1px solid var(--line); border-radius: 13px; padding: .9rem;
+    }
+    .mission-tab:hover, .mission-tab:focus-visible { border-color: rgba(69,230,208,.45); }
+    .mission-tab.active { background: rgba(69,230,208,.09); border-color: var(--cyan); }
+    .mission-tab small { display: block; color: var(--muted); margin-top: .18rem; }
+    .mission { padding: clamp(1.1rem, 3vw, 1.7rem); min-height: 550px; }
+    .mission-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .85rem; }
+    .chip { display: inline-flex; padding: .28rem .58rem; border-radius: 999px; background: rgba(103,169,255,.11); color: #a9ceff; border: 1px solid rgba(103,169,255,.2); font-size: .76rem; font-weight: 800; }
+    .chip.high { color: #ffd7dc; background: rgba(255,115,133,.1); border-color: rgba(255,115,133,.23); }
+    .mission h3 { margin: .25rem 0 .45rem; font-size: clamp(1.5rem, 3vw, 2.15rem); }
+    .scenario { color: #c2d1e1; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .callout { padding: 1rem; background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 13px; }
+    .callout h4 { margin: 0 0 .55rem; font-size: .95rem; color: var(--cyan); }
+    .callout ul { margin: 0; padding-left: 1.15rem; color: #bdcddd; }
+    .callout li + li { margin-top: .35rem; }
+    .decision { margin-top: 1rem; padding: 1rem; border-left: 3px solid var(--amber); background: rgba(255,200,104,.055); border-radius: 0 12px 12px 0; }
+    .decision strong { color: var(--amber); }
+    .roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .role { padding: 1.1rem; box-shadow: none; }
+    .role-icon { font-size: 1.4rem; }
+    .role h3 { margin: .55rem 0 .3rem; }
+    .role p { margin: 0; color: var(--muted); font-size: .93rem; }
+    .workflow { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; }
+    .step { position: relative; padding: 1rem; border-top: 2px solid var(--cyan); background: rgba(255,255,255,.025); border-radius: 0 0 12px 12px; }
+    .step b { display: block; color: var(--cyan); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+    .step span { display: block; margin-top: .3rem; font-weight: 800; }
+    .workspace { padding: clamp(1rem, 3vw, 1.5rem); }
+    .field { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: .4rem; font-weight: 750; }
+    input, textarea {
+      width: 100%; color: var(--ink); background: rgba(3,13,24,.7);
+      border: 1px solid var(--line); border-radius: 11px; padding: .78rem;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    input:focus, textarea:focus { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .checklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: .55rem; margin: .8rem 0 1.1rem; }
+    .check { display: flex; gap: .55rem; align-items: flex-start; padding: .7rem; background: rgba(255,255,255,.025); border-radius: 10px; }
+    .check input { width: auto; margin-top: .25rem; accent-color: var(--cyan); }
+    .workspace-actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+    .save-note { color: var(--muted); font-size: .86rem; margin: .7rem 0 0; }
+    footer { border-top: 1px solid var(--line); padding: 28px 0 42px; color: var(--muted); }
+    .footer-row { display: flex; justify-content: space-between; gap: 1rem; }
+    @media (max-width: 900px) {
+      .hero, .mission-layout { grid-template-columns: 1fr; }
+      .brief-card { transform: none; }
+      .mission-list { position: static; grid-template-columns: repeat(2, 1fr); }
+      .roles { grid-template-columns: repeat(2, 1fr); }
+      .workflow { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .shell { width: min(100% - 1.1rem, 1180px); }
+      .nav { min-height: 62px; }
+      .brand span:last-child { font-size: .9rem; }
+      .nav-links a:not(:last-child) { display: none; }
+      .hero { padding-top: 48px; }
+      h1 { font-size: 2.65rem; }
+      .hero-actions .btn { width: 100%; }
+      .section-head { align-items: start; flex-direction: column; }
+      .mission-list { display: flex; overflow-x: auto; padding-bottom: .25rem; scroll-snap-type: x mandatory; }
+      .mission-tab { min-width: 240px; scroll-snap-align: start; }
+      .grid-2, .roles, .workflow, .checklist { grid-template-columns: 1fr; }
+      .footer-row { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to missions</a>
+  <header>
+    <div class="shell nav">
+      <div class="brand"><span class="mark" aria-hidden="true">CH</span><span>CoolHack Cyber Academy</span></div>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#missions">Missions</a>
+        <a href="#team">Team</a>
+        <a href="#workspace">Case Notes</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Student cyber operations simulation</div>
+        <h1 id="page-title">Your first day on the <span>incident desk.</span></h1>
+        <p class="lede">CoolHack Solutions has hired your team to investigate realistic security incidents. Analyze the evidence, make defensible decisions, communicate clearly, and leave every case with a portfolio-ready artifact.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#missions">Open Mission 1 <span aria-hidden="true">→</span></a>
+          <a class="btn" href="#workflow">See how cases work</a>
+        </div>
+      </div>
+      <aside class="brief-card" aria-label="Current incident summary">
+        <div class="brief-top"><span class="status"><span class="pulse"></span> Training range online</span><strong>SEV-2</strong></div>
+        <div class="metric"><b>06</b><span>Cases in the mission queue</span><small>Phishing → final executive briefing</small></div>
+        <div class="metric"><b>05</b><span>Investigation phases</span><small>Triaging through reporting</small></div>
+        <div class="metric"><b>01</b><span>Professional portfolio</span><small>Evidence, tickets, and final reports</small></div>
+      </aside>
+    </section>
+  </div>
+
+  <main id="main" class="shell">
+    <section id="missions" aria-labelledby="missions-title">
+      <div class="section-head">
+        <div><h2 id="missions-title">Mission queue</h2><p>Select a case to receive your team briefing.</p></div>
+        <span class="status">6 guided cases</span>
+      </div>
+      <div class="mission-layout">
+        <div class="mission-list" id="missionList" role="tablist" aria-label="Cybersecurity missions"></div>
+        <article class="mission" id="missionPanel" role="tabpanel" tabindex="0" aria-live="polite"></article>
+      </div>
+    </section>
+
+    <section id="team" aria-labelledby="team-title">
+      <div class="section-head"><div><h2 id="team-title">Choose your seat</h2><p>Every role sees the same incident from a different professional responsibility.</p></div></div>
+      <div class="roles">
+        <article class="role"><span class="role-icon" aria-hidden="true">⌁</span><h3>SOC Analyst</h3><p>Review alerts, correlate evidence, build the incident timeline, and recommend severity.</p></article>
+        <article class="role"><span class="role-icon" aria-hidden="true">⌕</span><h3>Incident Responder</h3><p>Plan containment, preserve evidence, remove the threat, and validate recovery.</p></article>
+        <article class="role"><span class="role-icon" aria-hidden="true">◎</span><h3>Security Lead</h3><p>Balance business risk with security, approve actions, and manage escalation.</p></article>
+        <article class="role"><span class="role-icon" aria-hidden="true">✎</span><h3>Communications Lead</h3><p>Turn technical findings into clear updates for users, managers, and executives.</p></article>
+      </div>
+    </section>
+
+    <section id="workflow" aria-labelledby="workflow-title">
+      <div class="section-head"><div><h2 id="workflow-title">The investigation workflow</h2><p>Follow the same disciplined path on every case.</p></div></div>
+      <div class="workflow">
+        <div class="step"><b>Phase 1</b><span>Triage</span><small>What happened?</small></div>
+        <div class="step"><b>Phase 2</b><span>Investigate</span><small>What does the evidence prove?</small></div>
+        <div class="step"><b>Phase 3</b><span>Decide</span><small>What action is justified?</small></div>
+        <div class="step"><b>Phase 4</b><span>Respond</span><small>Contain, eradicate, recover.</small></div>
+        <div class="step"><b>Phase 5</b><span>Report</span><small>Explain impact and lessons.</small></div>
+      </div>
+    </section>
+
+    <section id="workspace" aria-labelledby="workspace-title">
+      <div class="section-head"><div><h2 id="workspace-title">Case notes workspace</h2><p>Draft your reasoning here, then download it for your submission and portfolio.</p></div></div>
+      <form class="panel workspace" id="caseForm">
+        <div class="grid-2">
+          <div class="field"><label for="studentName">Student or team name</label><input id="studentName" autocomplete="name" placeholder="Enter a name"></div>
+          <div class="field"><label for="selectedRole">Assigned role</label><input id="selectedRole" placeholder="Example: SOC Analyst"></div>
+        </div>
+        <div class="field"><label for="finding">Key finding</label><textarea id="finding" placeholder="What does the evidence show? Separate facts from assumptions."></textarea></div>
+        <div class="field"><label for="decision">Decision and justification</label><textarea id="decision" placeholder="What should the team do next, and why is that action proportionate?"></textarea></div>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend style="font-weight:750">Evidence package</legend>
+          <div class="checklist">
+            <label class="check"><input type="checkbox" value="Timeline completed"><span>Incident timeline completed</span></label>
+            <label class="check"><input type="checkbox" value="Screenshots or logs captured"><span>Screenshots or logs captured</span></label>
+            <label class="check"><input type="checkbox" value="Ticket or case notes updated"><span>Ticket or case notes updated</span></label>
+            <label class="check"><input type="checkbox" value="Stakeholder update drafted"><span>Stakeholder update drafted</span></label>
+          </div>
+        </fieldset>
+        <div class="workspace-actions">
+          <button class="btn primary" type="button" id="downloadBtn">Download case notes</button>
+          <button class="btn" type="button" id="clearBtn">Clear saved draft</button>
+        </div>
+        <p class="save-note" id="saveNote">Your draft is saved only in this browser. Do not enter passwords or private personal information.</p>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-row"><span>CoolHack Solutions is a fictional training organization.</span><span>Think like an analyst. Write like a professional.</span></div>
+  </footer>
+
+  <script>
+    const missions = [
+      {
+        title: "The Urgent Invoice", subtitle: "Phishing triage", severity: "High", tracks: ["SOC", "Email Security"],
+        scenario: "A finance employee received an urgent invoice email that appears to come from a trusted vendor. The employee opened the message and clicked the link before reporting it. Your team must determine whether the message is malicious and what may have been exposed.",
+        evidence: ["Email headers and sender details", "Message language and embedded URL", "User statement and login activity", "Endpoint and web-filter alerts"],
+        deliverables: ["Phishing-analysis ticket", "Evidence table with facts and indicators", "Containment recommendation", "Plain-language user notification"],
+        decision: "Do you disable the user account immediately, monitor it, or take another action? Defend the choice using the evidence available—not fear or guesswork."
+      },
+      {
+        title: "Impossible Travel", subtitle: "Identity investigation", severity: "High", tracks: ["SOC", "IAM"],
+        scenario: "The monitoring system reports successful logins for one employee from two distant locations within an impossible time window. One login used a familiar device; the other did not. Decide whether this is credential theft, legitimate travel, or a false positive.",
+        evidence: ["Authentication log timestamps", "IP and location context", "MFA events and device history", "Recent password-reset records"],
+        deliverables: ["Login timeline", "Account-compromise assessment", "Escalation and containment plan", "Manager status update"],
+        decision: "When is the evidence strong enough to lock the account, revoke sessions, and require a password reset?"
+      },
+      {
+        title: "The Noisy Workstation", subtitle: "Endpoint malware", severity: "High", tracks: ["DFIR", "Endpoint"],
+        scenario: "A workstation begins making repeated outbound connections shortly after a free utility was installed. The user says the computer still works normally. Your team must decide whether to isolate it without unnecessarily disrupting operations.",
+        evidence: ["Process and network-connection data", "Endpoint detection alerts", "Download and browser history", "File hash and persistence clues"],
+        deliverables: ["Host investigation worksheet", "Indicators of compromise", "Isolation decision", "Recovery and validation checklist"],
+        decision: "Would you isolate the workstation now? Explain the business impact of both acting and waiting."
+      },
+      {
+        title: "After-Hours Database Query", subtitle: "Insider-risk analysis", severity: "Medium", tracks: ["SOC", "Data Security"],
+        scenario: "A staff member with legitimate database access downloaded an unusually large set of customer records after normal business hours. Authorization alone does not explain intent. Investigate without assuming guilt.",
+        evidence: ["Database audit logs", "Role and access permissions", "Work schedule and business context", "File-transfer and removable-media events"],
+        deliverables: ["Evidence-based activity summary", "Data-scope estimate", "Interview and escalation questions", "Privacy-conscious incident notes"],
+        decision: "How will you investigate the activity fairly while preserving evidence and protecting the employee's privacy?"
+      },
+      {
+        title: "Website Under Pressure", subtitle: "Availability incident", severity: "Medium", tracks: ["NET", "Incident Response"],
+        scenario: "The public website has become slow and intermittently unavailable. Traffic volume has spiked, but marketing also launched a campaign today. Determine whether the organization faces a denial-of-service attack or a legitimate surge.",
+        evidence: ["Traffic volume and source patterns", "Web and firewall logs", "Application response times", "Marketing launch timeline"],
+        deliverables: ["Traffic-analysis summary", "Attack-versus-demand conclusion", "Short-term mitigation plan", "Customer-facing status message"],
+        decision: "Which traffic would you block or rate-limit, and how will you avoid blocking legitimate customers?"
+      },
+      {
+        title: "Executive Incident Briefing", subtitle: "Capstone case", severity: "High", tracks: ["SOC", "Leadership"],
+        scenario: "Leadership needs a final briefing on a multi-stage incident involving a phishing email, compromised credentials, suspicious endpoint activity, and possible data access. Your team must combine technical findings into one defensible story.",
+        evidence: ["Findings from earlier cases", "Verified event timeline", "Containment and recovery records", "Known impact and remaining uncertainty"],
+        deliverables: ["Executive incident summary", "Technical timeline and evidence appendix", "Lessons-learned recommendations", "Portfolio-ready final report"],
+        decision: "What can you state with confidence, what remains unknown, and what should leadership fund or change next?"
+      }
+    ];
+
+    const list = document.querySelector("#missionList");
+    const panel = document.querySelector("#missionPanel");
+    let activeMission = Number(localStorage.getItem("coolhack-active-mission") || 0);
+
+    function renderMission(index, moveFocus = false) {
+      activeMission = index;
+      localStorage.setItem("coolhack-active-mission", index);
+      document.querySelectorAll(".mission-tab").forEach((button, i) => {
+        button.classList.toggle("active", i === index);
+        button.setAttribute("aria-selected", i === index);
+        button.tabIndex = i === index ? 0 : -1;
+      });
+      const mission = missions[index];
+      panel.innerHTML = `
+        <div class="mission-meta">
+          <span class="chip high">${mission.severity} priority</span>
+          ${mission.tracks.map(track => `<span class="chip">${track}</span>`).join("")}
+        </div>
+        <h3>Mission ${index + 1}: ${mission.title}</h3>
+        <p class="scenario">${mission.scenario}</p>
+        <div class="grid-2">
+          <div class="callout"><h4>Evidence to examine</h4><ul>${mission.evidence.map(item => `<li>${item}</li>`).join("")}</ul></div>
+          <div class="callout"><h4>Portfolio deliverables</h4><ul>${mission.deliverables.map(item => `<li>${item}</li>`).join("")}</ul></div>
+        </div>
+        <div class="decision"><strong>Your decision point</strong><br>${mission.decision}</div>
+        <div class="hero-actions">
+          <a class="btn primary" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
+          ${index < missions.length - 1 ? `<button class="btn" type="button" id="nextMission">Next mission</button>` : ""}
+        </div>`;
+      const next = document.querySelector("#nextMission");
+      if (next) next.addEventListener("click", () => renderMission(index + 1, true));
+      if (moveFocus) panel.focus();
+    }
+
+    missions.forEach((mission, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "mission-tab";
+      button.id = `mission-tab-${index}`;
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-controls", "missionPanel");
+      button.innerHTML = `<strong>Mission ${index + 1}: ${mission.title}</strong><small>${mission.subtitle}</small>`;
+      button.addEventListener("click", () => renderMission(index));
+      button.addEventListener("keydown", event => {
+        if (!["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(event.key)) return;
+        event.preventDefault();
+        const forward = event.key === "ArrowDown" || event.key === "ArrowRight";
+        const nextIndex = (index + (forward ? 1 : -1) + missions.length) % missions.length;
+        document.querySelectorAll(".mission-tab")[nextIndex].focus();
+        renderMission(nextIndex);
+      });
+      list.appendChild(button);
+    });
+    renderMission(Math.min(activeMission, missions.length - 1));
+
+    const formFields = [...document.querySelectorAll("#caseForm input, #caseForm textarea")];
+    const storageKey = "coolhack-case-draft";
+    function saveDraft() {
+      const draft = {
+        studentName: document.querySelector("#studentName").value,
+        selectedRole: document.querySelector("#selectedRole").value,
+        finding: document.querySelector("#finding").value,
+        decision: document.querySelector("#decision").value,
+        checks: [...document.querySelectorAll('.check input:checked')].map(item => item.value)
+      };
+      localStorage.setItem(storageKey, JSON.stringify(draft));
+      document.querySelector("#saveNote").textContent = "Draft saved in this browser. Do not enter passwords or private personal information.";
+    }
+    formFields.forEach(field => field.addEventListener("input", saveDraft));
+    try {
+      const draft = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      ["studentName", "selectedRole", "finding", "decision"].forEach(id => {
+        if (draft[id]) document.querySelector(`#${id}`).value = draft[id];
+      });
+      (draft.checks || []).forEach(value => {
+        const box = [...document.querySelectorAll(".check input")].find(item => item.value === value);
+        if (box) box.checked = true;
+      });
+    } catch (_) {}
+
+    document.querySelector("#downloadBtn").addEventListener("click", () => {
+      const checked = [...document.querySelectorAll(".check input:checked")].map(item => `- ${item.value}`).join("\n") || "- None marked complete";
+      const content = `COOLHACK CYBER ACADEMY — CASE NOTES
+
+Mission: ${missions[activeMission].title}
+Student/Team: ${document.querySelector("#studentName").value || "Not entered"}
+Assigned Role: ${document.querySelector("#selectedRole").value || "Not entered"}
+
+KEY FINDING
+${document.querySelector("#finding").value || "Not entered"}
+
+DECISION AND JUSTIFICATION
+${document.querySelector("#decision").value || "Not entered"}
+
+EVIDENCE PACKAGE
+${checked}
+
+Reminder: Verify every claim against the evidence and clearly label any remaining assumptions.
+`;
+      const blob = new Blob([content], {type: "text/plain"});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `coolhack-mission-${activeMission + 1}-case-notes.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.querySelector("#clearBtn").addEventListener("click", () => {
+      if (!confirm("Clear this saved draft from the browser?")) return;
+      localStorage.removeItem(storageKey);
+      document.querySelector("#caseForm").reset();
+      document.querySelector("#saveNote").textContent = "Draft cleared. New notes will save automatically in this browser.";
+    });
+  </script>
+</body>
+</html>
