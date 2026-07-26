@@ -16,10 +16,13 @@ Students work through realistic incident-response missions, rotate through profe
 
 The public GitHub Pages site contains student-facing content only. Instructor answer keys, grading notes, and model responses must not be committed to this public repository.
 
-The signed-in classroom uses Supabase authentication, row-level security, cloud
+The signed-in classroom uses nickname-based student access, Supabase
+authentication, row-level security, cloud
 saving, and real-time team updates. The older downloadable case-notes area
 remains available as a backup. Students should never enter passwords, grades,
 real incident data, or unnecessary private information in mission content.
+The classroom does not request student email addresses, student IDs, or real
+full names and is explicitly presented as an independent simulation.
 
 ## Supabase classroom
 
