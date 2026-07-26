@@ -342,10 +342,10 @@
               </div>
               <p>Hello Maya,</p>
               <p>Your account is scheduled for suspension today because invoice CH-8841 remains unpaid. Review the attached invoice through our secure billing portal within 30 minutes to prevent interruption of your company orders.</p>
-              <p><span class="warning-link">REVIEW INVOICE</span></p>
+              <p><a class="warning-link" href="https://apexoffice-invoice.example/login" id="trainingInvoiceLink">REVIEW INVOICE</a></p>
               <p>Regards,<br>Daniel Ortiz<br>Accounts Receivable, Apex Office Supply</p>
             </div>
-            <p class="clue-note"><strong>Link inspection:</strong> The button displays <code>portal.apexofficesupply.example</code>, but its stored destination is <code>hxxps://apexoffice-invoice.example/login</code>. The safe <code>hxxps</code> format prevents accidental opening.</p>
+            <div class="clue-note"><strong>How to inspect the link:</strong><ol><li><strong>Do not click REVIEW INVOICE.</strong></li><li>Place your mouse pointer over REVIEW INVOICE without clicking it.</li><li>Look at the bottom-left corner of your browser. The web address shown there is the <strong>actual destination</strong>—the website the link would open.</li><li>Compare that address with the sender’s company name and email address. Record anything that does not match.</li></ol><p><strong>Using a phone or tablet?</strong> Press and hold REVIEW INVOICE until the link preview appears, then cancel or tap outside the preview. This training link is disabled, so it will not open when clicked.</p></div>
           </div>
         </details>
 
@@ -492,6 +492,13 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
       list.appendChild(button);
     });
     renderMission(Math.min(activeMission, missions.length - 1));
+
+    panel.addEventListener("click", event => {
+      const trainingLink = event.target.closest("#trainingInvoiceLink");
+      if (!trainingLink) return;
+      event.preventDefault();
+      alert("Training safety notice: This simulated invoice link is disabled. Students should inspect the destination without opening it.");
+    });
 
     const formFields = [...document.querySelectorAll("#caseForm input, #caseForm textarea")];
     const storageKey = "coolhack-case-draft";
