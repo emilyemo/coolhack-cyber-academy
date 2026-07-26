@@ -35,6 +35,18 @@ password or `service_role` key.
 
    Confirm the email address before running this statement.
 
+## First classroom test
+
+1. Open the published academy and create the instructor account.
+2. Confirm the account email if Supabase asks you to.
+3. Run the instructor-promotion statement above with that exact email.
+4. Sign out and sign back in. The **Instructor dashboard** should appear.
+5. Create one test student account in a private/incognito browser window.
+6. In the instructor dashboard, create a team and assign the test student to a
+   seat.
+7. Return to the student window. The assigned team workspace should load, and
+   edits should remain after refresh.
+
 ## Classroom data model
 
 - Every student has an individual authenticated account.
