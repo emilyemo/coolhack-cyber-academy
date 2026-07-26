@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#07111f">
+  <meta name="theme-color" content="#f4efe5">
   <meta name="description" content="CoolHack Cyber Academy student incident-response simulation dashboard.">
   <title>CoolHack Cyber Academy</title>
   <style>
@@ -193,6 +193,82 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
+
+    /* Warm, editorial training-room palette */
+    :root {
+      --ink: #292a25;
+      --muted: #67685f;
+      --panel: #fffdf8;
+      --line: #d7d0c2;
+      --cyan: #a3422f;
+      --cyan-dark: #f1dfd6;
+      --amber: #a66a18;
+      --red: #a3422f;
+      --blue: #4e6754;
+      --shadow: 0 16px 42px rgba(58, 48, 35, .09);
+    }
+    body {
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(244,239,229,.94), rgba(244,239,229,.94)),
+        repeating-linear-gradient(90deg, transparent 0 39px, rgba(79,72,61,.035) 40px);
+    }
+    header { background: rgba(244,239,229,.94); }
+    .mark { color: #fffdf8; box-shadow: none; }
+    .nav-links button {
+      color: var(--muted); background: transparent; border: 0; padding: .55rem .75rem;
+      border-radius: 9px; font-weight: 700;
+    }
+    .nav-links button:hover, .nav-links button:focus-visible { color: var(--ink); background: #e9e1d3; }
+    .eyebrow, .status { color: #84402f; background: #f2e3da; border-color: #d7b5a8; }
+    .pulse { background: #a3422f; box-shadow: 0 0 0 5px rgba(163,66,47,.1); }
+    h1 span { color: #a3422f; }
+    .lede, .scenario { color: #56584f; }
+    .btn { color: var(--ink); background: #fffdf8; }
+    .btn.primary { color: #fffdf8; background: #a3422f; border-color: #a3422f; }
+    .brief-card { transform: none; border-top: 5px solid #4e6754; }
+    .brief-top strong { color: #a3422f; }
+    .metric b { color: #4e6754; }
+    .mission-tab { color: var(--ink); background: #f7f2e9; }
+    .mission-tab:hover, .mission-tab:focus-visible { border-color: #a3422f; }
+    .mission-tab.active { background: #f1dfd6; border-color: #a3422f; }
+    .chip { color: #38503e; background: #e4ebe3; border-color: #becdbd; }
+    .chip.high { color: #843322; background: #f5dfd8; border-color: #deb7ab; }
+    .callout, .artifact, .path-step, .step, .check { background: #faf6ee; }
+    .callout h4, .evidence-room > h4, .learning-path h4, .roleplay-room h4,
+    .artifact-table th, .step b { color: #4e6754; }
+    .callout ul, .artifact-body { color: #4f5149; }
+    .decision { background: #fbf0dc; }
+    .evidence-room { background: #f7f4ec; border-color: #b8c4b8; }
+    .artifact summary { color: #34362f; }
+    .artifact summary:hover, .artifact summary:focus-visible { background: #eee8dc; }
+    .learning-path { background: #f1eee5; border-color: #c9c1b2; }
+    .roleplay-room { background: #faf2e4; }
+    .notice { color: #354439; background: #e9efe8; border-color: #4e6754; }
+    input, textarea { color: var(--ink); background: #fffdf8; }
+    .prompt-box, .log-block { color: #ece9df; background: #292c27; }
+    .clue-note { color: #60420f; background: #fbf0dc; }
+    .app-tabs {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem;
+      margin: 0 auto 1.25rem; padding: .55rem; background: #e9e1d3;
+      border: 1px solid #d2c7b5; border-radius: 16px;
+    }
+    .app-tab {
+      border: 0; border-radius: 11px; padding: .85rem 1rem; color: #5f5c53;
+      background: transparent; font-weight: 800;
+    }
+    .app-tab[aria-selected="true"] { color: #fffdf8; background: #4e6754; }
+    .app-tab small { display: block; margin-top: .15rem; font-weight: 500; opacity: .9; }
+    [data-view][hidden] { display: none !important; }
+    .instructions-lead {
+      padding: 1rem 1.15rem; margin-bottom: 1rem; border-left: 5px solid #a3422f;
+      background: #fffdf8; border-radius: 0 12px 12px 0;
+    }
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .app-tabs { grid-template-columns: 1fr; }
+      .app-tab { text-align: left; }
+    }
   </style>
 </head>
 <body>
@@ -201,9 +277,9 @@
     <div class="shell nav">
       <div class="brand"><span class="mark" aria-hidden="true">CH</span><span>CoolHack Cyber Academy</span></div>
       <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#missions">Missions</a>
-        <a href="#team">Team</a>
-        <a href="#workspace">Case Notes</a>
+        <button type="button" data-open-view="instructions">How It Works</button>
+        <button type="button" data-open-view="missions">Missions</button>
+        <button type="button" data-open-view="workspace">Team Workspace</button>
       </nav>
     </div>
   </header>
@@ -215,8 +291,8 @@
         <h1 id="page-title">Your first day on the <span>incident desk.</span></h1>
         <p class="lede">CoolHack Solutions has hired your team to investigate realistic security incidents. Analyze the evidence, make defensible decisions, communicate clearly, and leave every case with a portfolio-ready artifact.</p>
         <div class="hero-actions">
-          <a class="btn primary" href="#missions">Open Mission 1 <span aria-hidden="true">→</span></a>
-          <a class="btn" href="#workflow">See how cases work</a>
+          <button class="btn primary" type="button" data-open-view="instructions">Read the instructions first <span aria-hidden="true">→</span></button>
+          <button class="btn" type="button" data-open-view="missions">View mission queue</button>
         </div>
       </div>
       <aside class="brief-card" aria-label="Current incident summary">
@@ -229,7 +305,13 @@
   </div>
 
   <main id="main" class="shell">
-    <section id="missions" aria-labelledby="missions-title">
+    <div class="app-tabs" role="tablist" aria-label="Academy sections">
+      <button class="app-tab" id="view-tab-instructions" type="button" role="tab" aria-selected="true" aria-controls="instructions-view" data-open-view="instructions">1. How It Works<small>Read this before beginning</small></button>
+      <button class="app-tab" id="view-tab-missions" type="button" role="tab" aria-selected="false" aria-controls="missions" data-open-view="missions">2. Missions<small>Briefing, evidence, and AI role-play</small></button>
+      <button class="app-tab" id="view-tab-workspace" type="button" role="tab" aria-selected="false" aria-controls="workspace" data-open-view="workspace">3. Team Workspace<small>Complete and download the report</small></button>
+    </div>
+
+    <section id="missions" data-view="missions" aria-labelledby="missions-title" hidden>
       <div class="section-head">
         <div><h2 id="missions-title">Mission queue</h2><p>Select a case to receive your team briefing.</p></div>
         <span class="status">6 guided cases</span>
@@ -240,6 +322,21 @@
       </div>
     </section>
 
+    <div id="instructions-view" data-view="instructions" role="tabpanel" aria-labelledby="view-tab-instructions">
+      <div class="instructions-lead"><strong>Start here.</strong> Read these instructions as a team before opening a mission. Your team will choose four different roles, examine the evidence together, complete one shared AI conversation, and produce one shared incident report. Each member will also write a separate personal reflection.</div>
+      <section aria-labelledby="student-path-title">
+        <div class="section-head"><div><h2 id="student-path-title">What your team will do</h2><p>Follow these steps in order for every mission.</p></div></div>
+        <div class="path-steps">
+          <div class="path-step"><b>Step 1</b><span>Read the mission briefing</span></div>
+          <div class="path-step"><b>Step 2</b><span>Choose one role per member</span></div>
+          <div class="path-step"><b>Step 3</b><span>Examine every artifact</span></div>
+          <div class="path-step"><b>Step 4</b><span>Agree on an initial decision</span></div>
+          <div class="path-step"><b>Step 5</b><span>Complete one AI role-play</span></div>
+          <div class="path-step"><b>Step 6</b><span>Improve the team report</span></div>
+          <div class="path-step"><b>Step 7</b><span>Write individual reflections</span></div>
+          <div class="path-step"><b>Step 8</b><span>Download the portfolio file</span></div>
+        </div>
+      </section>
     <section id="team" aria-labelledby="team-title">
       <div class="section-head"><div><h2 id="team-title">Choose your seat</h2><p>Form a team of four. Each member takes one role so every professional responsibility is represented.</p></div></div>
       <div class="notice"><strong>How your team works:</strong> All four members examine the same evidence and discuss each decision. One member shares the AI chat on screen and types the team's agreed responses while everyone watches. Rotate the person typing in later missions. Your team submits one shared incident report and AI transcript. Each member submits a separate personal reflection in the course assignment.</div>
@@ -261,8 +358,9 @@
         <div class="step"><b>Phase 5</b><span>Report</span><small>Explain impact and lessons.</small></div>
       </div>
     </section>
+    </div>
 
-    <section id="workspace" aria-labelledby="workspace-title">
+    <section id="workspace" data-view="workspace" aria-labelledby="workspace-title" hidden>
       <div class="section-head"><div><h2 id="workspace-title">Team mission report workspace</h2><p>Complete one shared report after your team examines the evidence and finishes the AI supervisor role-play. The report saves only in this browser, so the team recorder must download it before leaving.</p></div></div>
       <form class="panel workspace" id="caseForm">
         <div class="grid-2">
@@ -299,6 +397,51 @@
   </footer>
 
   <script>
+    const academyViews = ["instructions", "missions", "workspace"];
+
+    function openAcademyView(viewName, moveFocus = false) {
+      if (!academyViews.includes(viewName)) return;
+      document.querySelectorAll("[data-view]").forEach(view => {
+        view.hidden = view.dataset.view !== viewName;
+      });
+      document.querySelectorAll(".app-tab").forEach(tab => {
+        const selected = tab.dataset.openView === viewName;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      localStorage.setItem("coolhack-active-view", viewName);
+      if (moveFocus) {
+        document.querySelector(`#view-tab-${viewName}`)?.focus();
+        document.querySelector(".app-tabs")?.scrollIntoView({behavior: "smooth", block: "start"});
+      }
+    }
+
+    document.addEventListener("click", event => {
+      const viewButton = event.target.closest("[data-open-view]");
+      if (viewButton) {
+        event.preventDefault();
+        openAcademyView(viewButton.dataset.openView, true);
+        return;
+      }
+      const workspaceLink = event.target.closest('a[href="#workspace"]');
+      if (workspaceLink) {
+        event.preventDefault();
+        openAcademyView("workspace", true);
+      }
+    });
+
+    document.querySelectorAll(".app-tab").forEach((tab, index) => {
+      tab.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+        event.preventDefault();
+        const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+        const nextIndex = (index + (forward ? 1 : -1) + academyViews.length) % academyViews.length;
+        openAcademyView(academyViews[nextIndex], true);
+      });
+    });
+
+    openAcademyView(localStorage.getItem("coolhack-active-view") || "instructions");
+
     const missions = [
       {
         title: "The Urgent Invoice", subtitle: "Phishing triage", severity: "High", tracks: ["SOC", "Email Security"],
