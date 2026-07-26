@@ -277,9 +277,22 @@
     .role.explainable { border: 1px solid var(--line); }
     .tap-hint { display: block; margin-top: .55rem; color: #84402f; font-size: .78rem; font-weight: 800; }
     .info-chip {
-      border: 1px solid #becdbd; cursor: pointer; font: inherit;
+      display: inline-flex; align-items: center; gap: .38rem;
+      border: 1px solid #9fb09f; cursor: pointer; font: inherit;
+      box-shadow: 0 2px 0 rgba(58,48,35,.12);
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
-    .info-chip:hover, .info-chip:focus-visible { border-color: #4e6754; filter: brightness(.98); }
+    .info-chip::after {
+      content: "?";
+      display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem;
+      color: #fffdf8; background: #4e6754; border-radius: 50%;
+      font-size: .7rem; font-weight: 900; line-height: 1;
+    }
+    .info-chip:hover, .info-chip:focus-visible {
+      transform: translateY(-1px); border-color: #4e6754;
+      box-shadow: 0 4px 0 rgba(58,48,35,.14);
+    }
+    .chip-help { margin: 0 0 .55rem; color: #68675f; font-size: .82rem; font-weight: 700; }
     .clock-panel {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem;
       margin: 0 0 1rem; padding: .8rem 1rem; color: #f8f2e8; background: #292c27;
@@ -814,6 +827,21 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
     const list = document.querySelector("#missionList");
     const panel = document.querySelector("#missionPanel");
     let activeMission = Number(localStorage.getItem("coolhack-active-mission") || 0);
+    const trackExplanations = {
+      "SOC": "SOC means Security Operations Center. SOC analysts monitor alerts, investigate suspicious activity, and help the organization respond to security incidents.",
+      "Email Security": "Email Security focuses on protecting people and systems from phishing, malicious links, unsafe attachments, impersonation, and other threats delivered through email.",
+      "IAM": "IAM means Identity and Access Management. It controls who can sign in, what they can access, and how suspicious account activity is detected and handled.",
+      "DFIR": "DFIR means Digital Forensics and Incident Response. It combines careful evidence collection with actions that contain, remove, and recover from a threat.",
+      "Endpoint": "Endpoint Security protects devices such as laptops, desktops, and servers from malware, suspicious activity, and unauthorized access.",
+      "Data Security": "Data Security protects information from unauthorized access, misuse, alteration, disclosure, or loss.",
+      "NET": "NET identifies a network-security mission. The team examines traffic, connections, devices, and security controls to understand what is happening across the network.",
+      "Incident Response": "Incident Response is the organized process used to prepare for, contain, remove, recover from, and learn from a cybersecurity incident.",
+      "Leadership": "Leadership focuses on explaining technical findings, business impact, uncertainty, priorities, and recommended actions to decision-makers."
+    };
+
+    function priorityExplanation(level) {
+      return `${level} priority tells the team how urgently this simulated case should be reviewed. It guides attention and response order; it does not reveal the answer or automatically prove that a security incident occurred.`;
+    }
 
     function renderMission(index, moveFocus = false) {
       activeMission = index;
@@ -826,9 +854,10 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
       const mission = missions[index];
       panel.innerHTML = `
         <div class="mission-meta">
-          <span class="chip high">${mission.severity} priority</span>
-          ${mission.tracks.map(track => `<span class="chip">${track}</span>`).join("")}
+          <button class="chip high info-chip" type="button" data-info-title="${mission.severity} priority" data-info="${priorityExplanation(mission.severity)}">${mission.severity} priority</button>
+          ${mission.tracks.map(track => `<button class="chip info-chip" type="button" data-info-title="${track}" data-info="${trackExplanations[track]}">${track}</button>`).join("")}
         </div>
+        <p class="chip-help">Select any label with a <strong>?</strong> to learn what it means.</p>
         <h3>Mission ${index + 1}: ${mission.title}</h3>
         <p class="scenario">${mission.scenario}</p>
         <div class="grid-2">
