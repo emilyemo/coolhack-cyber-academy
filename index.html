@@ -241,7 +241,8 @@
     </section>
 
     <section id="team" aria-labelledby="team-title">
-      <div class="section-head"><div><h2 id="team-title">Choose your seat</h2><p>Every role sees the same incident from a different professional responsibility.</p></div></div>
+      <div class="section-head"><div><h2 id="team-title">Choose your seat</h2><p>Form a team of four. Each member takes one role so every professional responsibility is represented.</p></div></div>
+      <div class="notice"><strong>How your team works:</strong> All four members examine the same evidence and discuss each decision. One member shares the AI chat on screen and types the team's agreed responses while everyone watches. Rotate the person typing in later missions. Your team submits one shared incident report and AI transcript. Each member submits a separate personal reflection in the course assignment.</div>
       <div class="roles">
         <article class="role"><span class="role-icon" aria-hidden="true">⌁</span><h3>SOC Analyst</h3><p>Review alerts, correlate evidence, build the incident timeline, and recommend severity.</p></article>
         <article class="role"><span class="role-icon" aria-hidden="true">⌕</span><h3>Incident Responder</h3><p>Plan containment, preserve evidence, remove the threat, and validate recovery.</p></article>
@@ -262,11 +263,11 @@
     </section>
 
     <section id="workspace" aria-labelledby="workspace-title">
-      <div class="section-head"><div><h2 id="workspace-title">Mission report workspace</h2><p>Complete this after examining the evidence and finishing the AI supervisor role-play. Your work saves automatically in this browser.</p></div></div>
+      <div class="section-head"><div><h2 id="workspace-title">Team mission report workspace</h2><p>Complete one shared report after your team examines the evidence and finishes the AI supervisor role-play. The report saves only in this browser, so the team recorder must download it before leaving.</p></div></div>
       <form class="panel workspace" id="caseForm">
         <div class="grid-2">
-          <div class="field"><label for="studentName">Student or team name</label><input id="studentName" autocomplete="name" placeholder="Enter a name"></div>
-          <div class="field"><label for="selectedRole">Assigned role</label><input id="selectedRole" placeholder="Example: SOC Analyst"></div>
+          <div class="field"><label for="studentName">Team name</label><input id="studentName" placeholder="Enter your team name"></div>
+          <div class="field"><label for="selectedRole">Team members and assigned roles</label><input id="selectedRole" placeholder="Example: Jordan — SOC Analyst; Casey — Incident Responder"></div>
         </div>
         <div class="field"><label for="finding">1. Evidence-based findings</label><textarea id="finding" placeholder="List the suspicious indicators you found. Name the artifact that supports each finding. Separate confirmed facts from assumptions."></textarea></div>
         <div class="field"><label for="timeline">2. Incident timeline</label><textarea id="timeline" placeholder="Put the important events in time order. Example: 9:12 AM — employee received the email."></textarea></div>
@@ -274,7 +275,7 @@
         <div class="field"><label for="unknowns">4. Remaining questions</label><textarea id="unknowns" placeholder="What is still unknown? What additional evidence would you collect?"></textarea></div>
         <div class="field"><label for="aiTranscript">5. AI role-play transcript</label><textarea id="aiTranscript" placeholder="Paste the complete conversation with the AI SOC supervisor here. Do not include private information, passwords, or real company data."></textarea></div>
         <div class="field"><label for="aiFeedback">6. AI supervisor feedback and readiness score</label><textarea id="aiFeedback" placeholder="Paste the AI supervisor's final feedback and score here."></textarea></div>
-        <div class="field"><label for="reflection">7. Personal reflection (at least 100 words)</label><textarea id="reflection" placeholder="Explain what you learned, what you initially missed, how the AI supervisor challenged your reasoning, and what you would do differently in a real SOC."></textarea></div>
+        <div class="field"><label for="reflection">7. Individual reflection draft (at least 100 words)</label><textarea id="reflection" placeholder="Each member writes a separate reflection: What did you contribute? What did you initially miss? How did the AI supervisor challenge your reasoning? What would you do differently in a real SOC? Submit the final reflection separately in the course assignment."></textarea></div>
         <fieldset style="border:0;padding:0;margin:0">
           <legend style="font-weight:750">Submission check</legend>
           <div class="checklist">
@@ -472,22 +473,24 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
         <h5>Student instructions</h5>
         <ol class="student-steps">
           <li>Click <strong>Copy role-play prompt</strong> below.</li>
-          <li>Open the AI tool approved by your instructor and start a new chat.</li>
+          <li>Choose one team member to open an AI tool they are permitted to use, such as ChatGPT, Microsoft Copilot, Google Gemini, Claude, or another generative AI tool. Use that student's own account and start a new chat.</li>
+          <li>Share that screen so every team member can see the AI conversation. The student operating the chat types only the team's agreed responses; the other three members contribute from their assigned roles.</li>
           <li>Paste the prompt into the chat and send it.</li>
-          <li>When asked, type your assigned role and your own initial findings. Refer to artifacts by number.</li>
-          <li>Answer the supervisor's questions in complete professional sentences. Do not ask the AI to “give me the answer.”</li>
+          <li>When asked, enter the team's four assigned roles and initial findings. Refer to artifacts by number and identify which role is contributing each recommendation.</li>
+          <li>Discuss each question as a team, then type one agreed answer in complete professional sentences. Do not ask the AI to “give me the answer.”</li>
           <li>Continue until the supervisor gives final feedback and a readiness score.</li>
-          <li>Copy the complete conversation into the <strong>AI role-play transcript</strong> box in the report workspace.</li>
+          <li>Copy the complete conversation into the <strong>AI role-play transcript</strong> box in the team report workspace.</li>
+          <li>Submit one team report and transcript. Each member must separately submit a personal reflection in the course assignment.</li>
         </ol>
 
-        <label for="roleplayPrompt">Prompt to paste into the approved AI tool</label>
+        <label for="roleplayPrompt">Prompt to paste into your team's permitted AI tool</label>
         <textarea class="prompt-box" id="roleplayPrompt" readonly>You are the SOC supervisor at CoolHack Solutions, a fictional training organization. Conduct a beginner-friendly workplace role-play with an AAS cybersecurity student investigating Mission 1, “The Urgent Invoice.”
 
 RULES FOR THE ROLE-PLAY
 1. Do not give the student the solution or list the phishing indicators for them.
 2. Ask only one question at a time and wait for the student's response.
-3. Begin by asking for the student's assigned role and initial evidence-based conclusion.
-4. Require the student to identify the exact artifact supporting each important claim.
+3. Begin by asking for the team's four assigned roles and its initial evidence-based conclusion.
+4. Require the team to identify the exact artifact supporting each important claim and invite contributions from all four roles.
 5. Challenge guesses, vague statements, unsafe actions, and conclusions that are not supported by evidence.
 6. Ask the student to separate confirmed facts from assumptions.
 7. Cover these workplace areas during the conversation: incident timeline, email indicators, account risk, endpoint risk, containment, evidence to collect next, escalation, and a plain-language update to the affected employee.
@@ -496,7 +499,7 @@ RULES FOR THE ROLE-PLAY
 10. Do not request or accept real passwords, personal data, or employer information.
 
 ENDING THE ROLE-PLAY
-After the student has answered the major questions, ask them for one final incident decision and justification. Then provide:
+After the team has answered the major questions, ask for one final team incident decision and justification. Then provide:
 - two things the student did well;
 - two specific improvements;
 - a readiness score for Evidence Use, Reasoning, Response Decision, and Professional Communication, with each category scored from 1 to 5;
@@ -515,8 +518,9 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           <li>Evidence-based findings and incident timeline</li>
           <li>Final decision with justification</li>
           <li>Complete AI role-play transcript and supervisor feedback</li>
-          <li>Personal reflection of at least 100 words</li>
-          <li>Downloaded mission report for submission or a sanitized portfolio</li>
+          <li>One shared team incident report</li>
+          <li>One separate personal reflection of at least 100 words from each member</li>
+          <li>A downloaded copy of the team report for each member's sanitized portfolio</li>
         </ul>
       </section>`;
 
@@ -579,7 +583,7 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           const status = document.querySelector("#copyStatus");
           try {
             await navigator.clipboard.writeText(prompt.value);
-            status.textContent = "Prompt copied. Open your instructor-approved AI tool and paste it into a new chat.";
+            status.textContent = "Prompt copied. One team member should open a permitted AI tool, share the screen, and paste it into a new chat.";
           } catch (_) {
             prompt.focus();
             prompt.select();
@@ -655,8 +659,8 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
       const content = `COOLHACK CYBER ACADEMY — CASE NOTES
 
 Mission: ${missions[activeMission].title}
-Student/Team: ${document.querySelector("#studentName").value || "Not entered"}
-Assigned Role: ${document.querySelector("#selectedRole").value || "Not entered"}
+Team: ${document.querySelector("#studentName").value || "Not entered"}
+Team Members and Roles: ${document.querySelector("#selectedRole").value || "Not entered"}
 
 KEY FINDING
 ${document.querySelector("#finding").value || "Not entered"}
