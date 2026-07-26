@@ -42,14 +42,17 @@ Never use or request an HCC password.
 
 ## Professor accounts and three sections
 
-1. Each professor creates a dedicated, non-institutional CoolHack project
-   account through the private instructor portal.
-2. In the platform administrator dashboard, use **Authorize a professor** with
-   that project email.
-3. Create each Capstone section and assign its professor.
-4. Professors can see and manage only their assigned section. The platform
+1. Give professors only the private professor portal:
+   `?portal=professor#classroom-access`.
+2. Each professor chooses a CoolHack-only username and password. No professor
+   email address is requested or stored.
+3. The account remains pending and has no section access.
+4. In the platform administrator dashboard, use **Authorize a professor** with
+   the exact pending CoolHack username.
+5. Create each Capstone section and assign its professor.
+6. Professors can see and manage only their assigned section. The platform
    administrator can see all sections.
-5. Create teams inside the correct section and use **Generate code**. Give each
+7. Create teams inside the correct section and use **Generate code**. Give each
    private team code only to that team's four students.
 
 ## First classroom test
@@ -69,7 +72,9 @@ Never use or request an HCC password.
 
 - Students use invented screen names, private passwords, and instructor-issued
   team codes; no student email is requested.
-- The platform administrator creates sections and authorizes professors.
+- The platform administrator is the only user whose account uses an email.
+- Professors use CoolHack usernames and remain blocked until the platform
+  administrator authorizes them.
 - Each professor creates teams only in the assigned section and assigns four
   distinct roles.
 - Each student edits a separate role-notes area.
