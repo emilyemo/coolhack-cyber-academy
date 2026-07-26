@@ -126,10 +126,6 @@ create policy "read own profile or instructor"
 on public.profiles for select
 using (id = auth.uid() or public.is_instructor());
 
-create policy "update own profile"
-on public.profiles for update
-using (id = auth.uid()) with check (id = auth.uid());
-
 create policy "instructors manage teams"
 on public.teams for all
 using (public.is_instructor()) with check (public.is_instructor());
@@ -195,6 +191,17 @@ using (
       where t.id = team_id and t.mission_locked
     )
   )
+)
+with check (
+  public.is_instructor()
+  or (
+    public.is_team_member(team_id)
+    and status in ('draft', 'submitted')
+    and not exists (
+      select 1 from public.teams t
+      where t.id = team_id and t.mission_locked
+    )
+  )
 );
 
 create policy "student owns reflection; instructor reads all"
@@ -210,7 +217,8 @@ on public.reflections for update
 using (
   (student_id = auth.uid() and submitted_at is null)
   or public.is_instructor()
-);
+)
+with check (student_id = auth.uid() or public.is_instructor());
 
 alter publication supabase_realtime add table
   public.role_notes,
