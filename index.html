@@ -237,6 +237,10 @@
     .mission-tab { color: var(--ink); background: #f7f2e9; }
     .mission-tab:hover, .mission-tab:focus-visible { border-color: #a3422f; }
     .mission-tab.active { background: #f1dfd6; border-color: #a3422f; }
+    .career-bridge { margin: 1rem 0; padding: 1rem; color: var(--ink); background: linear-gradient(135deg,#e6f8f6,#fff4df); border: 1px solid #8bd5ce; border-radius: 14px; }
+    .career-bridge h4 { margin: .2rem 0 .55rem; }
+    .career-bridge h5 { margin-top: 0; }
+    .locked-mission { padding: 1.25rem; background: #fff4df; border-left: 6px solid #d99a18; border-radius: 12px; }
     .chip { color: #38503e; background: #e4ebe3; border-color: #becdbd; }
     .chip.high { color: #843322; background: #f5dfd8; border-color: #deb7ab; }
     .callout, .artifact, .path-step, .step, .check { background: #faf6ee; }
@@ -568,7 +572,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=classroom-visibility-2"></script>
+  <script src="classroom.js?v=weekly-scenario-release-1"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -1086,6 +1090,23 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           <div class="callout"><h4>Portfolio deliverables</h4><ul>${mission.deliverables.map(item => `<li>${item}</li>`).join("")}</ul></div>
         </div>
         <div class="decision"><strong>Your decision point</strong><br>${mission.decision}</div>
+        ${index === 0 ? `
+          <section class="career-bridge" aria-labelledby="career-bridge-title">
+            <span class="card-kicker">From classroom to career</span>
+            <h4 id="career-bridge-title">Why an employer would care about this exercise</h4>
+            <p>Security employers need analysts who can inspect suspicious email evidence, separate facts from assumptions, assess account and device risk, recommend proportionate containment, and communicate clearly. This exercise mirrors that work by requiring your team to investigate before deciding and to document the reasoning behind its response.</p>
+            <div class="grid-2">
+              <div class="callout"><h5>Real-work mapping</h5><ul>
+                <li>Email artifacts → phishing triage and header review</li>
+                <li>Timeline building → incident reconstruction</li>
+                <li>Account and endpoint questions → scope assessment</li>
+                <li>Team decision → containment and escalation</li>
+                <li>Written report → incident documentation and handoff</li>
+              </ul></div>
+              <div class="callout"><h5>What you can tell an employer</h5><p>“In a four-person incident-response simulation, I analyzed a suspicious invoice email, correlated multiple evidence artifacts, separated confirmed findings from assumptions, helped recommend containment and escalation actions, and contributed to a professional incident report.”</p></div>
+            </div>
+            <p><strong>Interview follow-up:</strong> Be prepared to explain your assigned role, one artifact you evaluated, how the evidence changed the team’s conclusion, and why the final response was appropriate. Describe the process honestly as a simulation; do not present it as employment experience.</p>
+          </section>` : ""}
         ${index === 0 ? `<div class="hero-actions"><button class="btn primary" type="button" id="openEvidence" aria-expanded="false" aria-controls="evidenceRoom">Open Mission 1 evidence <span aria-hidden="true">→</span></button></div>${missionOneEvidence}${missionOneRoleplay}` : ""}
         <div class="hero-actions">
           <a class="btn ${index === 0 ? "" : "primary"}" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
@@ -1152,7 +1173,24 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
       });
       list.appendChild(button);
     });
-    renderMission(Math.min(activeMission, missions.length - 1));
+
+    function applyMissionRelease(releasedMission) {
+      const released = Number(releasedMission || 0);
+      document.querySelectorAll(".mission-tab").forEach((button, index) => {
+        button.hidden = released === 0 || index !== released - 1;
+      });
+      if (!released) {
+        panel.innerHTML = `<div class="locked-mission"><strong>Weekly scenario not yet available</strong><p>Your professor will reveal the activity when the class is ready to begin.</p></div>`;
+        return;
+      }
+      renderMission(released - 1);
+    }
+    window.addEventListener("coolhack:mission-release", event => applyMissionRelease(event.detail?.mission));
+    if (new URLSearchParams(window.location.search).get("portal") === "student") {
+      applyMissionRelease(window.CoolHackReleasedMission || 0);
+    } else {
+      renderMission(Math.min(activeMission, missions.length - 1));
+    }
 
     panel.addEventListener("click", event => {
       const trainingLink = event.target.closest("#trainingInvoiceLink");
