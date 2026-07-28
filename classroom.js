@@ -263,7 +263,7 @@
   }
 
   function accountBar(extra="") {
-    return `<div class="account-bar"><p><span class="live-dot"></span>Signed in as <strong>${esc(profile.display_name)}</strong> · ${esc(profile.app_role)}</p><div>${extra}<button class="btn" id="signOut" type="button">Sign out</button></div></div>`;
+    return `<div class="account-bar"><p><span class="live-dot"></span>Signed in as <strong>${esc(profile.display_name)}</strong> · ${esc(profile.app_role)}</p><div class="account-actions">${extra}${["instructor","platform_admin"].includes(profile.app_role)?`<a class="btn" href="?portal=student#classroom-access" target="_blank" rel="noopener">Preview student entrance</a>`:""}<button class="btn" id="signOut" type="button">Sign out</button></div></div>`;
   }
 
   async function studentScreen() {
@@ -287,6 +287,7 @@
     const myNote = (notesResult.data || []).find(n => n.author_id === currentUser.id)?.note_text || "";
     mount.innerHTML = accountBar(`<span class="cloud-state" id="cloudState">Cloud connected</span> `) + `
       <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Private team code: <code>${esc(membership.teams.join_code)}</code> · Your seat: ${esc(membership.assigned_role || "Not assigned")}. Share the code only with your other three teammates.</div>
+      <div class="visibility-guide"><strong>Who can see this work?</strong><span>Teammates see the roster, live role notes, and shared report.</span><span>Your private reflection is visible only to you, your assigned professor, and the platform administrator.</span></div>
       <div class="classroom-grid">
         <aside class="classroom-card"><h3>Team roster</h3><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong><br>${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><h3>Live role notes</h3><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc(roster.find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No notes yet.</p>"}</div></aside>
         <div>
@@ -372,6 +373,7 @@
   const lead=isAdmin?"Create classes, share one-time professor codes, and review activity across the academy.":"Manage only your assigned class, share its student section code, assign seats, and review submissions.";
   mount.innerHTML=accountBar()+`
     <div class="admin-hero"><div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div><span class="privacy-badge">De-identified classroom data only</span></div>
+    <div class="visibility-guide staff-visibility"><strong>${isAdmin?"Administrator visibility":"Professor visibility"}</strong><span>${isAdmin?"You can review every class, professor, team, student alias, and submission in CoolHack.":"You can review only the class assigned to your account and its teams, student aliases, shared work, and private reflections."}</span><span>The database enforces this boundary; it is not merely hidden by the dashboard.</span></div>
     <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Admin creates class</span><span><b>2</b> Professor claims code</span><span><b>3</b> Student creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
     <div class="admin-stats" aria-label="Classroom overview"><div><strong>${sections.length}</strong><span>Active sections</span></div><div><strong>${teams.length}</strong><span>Teams</span></div><div><strong>${members.length}</strong><span>Student accounts</span></div><div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div></div>
     ${isAdmin?`<div class="admin-panel-grid">
