@@ -305,6 +305,13 @@ alter table public.sections
 create unique index if not exists sections_class_code_key
   on public.sections (class_code);
 
+-- Team names need to be unique only inside a section, not across the academy.
+alter table public.teams
+  drop constraint if exists teams_name_key;
+
+create unique index if not exists teams_section_name_key
+  on public.teams (section_id, lower(name));
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql security definer set search_path = public
