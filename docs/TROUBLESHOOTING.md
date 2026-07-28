@@ -36,20 +36,19 @@ Repeated clicks can produce duplicate attempts and prolong confusion.
 - Confirm the code has not been replaced.
 - Never publish the code while troubleshooting.
 
-## Professor remains pending
+## Professor code is rejected
 
-1. Confirm the exact username spelling.
-2. Confirm the account exists in Supabase Authentication.
-3. Authorize the username from the platform administrator dashboard.
-4. Assign the professor to an active section.
-5. Sign out and sign in again.
+Confirm that the professor entered the dedicated professor access code, not the
+student section code or a team code. The class must be active and unassigned.
+If the code may be exposed or was already claimed, the administrator should use
+**Generate new code** and send the replacement privately.
 
 ## Administrator dashboard does not appear
 
 - Confirm the account exists.
 - Confirm the account's `profiles.app_role` is `platform_admin`.
 - Confirm the SQL update affected exactly one row.
-- Confirm all three SQL scripts completed in order.
+- Confirm all four SQL scripts completed in order.
 - Sign out and sign in through `?portal=admin#classroom-access`.
 
 ## Error: invalid input value for enum app_role
@@ -74,7 +73,7 @@ Do not substitute `instructor` for the administrator role.
 
 ## Professor sees no section
 
-Authorization and assignment are separate. Confirm:
+Confirm:
 
 - the profile role is `instructor`;
 - the section's `instructor_id` is the professor's profile ID; and
