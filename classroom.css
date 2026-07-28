@@ -43,6 +43,13 @@
 .section-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; margin:1rem 0; }
 .section-summary article { display:flex; flex-direction:column; gap:.15rem; padding:.8rem; background:#f4f0e7; border:1px solid #ddd3c3; border-radius:10px; }
 .section-summary span,.section-summary small { color:#5f5c53; }
+.scenario-release { display:grid; gap:.45rem; margin:.65rem 0; padding:.7rem; background:#e8f7f5; border:1px solid #8bd5ce; border-radius:10px; }
+.scenario-release label { margin:0; color:#12333a; font-size:.78rem; font-weight:850; }
+.scenario-release select { margin:.25rem 0 0; }
+.scenario-waiting { max-width:720px; margin:1.25rem auto; border-top:6px solid #d99a18; }
+.professor-briefing { margin:1rem 0; border-top:6px solid #ef6f51; }
+.professor-briefing details { margin:.7rem 0; padding:.7rem .85rem; background:#fff4df; border:1px solid #e8c77c; border-radius:10px; }
+.professor-briefing summary { color:#6f2d20; cursor:pointer; font-weight:850; }
 .team-operations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; }
 .team-operation { padding:1rem; color:#34362f; border:1px solid #d2c7b5; border-radius:13px; background:#faf6ee; }
 .team-operation-title { display:flex; align-items:start; justify-content:space-between; gap:.7rem; }
