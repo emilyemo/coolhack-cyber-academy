@@ -38,8 +38,11 @@ flowchart TD
 ```
 
 - The platform administrator can manage all sections.
-- A professor can manage only an assigned active section.
-- A student can access only the team joined with the private team code.
+- A professor can manage only an assigned active section and shares its private
+  section code with that class.
+- One student creates a team with the section code; the other three members join
+  with the generated private team code.
+- A student can access only that joined team.
 - Teammates can see one another's aliases and role notes.
 - A student's reflection is not visible to teammates; authorized staff can
   review it.
@@ -61,8 +64,8 @@ flowchart TD
 | Table | Stores |
 |---|---|
 | `profiles` | Display name and application role |
-| `sections` | Section name, assigned professor, and active state |
-| `teams` | Team name, private code, section, mission, and lock state |
+| `sections` | Section name, private section code, assigned professor, and active state |
+| `teams` | Student-chosen team name, private team code, section, mission, and lock state |
 | `team_members` | Student-to-team membership and assigned role |
 | `role_notes` | One student's notes for one team mission |
 | `team_reports` | Shared findings, timeline, decision, unknowns, AI transcript, and feedback |
