@@ -16,43 +16,51 @@ actual protection.
 ## First-day setup
 
 1. Confirm the account has the `platform_admin` role.
-2. Create each Capstone section with a neutral label.
-3. Ask each professor to create a username-only account through the professor
-   portal.
-4. Verify the requested username outside CoolHack before authorizing it.
-5. Authorize the exact pending username.
-6. Assign the authorized professor to the correct section.
-7. Give the assigned professor the section's private section code.
-8. One student in each group uses that section code to create the team and choose its neutral team name.
-9. That student shares the generated private team code only with the other three teammates.
-10. The assigned professor verifies the live roster and assigns the four distinct seats.
+2. Create each Capstone class with a neutral label.
+3. Copy the professor access code generated for that class.
+4. Give the code privately to the intended professor.
+5. The professor activates a username and password with that code and
+   immediately gains control of that class only.
+6. The professor gives students the separate student section code.
+7. One student in each group uses the student section code to create the team
+   and choose its neutral team name.
+8. That student shares the generated private team code only with the other
+   three teammates.
+9. The professor verifies the live roster and assigns the four distinct seats.
 
 Do not store official section numbers, employee IDs, student IDs, real rosters,
 or grades in CoolHack.
 
-## Approving a professor
+## Giving a professor access
 
-1. Have the professor tell you the exact CoolHack username through an approved
-   communication channel.
-2. Confirm the account is expected.
-3. In **Authorize a professor**, enter the exact username.
-4. Approve it once.
-5. Assign the professor to a section.
-6. Ask the professor to sign out and sign in again.
-7. Verify that the professor sees only the assigned section.
+1. Create the intended class.
+2. Copy that class's private professor access code.
+3. Send the code to the intended professor through an approved private channel.
+4. The professor opens the professor entrance, selects **First visit: activate
+   class**, and creates a CoolHack username and password.
+5. Verify that the professor's username appears on the correct class.
+6. Verify that the professor sees only that class.
 
-Authorization and section assignment are separate. An authorized professor
-without an assigned section should not see classroom data.
+There is no approval queue. A code can claim only an active, unassigned class.
+Generate a new code immediately if the original code may have been exposed.
 
 ## Creating sections
 
 Use neutral labels such as `Capstone Section 1`, not institutional course
-records. Select an authorized professor or choose **Assign later** if the
-professor account is not ready.
+records. CoolHack generates the professor access code and student section code
+automatically.
 
-After creating a section, CoolHack displays its private section code. Give that
-code only to the assigned professor. A team belongs to one section, and
-professor visibility is derived from that relationship.
+Give the professor access code only to the intended professor. After activation,
+the professor shares the separate student section code with the class. A team
+belongs to one section, and professor visibility is derived from that
+relationship.
+
+## Reviewing access
+
+The administrator dashboard lists recent successful sign-ins with the invented
+username, role, entrance used, and time. It does not expose student email
+identifiers. Use this list to confirm expected activity and investigate an
+unexpected role or entrance.
 
 ## Student-created teams and codes
 
@@ -102,7 +110,8 @@ course system; do not enter grades in CoolHack.
 
 - Forgotten administrator password: use the dedicated project's email recovery
   process; check rate limits before retrying.
-- Unknown professor request: do not authorize it.
+- Unexpected professor activation: rotate the professor code, preserve the
+  access audit, and investigate before classroom use continues.
 - Exposed team code: pause enrollment, investigate whether an unexpected alias
   joined, and replace/rebuild the team if necessary.
 - Suspected cross-team access: stop classroom use, preserve evidence, and review
