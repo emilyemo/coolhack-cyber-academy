@@ -30,6 +30,42 @@
     return `${token}@professors.coolhack.invalid`;
   }
 
+  function setPortalHeading(titleText, introText) {
+    const title = document.querySelector("#classroom-title");
+    const intro = title?.nextElementSibling;
+    if (title) title.textContent = titleText;
+    if (intro) intro.textContent = introText;
+  }
+
+  function renderWelcome() {
+    document.body.classList.add("role-landing");
+    setPortalHeading("Welcome to CoolHack Cyber Academy", "Choose your role to open the correct secure entrance.");
+    mount.innerHTML = `
+      <div class="role-welcome">
+        <div class="instructions-lead"><strong>Choose how you are entering CoolHack.</strong><br>Students and professors use private classroom codes. The administrator uses the dedicated project account.</div>
+        <div class="role-entry-grid">
+          <a class="role-entry-card" href="?portal=student#classroom-access">
+            <span class="role-entry-icon" aria-hidden="true">ST</span>
+            <h3>Student</h3>
+            <p>Create a team, join a team, or return to your team workspace.</p>
+            <strong>Enter as a student →</strong>
+          </a>
+          <a class="role-entry-card" href="?portal=professor#classroom-access">
+            <span class="role-entry-icon" aria-hidden="true">PR</span>
+            <h3>Professor</h3>
+            <p>Use the professor access code supplied for your class. No approval request is required.</p>
+            <strong>Enter as a professor →</strong>
+          </a>
+          <a class="role-entry-card" href="?portal=admin#classroom-access">
+            <span class="role-entry-icon" aria-hidden="true">AD</span>
+            <h3>Administrator</h3>
+            <p>Create classes, issue professor codes, and review access across the academy.</p>
+            <strong>Enter as administrator →</strong>
+          </a>
+        </div>
+      </div>`;
+  }
+
   function renderAdministratorAccess(mode = "create") {
     const creating = mode === "create";
     mount.innerHTML = `
@@ -51,32 +87,48 @@
     field("administratorModeSwitch").addEventListener("click", () => renderAdministratorAccess(creating ? "signin" : "create"));
   }
 
+  function renderProfessorAccess(mode = "signin") {
+    const creating = mode === "create";
+    setPortalHeading("CoolHack professor portal", "Sign in or activate the class code supplied by the platform administrator.");
+    mount.innerHTML = `
+      <div class="instructions-lead"><strong>Professor access</strong><br>Use a CoolHack-only username and password. Do not use an institutional email, employee ID, or institutional password.</div>
+      <div class="access-choice" aria-label="Professor access choices">
+        <button class="btn ${creating ? "" : "primary"}" type="button" data-professor-mode="signin">Sign in</button>
+        <button class="btn ${creating ? "primary" : ""}" type="button" data-professor-mode="create">First visit: activate class</button>
+      </div>
+      <form class="classroom-card" id="professorAccessForm" data-mode="${mode}">
+        <h3>${creating ? "Activate professor access" : "Professor sign-in"}</h3>
+        <p>${creating ? "Enter the private professor access code for your class. A valid unused code gives you immediate control of that class only." : "Use the same CoolHack username and password you created for this class."}</p>
+        ${creating ? `<label for="professorClassCode">Professor access code</label><input id="professorClassCode" minlength="8" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>` : ""}
+        <label for="professorAlias">Professor username</label><input id="professorAlias" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" required>
+        <small>Use letters, numbers, underscores, or hyphens. This is a CoolHack username—not an email address.</small>
+        <label for="professorPassword">${creating ? "Create a CoolHack password" : "CoolHack password"}</label><input id="professorPassword" type="password" minlength="12" autocomplete="${creating ? "new-password" : "current-password"}" required>
+        ${creating ? `<label for="professorPasswordConfirm">Confirm CoolHack password</label><input id="professorPasswordConfirm" type="password" minlength="12" autocomplete="new-password" required>` : ""}
+        <div class="hero-actions"><button class="btn primary" type="submit">${creating ? "Activate my class" : "Sign in"}</button></div>
+      </form>
+      <p class="auth-message" id="authMessage" role="status"></p>`;
+    field("professorAccessForm").addEventListener("submit", professorAccess);
+    document.querySelectorAll("[data-professor-mode]").forEach(button =>
+      button.addEventListener("click", () => renderProfessorAccess(button.dataset.professorMode))
+    );
+  }
+
   function authScreen() {
-    if (staffPortal) {
-      const title = document.querySelector("#classroom-title");
-      const intro = title?.nextElementSibling;
-      if (portal === "admin") {
-        if (title) title.textContent = "CoolHack administrator portal";
-        if (intro) intro.textContent = "Create or sign in to the dedicated CoolHack project account used only by the platform administrator.";
-        renderAdministratorAccess();
-      } else {
-        if (title) title.textContent = "CoolHack professor portal";
-        if (intro) intro.textContent = "Create or sign in to a dedicated CoolHack professor account. No email address is required.";
-        mount.innerHTML = `
-        <div class="instructions-lead"><strong>Professor access</strong><br>Choose a CoolHack-only username and password. Do not use an institutional email, employee ID, or institutional password.</div>
-        <form class="classroom-card" id="professorAccessForm">
-          <h3>Professor sign-in</h3>
-          <p>New accounts remain pending until the platform administrator authorizes the username and assigns a section.</p>
-          <label for="professorAlias">Professor username</label><input id="professorAlias" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" required>
-          <small>Use letters, numbers, underscores, or hyphens. This is a CoolHack username—not an email address.</small>
-          <label for="professorPassword">CoolHack password</label><input id="professorPassword" type="password" minlength="12" autocomplete="current-password" required>
-          <div class="hero-actions"><button class="btn primary" type="submit" name="staffAction" value="signin">Sign in</button><button class="btn" type="submit" name="staffAction" value="create">First visit: request access</button></div>
-        </form>
-        <p class="auth-message" id="authMessage" role="status"></p>`;
-        field("professorAccessForm").addEventListener("submit", professorAccess);
-      }
+    document.body.classList.remove("role-landing");
+    if (!portal) {
+      renderWelcome();
       return;
     }
+    if (portal === "admin") {
+      setPortalHeading("CoolHack administrator portal", "Sign in to create classes, issue access codes, and review academy activity.");
+      renderAdministratorAccess();
+      return;
+    }
+    if (portal === "professor" || portal === "instructor") {
+      renderProfessorAccess();
+      return;
+    }
+    setPortalHeading("CoolHack student portal", "Create a team, join a team, or return to your live team workspace.");
     renderStudentAccess();
   }
 
@@ -138,19 +190,27 @@
   }
   async function professorAccess(event) {
     event.preventDefault();
-    const action=event.submitter?.value||"signin";
+    const action=event.currentTarget.dataset.mode||"signin";
     const displayName=field("professorAlias").value.trim();
     const password=field("professorPassword").value;
-    say(action==="create"?"Creating professor access request…":"Signing in…");
+    say(action==="create"?"Activating your class…":"Signing in…");
     try {
       const email=await professorAliasEmail(displayName);
       if(action==="create"){
+        if(password!==field("professorPasswordConfirm").value){
+          say("The two CoolHack passwords do not match.");
+          return;
+        }
         const {error}=await db.auth.signUp({
           email,
           password,
-          options:{data:{display_name:displayName,account_kind:"professor_alias_pending"}}
+          options:{data:{
+            display_name:displayName,
+            account_kind:"professor_code_claim",
+            professor_code:field("professorClassCode").value.trim().toUpperCase()
+          }}
         });
-        say(error?error.message:"Request created. The platform administrator must authorize this username before any section is visible.");
+        say(error?error.message:"Professor access activated. Your assigned class will open automatically; no administrator approval is required.");
       } else {
         const {error}=await db.auth.signInWithPassword({email,password});
         if(error)say("That professor username or password did not match.");
@@ -285,43 +345,52 @@
   const sectionOptions = (sections, selected="") =>
     `<option value="">Choose a section</option>${sections.map(s=>`<option value="${s.id}" ${s.id===selected?"selected":""}>${esc(s.name)}</option>`).join("")}`;
 
+  function formatAccessTime(value) {
+    if (!value) return "";
+    return new Intl.DateTimeFormat(undefined, {dateStyle:"medium", timeStyle:"short"}).format(new Date(value));
+  }
+
   async function staffScreen() {
   const isAdmin=profile.app_role==="platform_admin";
-  const pendingPromise=isAdmin?db.rpc("pending_professors"):Promise.resolve({data:[],error:null});
-  const [sectionsResult,teamsResult,profilesResult,membersResult,pendingResult]=await Promise.all([
-    db.from("sections").select("id,name,class_code,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)").eq("is_active",true).order("name"),
+  const sectionFields=isAdmin
+    ?"id,name,class_code,professor_access_code,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)"
+    :"id,name,class_code,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)";
+  const accessPromise=isAdmin
+    ? db.from("access_events").select("id,portal,app_role,accessed_at,profiles(display_name)").order("accessed_at",{ascending:false}).limit(30)
+    : Promise.resolve({data:[],error:null});
+  const [sectionsResult,teamsResult,profilesResult,membersResult,accessResult]=await Promise.all([
+    db.from("sections").select(sectionFields).eq("is_active",true).order("name"),
     db.from("teams").select("*").order("name"),
     db.from("profiles").select("id,display_name,app_role").order("display_name"),
     db.from("team_members").select("team_id,user_id,assigned_role,profiles(display_name)"),
-    pendingPromise
+    accessPromise
   ]);
-  const queryError=[sectionsResult,teamsResult,profilesResult,membersResult,pendingResult].find(result=>result.error)?.error;if(queryError)throw queryError;
-  const sections=sectionsResult.data||[],teams=teamsResult.data||[],profiles=profilesResult.data||[],members=membersResult.data||[],pendingProfessors=pendingResult.data||[];
-  const professors=profiles.filter(p=>p.app_role==="instructor"),assignedSection=sections[0]?.id||"";
+  const queryError=[sectionsResult,teamsResult,profilesResult,membersResult,accessResult].find(result=>result.error)?.error;if(queryError)throw queryError;
+  const sections=sectionsResult.data||[],teams=teamsResult.data||[],profiles=profilesResult.data||[],members=membersResult.data||[],accessEvents=accessResult.data||[];
+  const professors=profiles.filter(p=>p.app_role==="instructor");
   const title=isAdmin?"Platform administrator dashboard":"Professor dashboard";
-  const lead=isAdmin?"Create sections and authorize professors. Students create and join their own four-person teams.":"Share your section code, monitor student-created teams, assign seats, and review submissions.";
+  const lead=isAdmin?"Create classes, share one-time professor codes, and review activity across the academy.":"Manage only your assigned class, share its student section code, assign seats, and review submissions.";
   mount.innerHTML=accountBar()+`
     <div class="admin-hero"><div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div><span class="privacy-badge">De-identified classroom data only</span></div>
-    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Admin creates section</span><span><b>2</b> Admin assigns professor</span><span><b>3</b> Student creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
+    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Admin creates class</span><span><b>2</b> Professor claims code</span><span><b>3</b> Student creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
     <div class="admin-stats" aria-label="Classroom overview"><div><strong>${sections.length}</strong><span>Active sections</span></div><div><strong>${teams.length}</strong><span>Teams</span></div><div><strong>${members.length}</strong><span>Student accounts</span></div><div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div></div>
     ${isAdmin?`<div class="admin-panel-grid">
-      <form class="classroom-card" id="createSection"><span class="card-kicker">Step 1</span><h3>Create a Capstone section</h3><label for="sectionName">Section label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required><label for="sectionProfessor">Assigned professor</label><select id="sectionProfessor"><option value="">Assign later</option>${professors.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select><div class="hero-actions"><button class="btn primary">Create section</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
-      <form class="classroom-card" id="authorizeProfessor"><span class="card-kicker">Step 2</span><h3>Authorize a professor</h3><p>Professor requests appear automatically after they choose “First visit: request access.”</p><label for="professorUsername">Pending professor request</label><select id="professorUsername" required ${pendingProfessors.length?"":"disabled"}><option value="">${pendingProfessors.length?"Choose a pending professor":"No pending requests"}</option>${pendingProfessors.map(p=>`<option value="${esc(p.display_name)}">${esc(p.display_name)}</option>`).join("")}</select><div class="hero-actions"><button class="btn primary" ${pendingProfessors.length?"":"disabled"}>Authorize professor</button></div><p id="professorMessage" class="form-message" role="status"></p></form>
+      <form class="classroom-card" id="createSection"><span class="card-kicker">Create class</span><h3>Open a Capstone class</h3><p>CoolHack generates a private professor code automatically. Give it to the intended professor; the first valid claim takes control of this class only.</p><label for="sectionName">Class label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required><div class="hero-actions"><button class="btn primary">Create class and code</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
+      <div class="classroom-card"><span class="card-kicker">Automatic access</span><h3>No approval queue</h3><p>You do not type a professor's name here and no request waits for approval. Create the class, copy its professor code below, and send it privately. After activation, the professor appears on that class automatically.</p></div>
     </div>`:""}
     <div class="admin-panel-grid">
-      <div class="classroom-card"><span class="card-kicker">Step 3</span><h3>Students create their teams</h3><p>Give students the private section code shown below. One student chooses the team name and creates the team; the other three join with the generated team code.</p></div>
-      <div class="classroom-card"><span class="card-kicker">Steps 4–5</span><h3>Professor manages the live roster</h3><p>Each student uses an invented screen name and private password. Teams appear automatically, and the assigned professor approves the four distinct seats.</p></div>
-    </div>
+      <div class="classroom-card"><span class="card-kicker">Student self-service</span><h3>Students create their teams</h3><p>The professor shares the student section code. One student chooses the team name and creates the team; the other three join with the generated team code.</p></div>
+      <div class="classroom-card"><span class="card-kicker">Professor control</span><h3>Professor manages the live roster</h3><p>Teams appear automatically. The professor sees only this class and assigns the four distinct seats.</p></div>
     </div>
     <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
-      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${esc(section.profiles?.display_name||"Professor not assigned")}</span><small>Section code: <code>${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small>${isAdmin?`<label>Assign or change professor<select data-section-professor="${section.id}"><option value="">Unassigned</option>${professors.map(p=>`<option value="${p.id}" ${section.instructor_id===p.id?"selected":""}>${esc(p.display_name)}</option>`).join("")}</select></label><button class="btn compact" type="button" data-section-save="${section.id}">Save professor</button>`:""}</article>`).join("")||"<p>Create a section to begin.</p>"}</div>
+      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${section.profiles?.display_name?`Professor: ${esc(section.profiles.display_name)}`:"Awaiting professor activation"}</span><small>Student section code: <code>${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small>${isAdmin?(section.instructor_id?`<small>Professor access: claimed</small>`:`<small>Professor access code: <code>${esc(section.professor_access_code)}</code></small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-code="${esc(section.professor_access_code)}">Copy professor code</button><button class="btn compact" type="button" data-professor-code-refresh="${section.id}">Generate new code</button></div>`):""}</article>`).join("")||"<p>Create a class to begin.</p>"}</div>
       <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
-    </section>`;
+    </section>
+    ${isAdmin?`<section class="classroom-card access-audit"><div class="operations-head"><div><span class="card-kicker">Access audit</span><h3>Recent successful sign-ins</h3><p>CoolHack records role-based access without displaying student emails.</p></div></div><div class="audit-list">${accessEvents.map(event=>`<article><strong>${esc(event.profiles?.display_name||"Account")}</strong><span>${esc(event.app_role)} · ${esc(event.portal)}</span><time datetime="${esc(event.accessed_at)}">${esc(formatAccessTime(event.accessed_at))}</time></article>`).join("")||"<p>No successful sign-ins have been recorded yet.</p>"}</div></section>`:""}`;
   bindSignOut();
   field("sectionFilter")?.addEventListener("change",event=>{const visible=event.target.value==="all"?teams:teams.filter(t=>t.section_id===event.target.value);field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);bindOperationButtons();});
-  field("authorizeProfessor")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("authorize_professor",{professor_username:field("professorUsername").value});field("professorMessage").textContent=result.error?result.error.message:`${result.data} is now authorized as a professor.`;if(!result.error)setTimeout(staffScreen,500);});
-  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const payload={name:field("sectionName").value.trim(),created_by:currentUser.id};if(field("sectionProfessor").value)payload.instructor_id=field("sectionProfessor").value;const result=await db.from("sections").insert(payload);field("sectionMessage").textContent=result.error?result.error.message:"Section created.";if(!result.error)setTimeout(staffScreen,400);});
-  document.querySelectorAll("[data-section-save]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-professor="${button.dataset.sectionSave}"]`);const result=await db.from("sections").update({instructor_id:select.value||null}).eq("id",button.dataset.sectionSave);field("staffReview").innerHTML=`<p class="form-message">${esc(result.error?result.error.message:"Professor assignment saved.")}</p>`;if(!result.error)setTimeout(staffScreen,350);}));
+  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.from("sections").insert({name:field("sectionName").value.trim(),created_by:currentUser.id}).select("name,professor_access_code").single();field("sectionMessage").textContent=result.error?result.error.message:`${result.data.name} created. Professor code: ${result.data.professor_access_code}`;if(!result.error)setTimeout(staffScreen,1000);});
+  document.querySelectorAll("[data-professor-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("regenerate_professor_access_code",{requested_section:button.dataset.professorCodeRefresh});field("staffReview").innerHTML=`<p class="form-message">${esc(result.error?result.error.message:`New professor code: ${result.data}`)}</p>`;if(!result.error)setTimeout(staffScreen,900);}));
   bindOperationButtons();
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
   function bindOperationButtons(){
@@ -387,12 +456,12 @@
     if(!currentUser){authScreen();return;}
     try {
       await loadProfile();
-      if (currentUser.user_metadata?.account_kind === "professor_alias_pending" && profile.app_role === "student") {
-        mount.innerHTML = accountBar() + `<div class="classroom-card"><h3>Professor authorization pending</h3><p>Your CoolHack account is secure, but no classroom information is available yet. Ask the platform administrator to authorize the username <strong>${esc(profile.display_name)}</strong> and assign your section.</p></div>`;
-        bindSignOut();
-      } else {
-        ["instructor","platform_admin"].includes(profile.app_role) ? await staffScreen() : await studentScreen();
+      const logKey=`coolhack-access-${currentUser.id}`;
+      if(!sessionStorage.getItem(logKey)){
+        await db.rpc("record_access_event",{requested_portal:portal||profile.app_role});
+        sessionStorage.setItem(logKey,"1");
       }
+      ["instructor","platform_admin"].includes(profile.app_role) ? await staffScreen() : await studentScreen();
     }
     catch(error){mount.innerHTML=`<div class="classroom-card"><h3>Classroom setup is not finished</h3><p>${esc(error.message)}</p><p>The instructor must run the supplied Supabase database setup script once before accounts can use the workspace.</p></div>`;}
   }
