@@ -36,12 +36,13 @@ At this point the browser-only workspace works, but the live classroom does not.
 
 ## 4. Install the database
 
-For the current release, a **new installation must run all three files in this
+For the current release, a **new installation must run all four files in this
 exact order**:
 
 1. `supabase/schema.sql`
 2. `supabase/nickname-auth-migration.sql`
 3. `supabase/admin-sections-migration.sql`
+4. `supabase/self-service-professor-migration.sql`
 
 For each file:
 
@@ -62,7 +63,9 @@ use [Troubleshooting](TROUBLESHOOTING.md).
 
 - If only `schema.sql` was previously run, run migrations 2 and 3 in order.
 - If the nickname migration was already run, run only migration 3.
-- If all three completed successfully, do not rerun them.
+- If the first three completed successfully on an existing installation, run
+  only migration 4.
+- If all four completed successfully, do not rerun them.
 
 ## 5. Configure authentication
 
@@ -79,8 +82,8 @@ use [Troubleshooting](TROUBLESHOOTING.md).
 
 Turning off confirmation changes the security tradeoff: possession of the
 chosen identifier is not verified by email. CoolHack compensates with private
-team codes, passwords, professor approval, section assignment, and row-level
-security. Complete the security tests before classroom use.
+team codes, passwords, single-use professor class claims, section isolation, and
+row-level security. Complete the security tests before classroom use.
 
 ## 6. Connect the browser safely
 
@@ -153,18 +156,20 @@ returning p.display_name, p.app_role;
 
 ## 8. Create a professor test account
 
-1. Open a private/incognito window.
-2. Open:
+1. Sign in as administrator and create a neutral test class.
+2. Copy its generated professor access code.
+3. Open a private/incognito window.
+4. Open:
    `https://YOUR-PAGES-URL/?portal=professor#classroom-access`
-3. Choose a non-identifying CoolHack username and a unique password of at least
+5. Select **First visit: activate class**.
+6. Enter the professor access code.
+7. Choose a non-identifying CoolHack username and a unique password of at least
    12 characters.
-4. Create the account.
-5. Confirm that the account shows **authorization pending** and cannot see any
-   section.
-6. In the administrator dashboard, authorize the exact username.
-7. Create a test section and assign the professor.
-8. Sign in again as the professor and confirm that only the assigned section is
-   visible.
+8. Create the account.
+9. Confirm that the professor immediately sees only the claimed class.
+10. Confirm that reusing the same professor code cannot create another
+    professor account.
+11. Confirm that the administrator access audit records the successful sign-in.
 
 ## 9. Create and isolate two test teams
 
@@ -182,13 +187,14 @@ Only after all tests pass should a classroom pilot begin.
 ## 10. Deployment checklist
 
 - [ ] GitHub Pages loads over HTTPS
-- [ ] All three SQL files completed in order
+- [ ] All four SQL files completed in order
 - [ ] `app_role` includes `student`, `instructor`, and `platform_admin`
 - [ ] Only public Supabase values are in `supabase-config.js`
 - [ ] Administrator account uses a dedicated project email
 - [ ] Administrator role promotion affected exactly one account
-- [ ] Pending professor cannot see data
-- [ ] Authorized professor sees only the assigned section
+- [ ] Invalid or claimed professor code cannot create access
+- [ ] Professor sees only the code-claimed class
+- [ ] Administrator can review recent successful sign-ins
 - [ ] Students see only their own team
 - [ ] Teammates cannot read another student's reflection
 - [ ] Locked missions reject student edits
