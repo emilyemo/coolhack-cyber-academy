@@ -1,5 +1,12 @@
 # Changelog
 
+## Weekly scenario release
+
+- Added a professor-only reveal/hide control for one scenario per class.
+- Kept other scenarios unavailable in the student portal until released.
+- Added private Scenario 1 professor talking points and debrief prompts.
+- Added Scenario 1 real-work, résumé, and interview connections for students.
+
 Notable project changes are documented here. Dates use ISO format.
 
 ## Unreleased
