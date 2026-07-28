@@ -52,6 +52,26 @@ Repeated clicks can produce duplicate attempts and prolong confusion.
 - Confirm all three SQL scripts completed in order.
 - Sign out and sign in through `?portal=admin#classroom-access`.
 
+## Error: invalid input value for enum app_role
+
+If promotion reports that `platform_admin` is invalid:
+
+1. Stop; the failed update changed nothing.
+2. Inspect the allowed roles with the verification query in
+   [Installation](INSTALLATION.md).
+3. If only `student` and `instructor` appear, run once:
+
+```sql
+alter type public.app_role
+add value if not exists 'platform_admin';
+```
+
+4. Rerun the read-only role verification.
+5. Promote the administrator only after all three roles appear.
+6. Confirm exactly one row returns `app_role = platform_admin`.
+
+Do not substitute `instructor` for the administrator role.
+
 ## Professor sees no section
 
 Authorization and assignment are separate. Confirm:
