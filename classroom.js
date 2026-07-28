@@ -249,156 +249,82 @@
     `<option value="">Choose a section</option>${sections.map(s=>`<option value="${s.id}" ${s.id===selected?"selected":""}>${esc(s.name)}</option>`).join("")}`;
 
   async function staffScreen() {
-    const isAdmin = profile.app_role === "platform_admin";
-    const [sectionsResult, teamsResult, profilesResult, membersResult] = await Promise.all([
-      db.from("sections").select("id,name,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)").order("name"),
-      db.from("teams").select("*").order("name"),
-      db.from("profiles").select("id,display_name,app_role").order("display_name"),
-      db.from("team_members").select("team_id,user_id,assigned_role,profiles(display_name)")
-    ]);
-    const queryError = [sectionsResult,teamsResult,profilesResult,membersResult].find(result=>result.error)?.error;
-    if (queryError) throw queryError;
-    const sections = sectionsResult.data || [];
-    const teams = teamsResult.data || [];
-    const profiles = profilesResult.data || [];
-    const members = membersResult.data || [];
-    const professors = profiles.filter(p=>p.app_role==="instructor");
-    const students = profiles.filter(p=>p.app_role==="student");
-    const assignedIds = new Set(members.map(m=>m.user_id));
-    const unassigned = students.filter(p=>!assignedIds.has(p.id));
-    const assignedSection = sections[0]?.id || "";
-    const title = isAdmin ? "Platform administrator dashboard" : "Professor dashboard";
-    const lead = isAdmin
-      ? "Manage every Capstone section, authorize professors, create teams, and supervise live mission activity across the academy."
-      : "Manage only your assigned Capstone section, create teams, assign seats, and review live mission work.";
-
-    mount.innerHTML = accountBar() + `
-      <div class="admin-hero">
-        <div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div>
-        <span class="privacy-badge">De-identified classroom data only</span>
-      </div>
-      <div class="admin-stats" aria-label="Classroom overview">
-        <div><strong>${sections.length}</strong><span>Active sections</span></div>
-        <div><strong>${teams.length}</strong><span>Teams</span></div>
-        <div><strong>${members.length}</strong><span>Student accounts</span></div>
-        <div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div>
-      </div>
-      ${isAdmin?`
-      <div class="admin-panel-grid">
-        <form class="classroom-card" id="authorizeProfessor">
-          <span class="card-kicker">Access control</span><h3>Authorize a professor</h3>
-          <p>The professor must first request access with a CoolHack username. No professor email is collected.</p>
-          <label for="professorUsername">Pending professor username</label><input id="professorUsername" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="off" required>
-          <div class="hero-actions"><button class="btn primary">Authorize professor</button></div><p id="professorMessage" class="form-message" role="status"></p>
-        </form>
-        <form class="classroom-card" id="createSection">
-          <span class="card-kicker">Three-section setup</span><h3>Create a Capstone section</h3>
-          <label for="sectionName">Section label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required>
-          <label for="sectionProfessor">Assigned professor</label><select id="sectionProfessor"><option value="">Assign later</option>${professors.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select>
-          <div class="hero-actions"><button class="btn primary">Create section</button></div><p id="sectionMessage" class="form-message" role="status"></p>
-        </form>
-      </div>`:""}
-      <div class="admin-panel-grid">
-        <form class="classroom-card" id="createTeam">
-          <span class="card-kicker">Team setup</span><h3>Create a team</h3>
-          <label for="teamSection">Capstone section</label><select id="teamSection" required>${sectionOptions(sections,assignedSection)}</select>
-          <label for="teamName">Team name</label><input id="teamName" placeholder="Example: Team Phoenix" required maxlength="50">
-          <label for="joinCode">Private team code</label>
-          <div class="code-builder"><input id="joinCode" required minlength="8" maxlength="12" pattern="[A-Z0-9]+" readonly><button class="btn" id="generateCode" type="button">Generate code</button></div>
-          <small>Give this code only to the four students assigned to this team.</small>
-          <div class="hero-actions"><button class="btn primary">Create team</button></div><p id="teamMessage" class="form-message" role="status"></p>
-        </form>
-        <form class="classroom-card" id="assignStudent">
-          <span class="card-kicker">Roster</span><h3>Assign a student and seat</h3>
-          <label for="assignUser">Unassigned screen name</label><select id="assignUser" required><option value="">Choose a student</option>${unassigned.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select>
-          <label for="assignTeam">Team</label><select id="assignTeam" required><option value="">Choose a team</option>${teams.map(t=>`<option value="${t.id}">${esc(t.name)} · ${esc(sections.find(s=>s.id===t.section_id)?.name||"Section pending")}</option>`).join("")}</select>
-          <label for="assignRole">Seat (role)</label><select id="assignRole" required><option value="">Choose a role</option>${["SOC Analyst","Incident Responder","Security Lead","Communications Lead"].map(r=>`<option>${r}</option>`).join("")}</select>
-          <div class="hero-actions"><button class="btn primary">Save assignment</button></div><p id="assignmentMessage" class="form-message" role="status"></p>
-        </form>
-      </div>
-      <section class="classroom-card operations-board">
-        <div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
-        <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${esc(section.profiles?.display_name||"Professor not assigned")}</span><small>${teams.filter(t=>t.section_id===section.id).length} teams</small></article>`).join("")||"<p>Create a section to begin.</p>"}</div>
-        <div id="teamOperations">${renderTeamOperations(teams,sections,members)}</div>
-        <div id="staffReview" aria-live="polite"></div>
-      </section>`;
-
-    bindSignOut();
-    const newCode = () => { field("joinCode").value = secureTeamCode(); };
-    newCode();
-    field("generateCode")?.addEventListener("click",newCode);
-    field("sectionFilter")?.addEventListener("change",event=>{
-      const visible = event.target.value==="all" ? teams : teams.filter(t=>t.section_id===event.target.value);
-      field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members);
-      bindOperationButtons();
-    });
-    field("authorizeProfessor")?.addEventListener("submit",async event=>{
-      event.preventDefault();
-      const result=await db.rpc("authorize_professor",{professor_username:field("professorUsername").value.trim()});
-      field("professorMessage").textContent=result.error?result.error.message:`${result.data} is now authorized as a professor.`;
-      if(!result.error)setTimeout(staffScreen,700);
-    });
-    field("createSection")?.addEventListener("submit",async event=>{
-      event.preventDefault();
-      const payload={name:field("sectionName").value.trim(),created_by:currentUser.id};
-      if(field("sectionProfessor").value)payload.instructor_id=field("sectionProfessor").value;
-      const result=await db.from("sections").insert(payload);
-      field("sectionMessage").textContent=result.error?result.error.message:"Section created.";
-      if(!result.error)setTimeout(staffScreen,500);
-    });
-    field("createTeam")?.addEventListener("submit",async event=>{
-      event.preventDefault();
-      const payload={name:field("teamName").value.trim(),join_code:field("joinCode").value,section_id:field("teamSection").value,created_by:currentUser.id};
-      const result=await db.from("teams").insert(payload);
-      field("teamMessage").textContent=result.error?result.error.message:"Team created and its code is ready to share.";
-      if(!result.error)setTimeout(staffScreen,500);
-    });
-    field("assignStudent")?.addEventListener("submit",async event=>{
-      event.preventDefault();
-      const result=await db.from("team_members").upsert({team_id:field("assignTeam").value,user_id:field("assignUser").value,assigned_role:field("assignRole").value},{onConflict:"team_id,user_id"});
-      field("assignmentMessage").textContent=result.error?result.error.message:"Student and seat assigned.";
-      if(!result.error)setTimeout(staffScreen,500);
-    });
-    bindOperationButtons();
-
-    function bindOperationButtons() {
-      document.querySelectorAll("[data-copy-code]").forEach(button=>button.addEventListener("click",async()=>{
-        await navigator.clipboard.writeText(button.dataset.copyCode);
-        button.textContent="Code copied";
-        setTimeout(()=>button.textContent="Copy code",1200);
-      }));
-      document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
-      document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{
-        const changes={};
-        if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";
-        if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);
-        const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);
-        if(result.error)field("staffReview").innerHTML=`<p class="auth-message">${esc(result.error.message)}</p>`;
-        else staffScreen();
-      }));
-    }
+  const isAdmin=profile.app_role==="platform_admin";
+  const pendingPromise=isAdmin?db.rpc("pending_professors"):Promise.resolve({data:[],error:null});
+  const [sectionsResult,teamsResult,profilesResult,membersResult,pendingResult]=await Promise.all([
+    db.from("sections").select("id,name,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)").eq("is_active",true).order("name"),
+    db.from("teams").select("*").order("name"),
+    db.from("profiles").select("id,display_name,app_role").order("display_name"),
+    db.from("team_members").select("team_id,user_id,assigned_role,profiles(display_name)"),
+    pendingPromise
+  ]);
+  const queryError=[sectionsResult,teamsResult,profilesResult,membersResult,pendingResult].find(result=>result.error)?.error;if(queryError)throw queryError;
+  const sections=sectionsResult.data||[],teams=teamsResult.data||[],profiles=profilesResult.data||[],members=membersResult.data||[],pendingProfessors=pendingResult.data||[];
+  const professors=profiles.filter(p=>p.app_role==="instructor"),assignedSection=sections[0]?.id||"";
+  const title=isAdmin?"Platform administrator dashboard":"Professor dashboard";
+  const lead=isAdmin?"Follow the setup sequence below: section, professor, team, then students and seats.":"Create teams in your assigned section, share team codes, then assign seats from each live roster.";
+  mount.innerHTML=accountBar()+`
+    <div class="admin-hero"><div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div><span class="privacy-badge">De-identified classroom data only</span></div>
+    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Create section</span><span><b>2</b> Authorize professor</span><span><b>3</b> Create team</span><span><b>4</b> Students join</span><span><b>5</b> Assign seats</span></div>
+    <div class="admin-stats" aria-label="Classroom overview"><div><strong>${sections.length}</strong><span>Active sections</span></div><div><strong>${teams.length}</strong><span>Teams</span></div><div><strong>${members.length}</strong><span>Student accounts</span></div><div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div></div>
+    ${isAdmin?`<div class="admin-panel-grid">
+      <form class="classroom-card" id="createSection"><span class="card-kicker">Step 1</span><h3>Create a Capstone section</h3><label for="sectionName">Section label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required><label for="sectionProfessor">Assigned professor</label><select id="sectionProfessor"><option value="">Assign later</option>${professors.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select><div class="hero-actions"><button class="btn primary">Create section</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
+      <form class="classroom-card" id="authorizeProfessor"><span class="card-kicker">Step 2</span><h3>Authorize a professor</h3><p>Professor requests appear automatically after they choose “First visit: request access.”</p><label for="professorUsername">Pending professor request</label><select id="professorUsername" required ${pendingProfessors.length?"":"disabled"}><option value="">${pendingProfessors.length?"Choose a pending professor":"No pending requests"}</option>${pendingProfessors.map(p=>`<option value="${esc(p.display_name)}">${esc(p.display_name)}</option>`).join("")}</select><div class="hero-actions"><button class="btn primary" ${pendingProfessors.length?"":"disabled"}>Authorize professor</button></div><p id="professorMessage" class="form-message" role="status"></p></form>
+    </div>`:""}
+    <div class="admin-panel-grid">
+      <form class="classroom-card" id="createTeam"><span class="card-kicker">Step 3</span><h3>Create a team</h3><label for="teamSection">Capstone section</label><select id="teamSection" required ${sections.length?"":"disabled"}>${sectionOptions(sections,assignedSection)}</select><label for="teamName">Team name</label><input id="teamName" placeholder="Example: Team Phoenix" required maxlength="50" ${sections.length?"":"disabled"}><label for="joinCode">Private team code</label><div class="code-builder"><input id="joinCode" required minlength="8" maxlength="12" pattern="[A-Z0-9]+" readonly ${sections.length?"":"disabled"}><button class="btn" id="generateCode" type="button" ${sections.length?"":"disabled"}>Generate code</button></div><small>${sections.length?"Give this code only to the four students assigned to this team.":"Create a section first; team controls will then activate."}</small><div class="hero-actions"><button class="btn primary" ${sections.length?"":"disabled"}>Create team</button></div><p id="teamMessage" class="form-message" role="status"></p></form>
+      <div class="classroom-card"><span class="card-kicker">Steps 4–5</span><h3>Students and seats</h3><p>Students create access with their team code and invented screen name. They immediately appear inside that team’s roster below.</p><p>Assign each student’s seat from the real roster. The database allows no more than four students and no duplicate seat within a team.</p></div>
+    </div>
+    <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
+      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${esc(section.profiles?.display_name||"Professor not assigned")}</span><small>${teams.filter(t=>t.section_id===section.id).length} teams</small>${isAdmin?`<label>Assign or change professor<select data-section-professor="${section.id}"><option value="">Unassigned</option>${professors.map(p=>`<option value="${p.id}" ${section.instructor_id===p.id?"selected":""}>${esc(p.display_name)}</option>`).join("")}</select></label><button class="btn compact" type="button" data-section-save="${section.id}">Save professor</button>`:""}</article>`).join("")||"<p>Create a section to begin.</p>"}</div>
+      <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
+    </section>`;
+  bindSignOut();
+  const newCode=()=>{if(field("joinCode"))field("joinCode").value=secureTeamCode();};newCode();field("generateCode")?.addEventListener("click",newCode);
+  field("sectionFilter")?.addEventListener("change",event=>{const visible=event.target.value==="all"?teams:teams.filter(t=>t.section_id===event.target.value);field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);bindOperationButtons();});
+  field("authorizeProfessor")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("authorize_professor",{professor_username:field("professorUsername").value});field("professorMessage").textContent=result.error?result.error.message:`${result.data} is now authorized as a professor.`;if(!result.error)setTimeout(staffScreen,500);});
+  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const payload={name:field("sectionName").value.trim(),created_by:currentUser.id};if(field("sectionProfessor").value)payload.instructor_id=field("sectionProfessor").value;const result=await db.from("sections").insert(payload);field("sectionMessage").textContent=result.error?result.error.message:"Section created.";if(!result.error)setTimeout(staffScreen,400);});
+  field("createTeam")?.addEventListener("submit",async event=>{event.preventDefault();const payload={name:field("teamName").value.trim(),join_code:field("joinCode").value,section_id:field("teamSection").value,created_by:currentUser.id};const result=await db.from("teams").insert(payload);field("teamMessage").textContent=result.error?result.error.message:"Team created and its code is ready to share.";if(!result.error)setTimeout(staffScreen,400);});
+  document.querySelectorAll("[data-section-save]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-professor="${button.dataset.sectionSave}"]`);const result=await db.from("sections").update({instructor_id:select.value||null}).eq("id",button.dataset.sectionSave);field("staffReview").innerHTML=`<p class="form-message">${esc(result.error?result.error.message:"Professor assignment saved.")}</p>`;if(!result.error)setTimeout(staffScreen,350);}));
+  bindOperationButtons();
+  function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
+  function bindOperationButtons(){
+    document.querySelectorAll("[data-copy-code]").forEach(button=>button.addEventListener("click",async()=>{await navigator.clipboard.writeText(button.dataset.copyCode);button.textContent="Code copied";setTimeout(()=>button.textContent="Copy code",1200);}));
+    document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
+    document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);if(button.dataset.teamControl==="code")changes.join_code=secureTeamCode();const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-member-role]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-role-select="${button.dataset.memberRole}"]`);const result=await db.from("team_members").update({assigned_role:select.value||null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberRole);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-member-move]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-move-select="${button.dataset.memberMove}"]`);if(!select?.value){showOperationResult("Choose a destination team first.",true);return;}const result=await db.from("team_members").update({team_id:select.value,assigned_role:null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberMove);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
   }
+}
 
-  function renderTeamOperations(teams,sections,members) {
-    if(!teams.length)return "<p>No teams are available in this view.</p>";
-    return `<div class="team-operations">${teams.map(team=>{
-      const teamMembers=members.filter(m=>m.team_id===team.id);
-      const section=sections.find(s=>s.id===team.section_id);
-      return `<article class="team-operation">
-        <div class="team-operation-title"><div><span>${esc(section?.name||"Section pending")}</span><h4>${esc(team.name)}</h4></div><span class="status-pill ${team.mission_locked?"locked":"open"}">${team.mission_locked?"Locked":"Open"}</span></div>
-        <div class="mission-progress" aria-label="Mission ${team.active_mission} of 6"><span style="width:${team.active_mission/6*100}%"></span></div>
-        <p><strong>Mission ${team.active_mission} of 6</strong> · ${teamMembers.length} of 4 seats filled</p>
-        <ul>${teamMembers.map(m=>`<li>${esc(m.profiles?.display_name)} — ${esc(m.assigned_role||"Seat pending")}</li>`).join("")||"<li>No student accounts yet.</li>"}</ul>
-        <div class="team-code-row"><code>${esc(team.join_code)}</code><button class="btn compact" type="button" data-copy-code="${esc(team.join_code)}">Copy code</button></div>
-        <div class="mission-controls">
-          <button class="btn compact" type="button" data-team-review="${team.id}" data-team-name="${esc(team.name)}" data-mission="${team.active_mission}">Review live work</button>
-          <button class="btn compact" type="button" data-team-control="lock" data-team-id="${team.id}" data-locked="${team.mission_locked}">${team.mission_locked?"Reopen mission":"Lock mission"}</button>
-          <label>Active mission<select data-mission-select="${team.id}">${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===team.active_mission?"selected":""}>${n}</option>`).join("")}</select></label>
-          <button class="btn compact" type="button" data-team-control="mission" data-team-id="${team.id}" data-mission-target="${team.active_mission}">Apply</button>
-        </div>
-      </article>`;
-    }).join("")}</div>`;
-  }
+  function renderTeamOperations(teams,sections,members,professors,isAdmin) {
+  const roles=["SOC Analyst","Incident Responder","Security Lead","Communications Lead"];
+  if(!teams.length)return "<div class=\"empty-state\"><strong>No teams yet.</strong><p>Create a team above; student and seat controls will appear here after students join with its code.</p></div>";
+  return `<div class="team-operations">${teams.map(team=>{
+    const teamMembers=members.filter(m=>m.team_id===team.id);
+    const section=sections.find(s=>s.id===team.section_id);
+    const destinations=teams.filter(t=>t.id!==team.id);
+    return `<article class="team-operation">
+      <div class="team-operation-title"><div><span>${esc(section?.name||"Section pending")}</span><h4>${esc(team.name)}</h4></div><span class="status-pill ${team.mission_locked?"locked":"open"}">${team.mission_locked?"Locked":"Open"}</span></div>
+      <div class="mission-progress" aria-label="Mission ${team.active_mission} of 6"><span style="width:${team.active_mission/6*100}%"></span></div>
+      <p><strong>Mission ${team.active_mission} of 6</strong> · ${teamMembers.length} of 4 seats filled</p>
+      <div class="team-roster-manager">${teamMembers.map(member=>`<div class="roster-manager">
+        <strong>${esc(member.profiles?.display_name||"Student")}</strong>
+        <label>Seat<select data-member-role-select="${member.user_id}"><option value="">Seat pending</option>${roles.map(role=>`<option value="${role}" ${member.assigned_role===role?"selected":""}>${role}</option>`).join("")}</select></label>
+        <button class="btn compact" type="button" data-member-role="${member.user_id}" data-current-team="${team.id}">Save seat</button>
+        <label>Move to team<select data-member-move-select="${member.user_id}" ${destinations.length?"":"disabled"}><option value="">Choose destination</option>${destinations.map(destination=>`<option value="${destination.id}">${esc(destination.name)}</option>`).join("")}</select></label>
+        <button class="btn compact" type="button" data-member-move="${member.user_id}" data-current-team="${team.id}" ${destinations.length?"":"disabled"}>Move student</button>
+      </div>`).join("")||"<p>No students yet. Give the private team code to up to four students; they will appear here automatically after creating access.</p>"}</div>
+      <div class="team-code-row"><code>${esc(team.join_code)}</code><button class="btn compact" type="button" data-copy-code="${esc(team.join_code)}">Copy code</button><button class="btn compact" type="button" data-team-control="code" data-team-id="${team.id}">Regenerate code</button></div>
+      <div class="mission-controls">
+        <button class="btn compact" type="button" data-team-review="${team.id}" data-team-name="${esc(team.name)}" data-mission="${team.active_mission}">Review live work</button>
+        <button class="btn compact" type="button" data-team-control="lock" data-team-id="${team.id}" data-locked="${team.mission_locked}">${team.mission_locked?"Reopen mission":"Lock mission"}</button>
+        <label>Active mission<select data-mission-select="${team.id}">${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===team.active_mission?"selected":""}>${n}</option>`).join("")}</select></label>
+        <button class="btn compact" type="button" data-team-control="mission" data-team-id="${team.id}">Apply mission</button>
+      </div>
+    </article>`;
+  }).join("")}</div>`;
+}
 
   async function reviewTeam(teamId,teamName,mission) {
     const [reportResult,notesResult,reflectionsResult]=await Promise.all([
