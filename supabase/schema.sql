@@ -243,6 +243,17 @@ using (
 )
 with check (student_id = auth.uid() or public.is_instructor());
 
+-- Table privileges are the outer access gate; row-level security policies above
+-- still determine which rows each authenticated account may read or change.
+grant select, insert, update, delete on table
+  public.profiles,
+  public.teams,
+  public.team_members,
+  public.role_notes,
+  public.team_reports,
+  public.reflections
+to authenticated;
+
 alter publication supabase_realtime add table
   public.role_notes,
   public.team_reports,
