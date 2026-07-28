@@ -3,6 +3,10 @@
 This file is a short reference. New installers should follow the complete
 [Installation Guide](docs/INSTALLATION.md), including its security tests.
 
+After the self-service professor migration, run
+`supabase/weekly-scenario-release.sql` once. It adds the class-level scenario
+release setting and the professor-authorized reveal/hide function.
+
 ## Safe browser configuration
 
 The browser receives only:
