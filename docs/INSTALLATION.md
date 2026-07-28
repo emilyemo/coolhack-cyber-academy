@@ -43,6 +43,7 @@ exact order**:
 2. `supabase/nickname-auth-migration.sql`
 3. `supabase/admin-sections-migration.sql`
 4. `supabase/self-service-professor-migration.sql`
+5. `supabase/weekly-scenario-release.sql`
 
 For each file:
 
