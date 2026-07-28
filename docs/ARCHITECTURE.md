@@ -28,8 +28,8 @@ change.
 
 ```mermaid
 flowchart TD
-    A["Platform administrator"] --> B["Capstone section"]
-    B --> C["Authorized professor"]
+    A["Platform administrator"] --> B["Capstone section + professor code"]
+    B --> C["Professor claims class"]
     B --> D["Team"]
     D --> E["Four student aliases"]
     D --> F["Shared report and AI transcript"]
@@ -38,8 +38,9 @@ flowchart TD
 ```
 
 - The platform administrator can manage all sections.
-- A professor can manage only an assigned active section and shares its private
-  section code with that class.
+- A professor uses the administrator-issued professor code to claim one active,
+  unassigned class and can manage only that class.
+- The professor shares the separate student section code with that class.
 - One student creates a team with the section code; the other three members join
   with the generated private team code.
 - A student can access only that joined team.
@@ -58,26 +59,29 @@ flowchart TD
 | `supabase/schema.sql` | Original database foundation |
 | `supabase/nickname-auth-migration.sql` | Nickname account compatibility |
 | `supabase/admin-sections-migration.sql` | Administrator, professors, and section isolation |
+| `supabase/self-service-professor-migration.sql` | Code-based professor claims and access audit |
 
 ## Data model
 
 | Table | Stores |
 |---|---|
 | `profiles` | Display name and application role |
-| `sections` | Section name, private section code, assigned professor, and active state |
+| `sections` | Section name, professor access code, student section code, assigned professor, and active state |
 | `teams` | Student-chosen team name, private team code, section, mission, and lock state |
 | `team_members` | Student-to-team membership and assigned role |
 | `role_notes` | One student's notes for one team mission |
 | `team_reports` | Shared findings, timeline, decision, unknowns, AI transcript, and feedback |
 | `reflections` | One student's private reflection for one mission |
+| `access_events` | Recent successful role-based sign-ins visible to the administrator |
 
 ## Authentication model
 
 Supabase authentication uses email/password credentials internally.
 
 - The administrator uses one real, dedicated project email for recovery.
-- A professor supplies only a username; the application derives a stable,
-  non-deliverable internal identifier.
+- A professor supplies a private class code and username; the application
+  derives a stable, non-deliverable internal identifier and atomically assigns
+  the matching class.
 - A student supplies a team code and invented screen name; the application
   derives a stable, non-deliverable internal identifier.
 
