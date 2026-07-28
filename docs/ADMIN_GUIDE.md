@@ -22,10 +22,10 @@ actual protection.
 4. Verify the requested username outside CoolHack before authorizing it.
 5. Authorize the exact pending username.
 6. Assign the authorized professor to the correct section.
-7. Create teams in the correct section.
-8. Generate a separate private team code for every team.
-9. Share each code only with that team's four students.
-10. Assign all four student aliases to distinct roles.
+7. Give the assigned professor the section's private section code.
+8. One student in each group uses that section code to create the team and choose its neutral team name.
+9. That student shares the generated private team code only with the other three teammates.
+10. The assigned professor verifies the live roster and assigns the four distinct seats.
 
 Do not store official section numbers, employee IDs, student IDs, real rosters,
 or grades in CoolHack.
@@ -50,20 +50,22 @@ Use neutral labels such as `Capstone Section 1`, not institutional course
 records. Select an authorized professor or choose **Assign later** if the
 professor account is not ready.
 
-Before creating teams, verify the section-professor pairing. A team belongs to
-one section, and professor visibility is derived from that relationship.
+After creating a section, CoolHack displays its private section code. Give that
+code only to the assigned professor. A team belongs to one section, and
+professor visibility is derived from that relationship.
 
-## Creating teams and codes
+## Student-created teams and codes
 
-1. Select the correct section.
-2. Enter a neutral team name.
-3. Select **Generate code**.
-4. Create the team.
-5. Use **Copy code** and send it privately to the four assigned students.
+1. The professor shares the section code with the class.
+2. One student from each four-person group selects **Create a team**.
+3. That student enters the section code, a neutral team name, an invented screen
+   name, and a CoolHack-only password.
+4. CoolHack creates the team and displays its private team code.
+5. The team leader shares that team code only with the other three members.
+6. The professor verifies the roster before assigning seats.
 
-Do not post all team codes in one announcement. A code is an enrollment secret,
-not a general class password. Generate a new code if one is exposed before
-students enroll.
+Do not post team codes in a general announcement. A team code is an enrollment
+secret. Regenerate it if it is exposed before enrollment is complete.
 
 ## Assigning the four seats
 
