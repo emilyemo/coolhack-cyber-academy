@@ -4,6 +4,20 @@ Professors use a CoolHack username, password, and the private professor access
 code created for their class. No professor email address or separate
 administrator approval is required.
 
+## Release one weekly scenario
+
+Every scenario begins hidden. In the Professor Dashboard, find the class under
+**Sections, teams, and mission progress**, choose the week's scenario, and
+select **Reveal selected scenario**. Select **Hide scenario** when students
+should no longer open it.
+
+Only one scenario is visible to students in the class at a time. Changing the
+released scenario moves every team in that class to the new workspace without
+deleting work saved for an earlier scenario.
+
+When Scenario 1 is released, the dashboard displays a private launch guide with
+an opening speech, discussion prompts, a safety reminder, and a closing debrief.
+
 ## Create an account
 
 1. Open the private professor route provided by the administrator:
