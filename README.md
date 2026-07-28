@@ -17,7 +17,9 @@ individual reflections.
 - Downloadable browser-only case notes
 - Optional Supabase-backed live classroom
 - Platform-administrator, professor, section, team, and student role separation
-- Nickname-only student access and username-only professor access
+- Role-selection welcome page with separate student, professor, and administrator entrances
+- Nickname-only student access and class-code professor activation
+- Administrator access audit for recent successful sign-ins
 - Row-level security and live team updates
 
 The public repository intentionally contains **no instructor answer keys,
@@ -56,7 +58,7 @@ sections, cloud saving, live updates, and staff dashboards, complete the
 | Person | Sign-in information | Access |
 |---|---|---|
 | Platform administrator | One dedicated project email and CoolHack-only password | All sections |
-| Professor | CoolHack username and CoolHack-only password; no email requested | Assigned section only, after approval |
+| Professor | Private professor code, CoolHack username, and CoolHack-only password; no email requested | Code-claimed class only |
 | Student | Private team code, invented screen name, and CoolHack-only password; no email requested | Assigned team only |
 
 The application internally converts professor usernames and student
