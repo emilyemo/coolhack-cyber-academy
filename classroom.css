@@ -1,5 +1,6 @@
-.account-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.8rem; margin:1rem 0; padding:.8rem 1rem; color:#34362f; background:#f4f0e7; border:1px solid #d2c7b5; border-radius:12px; }
+.account-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.8rem; margin:1rem 0; padding:.8rem 1rem; color:#12333a; background:#e6f8f6; border:1px solid #8bd5ce; border-radius:12px; }
 .account-bar p { margin:0; }
+.account-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; }
 .classroom-card select { width:100%; color:#292c27; background:#fffdf8; border:1px solid #b9ac98; border-radius:11px; padding:.78rem; margin-bottom:1rem; }
 .classroom-grid { display:grid; grid-template-columns:minmax(240px,.7fr) minmax(0,1.3fr); gap:1rem; }
 .classroom-card { padding:1.1rem; color:#34362f; border:1px solid #d2c7b5; border-radius:14px; background:#fffdf8; box-shadow:var(--shadow); }
@@ -14,7 +15,7 @@
 .cloud-state { color:#38503e; font-size:.88rem; font-weight:750; }
 .instructor-team { margin:.7rem 0; padding:.8rem; border:1px solid #d2c7b5; border-radius:10px; background:#faf6ee; }
 .classroom-hidden { display:none !important; }
-.admin-hero { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:1rem 0; padding:1.35rem; color:#292c27; background:linear-gradient(135deg,#f3eadf,#e4ebe3); border:1px solid #becdbd; border-radius:16px; box-shadow:var(--shadow); }
+.admin-hero { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:1rem 0; padding:1.35rem; color:#12333a; background:linear-gradient(135deg,#dff8f4 0%,#fff0d2 52%,#ffe3dc 100%); border:1px solid #79cfc7; border-radius:16px; box-shadow:var(--shadow); }
 .admin-hero h3 { margin:.15rem 0 .35rem; font-size:clamp(1.35rem,3vw,2rem); }
 .admin-hero p { max-width:720px; margin:0; color:#56584f; }
 .eyebrow,.card-kicker { display:block; color:#38503e; font-size:.74rem; font-weight:850; letter-spacing:.11em; text-transform:uppercase; }
@@ -22,7 +23,11 @@
 .privacy-badge { flex:0 0 auto; padding:.55rem .75rem; color:#38503e; background:#fffdf8; border:1px solid #9eb19e; border-radius:999px; font-size:.78rem; font-weight:800; }
 .admin-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.8rem; margin:1rem 0; }
 .admin-stats div { display:flex; flex-direction:column; min-height:92px; justify-content:center; padding:1rem; color:#34362f; background:#fffdf8; border:1px solid #d2c7b5; border-radius:14px; }
-.admin-stats strong { color:#4e6754; font-size:1.75rem; line-height:1; }
+.admin-stats div:nth-child(1) { border-top:5px solid #087f8c; }
+.admin-stats div:nth-child(2) { border-top:5px solid #ef6f51; }
+.admin-stats div:nth-child(3) { border-top:5px solid #3478c0; }
+.admin-stats div:nth-child(4) { border-top:5px solid #d99a18; }
+.admin-stats strong { color:#087f8c; font-size:1.75rem; line-height:1; }
 .admin-stats span { margin-top:.4rem; color:#5f5c53; font-size:.82rem; font-weight:750; }
 .admin-panel-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin:1rem 0; }
 .auth-switch { display:block; margin:.85rem auto 0; padding:.35rem; color:#6f2d20; background:transparent; border:0; text-decoration:underline; text-underline-offset:3px; cursor:pointer; font:inherit; font-weight:750; }
@@ -145,12 +150,21 @@
 .role-landing #classroom-access { min-height: calc(100vh - 120px); }
 .role-welcome { max-width: 980px; margin: 0 auto; }
 .role-entry-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1rem 0 2rem; }
-.role-entry-card { display:flex; min-height:270px; flex-direction:column; padding:1.25rem; color:#292c27; background:#fffdf8; border:1px solid #d2c7b5; border-radius:16px; box-shadow:var(--shadow); text-decoration:none; }
+.role-entry-card { display:flex; min-height:270px; flex-direction:column; padding:1.25rem; color:#17323a; background:#fff; border:1px solid #b9d8d8; border-top:7px solid #087f8c; border-radius:16px; box-shadow:0 16px 38px rgba(18,71,79,.12); text-decoration:none; }
+.role-entry-card:nth-child(2) { border-top-color:#ef6f51; }
+.role-entry-card:nth-child(3) { border-top-color:#3478c0; }
 .role-entry-card:hover,.role-entry-card:focus-visible { transform:translateY(-2px); border-color:#a3422f; outline:3px solid rgba(163,66,47,.18); }
 .role-entry-card h3 { margin:.9rem 0 .3rem; font-size:1.4rem; }
 .role-entry-card p { flex:1; color:#5f5c53; }
 .role-entry-card>strong { color:#7e3324; }
-.role-entry-icon { display:grid; place-items:center; width:48px; height:48px; color:#fffdf8; background:#4e6754; border-radius:13px; font-weight:850; letter-spacing:.08em; }
+.role-entry-icon { display:grid; place-items:center; width:48px; height:48px; color:#fff; background:#087f8c; border-radius:13px; font-weight:850; letter-spacing:.08em; }
+.role-entry-card:nth-child(2) .role-entry-icon { background:#ef6f51; }
+.role-entry-card:nth-child(3) .role-entry-icon { background:#3478c0; }
+.visibility-guide { display:grid; grid-template-columns:auto 1fr 1fr; gap:.7rem; align-items:start; margin:1rem 0; padding:.9rem 1rem; color:#17323a; background:#eef9ff; border:1px solid #9ccfea; border-left:6px solid #3478c0; border-radius:12px; }
+.visibility-guide strong { color:#195b91; }
+.visibility-guide span { padding-left:.7rem; border-left:1px solid #b9dbea; }
+.staff-visibility { background:#effaf7; border-color:#9bd9d1; border-left-color:#087f8c; }
+.staff-visibility strong { color:#076b75; }
 .section-code-actions { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.45rem; }
 .access-audit { margin-top:1rem; }
 .audit-list { display:grid; gap:.5rem; margin-top:1rem; }
@@ -160,4 +174,6 @@
   .role-entry-grid { grid-template-columns:1fr; }
   .role-entry-card { min-height:0; }
   .audit-list article { grid-template-columns:1fr; gap:.15rem; }
+  .visibility-guide { grid-template-columns:1fr; }
+  .visibility-guide span { padding-left:0; border-left:0; }
 }
