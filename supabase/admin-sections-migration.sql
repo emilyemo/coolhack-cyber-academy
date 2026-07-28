@@ -3,7 +3,7 @@
 
 alter type public.app_role add value if not exists 'platform_admin';
 
-do $
+do $$
 begin
   if not exists (
     select 1
@@ -16,7 +16,7 @@ begin
   ) then
     raise exception 'CoolHack migration stopped: platform_admin role was not installed';
   end if;
-end $;
+end $$;
 
 create table if not exists public.sections (
   id uuid primary key default gen_random_uuid(),
@@ -244,7 +244,7 @@ grant select, insert, update, delete on table
   public.sections
 to authenticated;
 
-do $
+do $$
 begin
   begin
     alter publication supabase_realtime add table public.sections;
