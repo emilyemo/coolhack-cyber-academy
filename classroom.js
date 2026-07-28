@@ -77,19 +77,44 @@
       }
       return;
     }
+    renderStudentAccess();
+  }
+
+  function renderStudentAccess(mode = "signin") {
+    const signingIn = mode === "signin";
+    const joining = mode === "join";
+    const creatingTeam = mode === "create-team";
+    const title = signingIn ? "Student sign-in" : joining ? "Join an existing team" : "Create a new team";
+    const intro = signingIn
+      ? "Returning student? Use the same private team code, invented screen name, and CoolHack password."
+      : joining
+        ? "Use the private team code shared by your team leader."
+        : "One student starts the team with the professor's section code and chooses the team name. CoolHack will create the private team code for the other three students.";
     mount.innerHTML = `
-      <div class="instructions-lead"><strong>Independent classroom simulation</strong><br>CoolHack is not an HCC system. Students use an invented screen name—never an HCC email, student ID, official password, grade, or other personal information. A private CoolHack password connects you to your team and restores your work after a refresh.</div>
-      <form class="classroom-card" id="studentAccessForm">
-        <h3>Student access</h3>
-        <p>No student email is collected. Use the team code from your instructor and an invented screen name.</p>
-        <label for="studentTeamCode">Team code</label><input id="studentTeamCode" minlength="6" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
-        <label for="studentAlias">Screen name</label><input id="studentAlias" minlength="2" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" aria-describedby="aliasHelp" required>
+      <div class="instructions-lead"><strong>Independent classroom simulation</strong><br>CoolHack is not an HCC system. Use an invented screen name—never an HCC email, student ID, official password, grade, or other personal information.</div>
+      <div class="access-choice" aria-label="Student access choices">
+        <button class="btn ${signingIn ? "primary" : ""}" type="button" data-student-mode="signin">Sign in</button>
+        <button class="btn ${joining ? "primary" : ""}" type="button" data-student-mode="join">Join a team</button>
+        <button class="btn ${creatingTeam ? "primary" : ""}" type="button" data-student-mode="create-team">Create a team</button>
+      </div>
+      <form class="classroom-card" id="studentAccessForm" data-mode="${mode}">
+        <h3>${title}</h3><p>${intro}</p>
+        ${creatingTeam ? `
+          <label for="studentSectionCode">Professor's section code</label><input id="studentSectionCode" minlength="8" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
+          <label for="studentTeamName">Team name</label><input id="studentTeamName" minlength="2" maxlength="50" placeholder="Example: Team Phoenix" required>
+        ` : `
+          <label for="studentTeamCode">Private team code</label><input id="studentTeamCode" minlength="6" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
+        `}
+        <label for="studentAlias">Invented screen name</label><input id="studentAlias" minlength="2" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" aria-describedby="aliasHelp" required>
         <small id="aliasHelp">Use letters, numbers, underscores, or hyphens. Do not use your real full name or student ID.</small>
-        <label for="studentPassword">Private CoolHack password</label><input id="studentPassword" type="password" minlength="10" autocomplete="current-password" required>
-        <div class="hero-actions"><button class="btn primary" type="submit" name="studentAction" value="signin">Sign in</button><button class="btn" type="submit" name="studentAction" value="create">First visit: create access</button></div>
+        <label for="studentPassword">${signingIn ? "CoolHack password" : "Create a private CoolHack password"}</label><input id="studentPassword" type="password" minlength="10" autocomplete="${signingIn ? "current-password" : "new-password"}" required>
+        <div class="hero-actions"><button class="btn primary" type="submit">${signingIn ? "Sign in" : joining ? "Create access and join team" : "Create team and access"}</button></div>
       </form>
       <p class="auth-message" id="authMessage" role="status"></p>`;
     field("studentAccessForm").addEventListener("submit", studentAccess);
+    document.querySelectorAll("[data-student-mode]").forEach(button =>
+      button.addEventListener("click", () => renderStudentAccess(button.dataset.studentMode))
+    );
   }
 
   async function administratorAccess(event) {
@@ -136,26 +161,38 @@
   }
   async function studentAccess(event) {
     event.preventDefault();
-    const action = event.submitter?.value || "signin";
+    const mode = event.currentTarget.dataset.mode || "signin";
     const displayName = field("studentAlias").value.trim();
-    const joinCode = field("studentTeamCode").value.trim().toUpperCase();
     const password = field("studentPassword").value;
-    say(action === "create" ? "Creating private student access…" : "Signing in…");
+    const creatingTeam = mode === "create-team";
+    const joinCode = creatingTeam ? secureTeamCode() : field("studentTeamCode").value.trim().toUpperCase();
+    say(mode === "signin" ? "Signing in…" : creatingTeam ? "Creating your team…" : "Joining your team…");
     try {
       const email = await aliasEmail(displayName, joinCode);
-      if (action === "create") {
-        const { error } = await db.auth.signUp({
-          email,
-          password,
-          options:{data:{display_name:displayName, join_code:joinCode, account_kind:"student_alias"}}
-        });
-        say(error ? error.message : "Access created. If the workspace does not open automatically, choose Sign in.");
-      } else {
+      if (mode === "signin") {
         const { error } = await db.auth.signInWithPassword({email, password});
         if (error) say("That team code, screen name, or password did not match.");
+        return;
       }
+      const metadata = {
+        display_name: displayName,
+        join_code: joinCode,
+        account_kind: creatingTeam ? "student_team_creator" : "student_alias"
+      };
+      if (creatingTeam) {
+        metadata.section_code = field("studentSectionCode").value.trim().toUpperCase();
+        metadata.team_name = field("studentTeamName").value.trim();
+      }
+      const { error } = await db.auth.signUp({email, password, options:{data:metadata}});
+      say(error
+        ? error.message
+        : creatingTeam
+          ? `Team created. Your private team code is ${joinCode}. Share it only with your other three teammates.`
+          : "Access created and you have joined the team. If the workspace does not open automatically, choose Sign in.");
     } catch (_error) {
-      say("Student access could not be created. Check the entries and try again.");
+      say(creatingTeam
+        ? "The team could not be created. Check the section code and use a team name that is not already taken."
+        : "Student access could not be created. Check the entries and try again.");
     }
   }
 
@@ -170,7 +207,7 @@
   }
 
   async function studentScreen() {
-    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked)").eq("user_id",currentUser.id).maybeSingle();
+    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,join_code,active_mission,mission_locked)").eq("user_id",currentUser.id).maybeSingle();
     if (m.error) throw m.error;
     membership = m.data;
     if (!membership) {
@@ -189,7 +226,7 @@
     const report = reportResult.data || {};
     const myNote = (notesResult.data || []).find(n => n.author_id === currentUser.id)?.note_text || "";
     mount.innerHTML = accountBar(`<span class="cloud-state" id="cloudState">Cloud connected</span> `) + `
-      <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Your seat: ${esc(membership.assigned_role || "Not assigned")}. Each member writes in a separate role-notes box; the team report is shared.</div>
+      <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Private team code: <code>${esc(membership.teams.join_code)}</code> · Your seat: ${esc(membership.assigned_role || "Not assigned")}. Share the code only with your other three teammates.</div>
       <div class="classroom-grid">
         <aside class="classroom-card"><h3>Team roster</h3><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong><br>${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><h3>Live role notes</h3><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc(roster.find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No notes yet.</p>"}</div></aside>
         <div>
@@ -252,7 +289,7 @@
   const isAdmin=profile.app_role==="platform_admin";
   const pendingPromise=isAdmin?db.rpc("pending_professors"):Promise.resolve({data:[],error:null});
   const [sectionsResult,teamsResult,profilesResult,membersResult,pendingResult]=await Promise.all([
-    db.from("sections").select("id,name,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)").eq("is_active",true).order("name"),
+    db.from("sections").select("id,name,class_code,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)").eq("is_active",true).order("name"),
     db.from("teams").select("*").order("name"),
     db.from("profiles").select("id,display_name,app_role").order("display_name"),
     db.from("team_members").select("team_id,user_id,assigned_role,profiles(display_name)"),
@@ -262,29 +299,28 @@
   const sections=sectionsResult.data||[],teams=teamsResult.data||[],profiles=profilesResult.data||[],members=membersResult.data||[],pendingProfessors=pendingResult.data||[];
   const professors=profiles.filter(p=>p.app_role==="instructor"),assignedSection=sections[0]?.id||"";
   const title=isAdmin?"Platform administrator dashboard":"Professor dashboard";
-  const lead=isAdmin?"Follow the setup sequence below: section, professor, team, then students and seats.":"Create teams in your assigned section, share team codes, then assign seats from each live roster.";
+  const lead=isAdmin?"Create sections and authorize professors. Students create and join their own four-person teams.":"Share your section code, monitor student-created teams, assign seats, and review submissions.";
   mount.innerHTML=accountBar()+`
     <div class="admin-hero"><div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div><span class="privacy-badge">De-identified classroom data only</span></div>
-    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Create section</span><span><b>2</b> Authorize professor</span><span><b>3</b> Create team</span><span><b>4</b> Students join</span><span><b>5</b> Assign seats</span></div>
+    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Admin creates section</span><span><b>2</b> Admin assigns professor</span><span><b>3</b> Student creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
     <div class="admin-stats" aria-label="Classroom overview"><div><strong>${sections.length}</strong><span>Active sections</span></div><div><strong>${teams.length}</strong><span>Teams</span></div><div><strong>${members.length}</strong><span>Student accounts</span></div><div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div></div>
     ${isAdmin?`<div class="admin-panel-grid">
       <form class="classroom-card" id="createSection"><span class="card-kicker">Step 1</span><h3>Create a Capstone section</h3><label for="sectionName">Section label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required><label for="sectionProfessor">Assigned professor</label><select id="sectionProfessor"><option value="">Assign later</option>${professors.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select><div class="hero-actions"><button class="btn primary">Create section</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
       <form class="classroom-card" id="authorizeProfessor"><span class="card-kicker">Step 2</span><h3>Authorize a professor</h3><p>Professor requests appear automatically after they choose “First visit: request access.”</p><label for="professorUsername">Pending professor request</label><select id="professorUsername" required ${pendingProfessors.length?"":"disabled"}><option value="">${pendingProfessors.length?"Choose a pending professor":"No pending requests"}</option>${pendingProfessors.map(p=>`<option value="${esc(p.display_name)}">${esc(p.display_name)}</option>`).join("")}</select><div class="hero-actions"><button class="btn primary" ${pendingProfessors.length?"":"disabled"}>Authorize professor</button></div><p id="professorMessage" class="form-message" role="status"></p></form>
     </div>`:""}
     <div class="admin-panel-grid">
-      <form class="classroom-card" id="createTeam"><span class="card-kicker">Step 3</span><h3>Create a team</h3><label for="teamSection">Capstone section</label><select id="teamSection" required ${sections.length?"":"disabled"}>${sectionOptions(sections,assignedSection)}</select><label for="teamName">Team name</label><input id="teamName" placeholder="Example: Team Phoenix" required maxlength="50" ${sections.length?"":"disabled"}><label for="joinCode">Private team code</label><div class="code-builder"><input id="joinCode" required minlength="8" maxlength="12" pattern="[A-Z0-9]+" readonly ${sections.length?"":"disabled"}><button class="btn" id="generateCode" type="button" ${sections.length?"":"disabled"}>Generate code</button></div><small>${sections.length?"Give this code only to the four students assigned to this team.":"Create a section first; team controls will then activate."}</small><div class="hero-actions"><button class="btn primary" ${sections.length?"":"disabled"}>Create team</button></div><p id="teamMessage" class="form-message" role="status"></p></form>
-      <div class="classroom-card"><span class="card-kicker">Steps 4–5</span><h3>Students and seats</h3><p>Students create access with their team code and invented screen name. They immediately appear inside that team’s roster below.</p><p>Assign each student’s seat from the real roster. The database allows no more than four students and no duplicate seat within a team.</p></div>
+      <div class="classroom-card"><span class="card-kicker">Step 3</span><h3>Students create their teams</h3><p>Give students the private section code shown below. One student chooses the team name and creates the team; the other three join with the generated team code.</p></div>
+      <div class="classroom-card"><span class="card-kicker">Steps 4–5</span><h3>Professor manages the live roster</h3><p>Each student uses an invented screen name and private password. Teams appear automatically, and the assigned professor approves the four distinct seats.</p></div>
+    </div>
     </div>
     <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
-      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${esc(section.profiles?.display_name||"Professor not assigned")}</span><small>${teams.filter(t=>t.section_id===section.id).length} teams</small>${isAdmin?`<label>Assign or change professor<select data-section-professor="${section.id}"><option value="">Unassigned</option>${professors.map(p=>`<option value="${p.id}" ${section.instructor_id===p.id?"selected":""}>${esc(p.display_name)}</option>`).join("")}</select></label><button class="btn compact" type="button" data-section-save="${section.id}">Save professor</button>`:""}</article>`).join("")||"<p>Create a section to begin.</p>"}</div>
+      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${esc(section.profiles?.display_name||"Professor not assigned")}</span><small>Section code: <code>${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small>${isAdmin?`<label>Assign or change professor<select data-section-professor="${section.id}"><option value="">Unassigned</option>${professors.map(p=>`<option value="${p.id}" ${section.instructor_id===p.id?"selected":""}>${esc(p.display_name)}</option>`).join("")}</select></label><button class="btn compact" type="button" data-section-save="${section.id}">Save professor</button>`:""}</article>`).join("")||"<p>Create a section to begin.</p>"}</div>
       <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
     </section>`;
   bindSignOut();
-  const newCode=()=>{if(field("joinCode"))field("joinCode").value=secureTeamCode();};newCode();field("generateCode")?.addEventListener("click",newCode);
   field("sectionFilter")?.addEventListener("change",event=>{const visible=event.target.value==="all"?teams:teams.filter(t=>t.section_id===event.target.value);field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);bindOperationButtons();});
   field("authorizeProfessor")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("authorize_professor",{professor_username:field("professorUsername").value});field("professorMessage").textContent=result.error?result.error.message:`${result.data} is now authorized as a professor.`;if(!result.error)setTimeout(staffScreen,500);});
   field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const payload={name:field("sectionName").value.trim(),created_by:currentUser.id};if(field("sectionProfessor").value)payload.instructor_id=field("sectionProfessor").value;const result=await db.from("sections").insert(payload);field("sectionMessage").textContent=result.error?result.error.message:"Section created.";if(!result.error)setTimeout(staffScreen,400);});
-  field("createTeam")?.addEventListener("submit",async event=>{event.preventDefault();const payload={name:field("teamName").value.trim(),join_code:field("joinCode").value,section_id:field("teamSection").value,created_by:currentUser.id};const result=await db.from("teams").insert(payload);field("teamMessage").textContent=result.error?result.error.message:"Team created and its code is ready to share.";if(!result.error)setTimeout(staffScreen,400);});
   document.querySelectorAll("[data-section-save]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-professor="${button.dataset.sectionSave}"]`);const result=await db.from("sections").update({instructor_id:select.value||null}).eq("id",button.dataset.sectionSave);field("staffReview").innerHTML=`<p class="form-message">${esc(result.error?result.error.message:"Professor assignment saved.")}</p>`;if(!result.error)setTimeout(staffScreen,350);}));
   bindOperationButtons();
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
@@ -299,7 +335,7 @@
 
   function renderTeamOperations(teams,sections,members,professors,isAdmin) {
   const roles=["SOC Analyst","Incident Responder","Security Lead","Communications Lead"];
-  if(!teams.length)return "<div class=\"empty-state\"><strong>No teams yet.</strong><p>Create a team above; student and seat controls will appear here after students join with its code.</p></div>";
+  if(!teams.length)return "<div class=\"empty-state\"><strong>No teams yet.</strong><p>Give students the section code. The first student will create the team, and it will appear here automatically.</p></div>";
   return `<div class="team-operations">${teams.map(team=>{
     const teamMembers=members.filter(m=>m.team_id===team.id);
     const section=sections.find(s=>s.id===team.section_id);
