@@ -61,3 +61,47 @@
 .review-entry p { margin:.25rem 0 0; white-space:pre-wrap; }
 @media (max-width:900px) { .admin-stats { grid-template-columns:repeat(2,1fr); } .team-operations { grid-template-columns:1fr; } }
 @media (max-width:760px) { .classroom-grid,.auth-grid,.admin-panel-grid,.section-summary { grid-template-columns:1fr; } .admin-hero,.operations-head { align-items:stretch; flex-direction:column; } .privacy-badge { align-self:flex-start; } .operations-head label { min-width:0; width:100%; } }
+
+
+/* High-contrast classroom forms for the warm paper theme */
+.classroom-card input,
+.classroom-card textarea,
+.classroom-card select {
+  color: #20231f;
+  background-color: #fffdf8;
+  border-color: #9c927f;
+  caret-color: #20231f;
+  -webkit-text-fill-color: #20231f;
+  color-scheme: light;
+}
+.classroom-card input::placeholder,
+.classroom-card textarea::placeholder {
+  color: #68685f;
+  opacity: 1;
+  -webkit-text-fill-color: #68685f;
+}
+.classroom-card input:focus,
+.classroom-card textarea:focus,
+.classroom-card select:focus {
+  color: #20231f;
+  background-color: #ffffff;
+  border-color: #a3422f;
+  outline: 3px solid rgba(163, 66, 47, .28);
+  outline-offset: 2px;
+  -webkit-text-fill-color: #20231f;
+}
+.classroom-card input::selection,
+.classroom-card textarea::selection {
+  color: #ffffff;
+  background: #4e6754;
+}
+.classroom-card input:-webkit-autofill,
+.classroom-card input:-webkit-autofill:hover,
+.classroom-card input:-webkit-autofill:focus,
+.classroom-card textarea:-webkit-autofill,
+.classroom-card select:-webkit-autofill {
+  -webkit-text-fill-color: #20231f;
+  -webkit-box-shadow: 0 0 0 1000px #fffdf8 inset;
+  box-shadow: 0 0 0 1000px #fffdf8 inset;
+  caret-color: #20231f;
+}
