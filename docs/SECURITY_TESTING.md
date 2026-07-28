@@ -16,14 +16,15 @@ windows. Do not use real people or real records.
 - [ ] New administrator account begins without administrator access.
 - [ ] Manual promotion updates exactly one intended account.
 - [ ] Platform administrator sees all test sections.
-- [ ] Non-administrator cannot execute professor authorization.
+- [ ] Platform administrator sees recent successful sign-ins.
+- [ ] Non-administrator cannot read the academy access audit.
 
 ## Professor
 
-- [ ] New professor account is pending.
-- [ ] Pending professor sees no section or student data.
-- [ ] Authorization alone does not expose an unassigned section.
-- [ ] Assigned Professor A sees Section A.
+- [ ] Invalid professor code cannot create an account.
+- [ ] Professor code claims only its matching active, unassigned class.
+- [ ] A claimed professor code cannot create a second professor account.
+- [ ] Professor A immediately sees only the code-claimed Section A.
 - [ ] Professor A cannot read or change Section B.
 - [ ] Professor A cannot promote another professor.
 
