@@ -108,3 +108,27 @@
 
 /* Guided administrator workflow */
 .guided-workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin:1rem 0;padding:.75rem;background:#f0e9dc;border:1px solid #d7d0c2;border-radius:14px}.guided-workflow span{display:flex;align-items:center;gap:.45rem;padding:.65rem;background:#fffdf8;border-radius:10px;color:#34362f;font-weight:750}.guided-workflow b{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;background:#4e6754;color:#fffdf8}.team-roster-manager{display:grid;gap:.65rem;margin:.8rem 0}.roster-manager{display:grid;grid-template-columns:minmax(120px,1fr) minmax(160px,1fr) auto minmax(160px,1fr) auto;gap:.55rem;align-items:end;padding:.75rem;background:#f7f2e9;border:1px solid #d7d0c2;border-radius:11px}.roster-manager label{margin:0;font-size:.82rem}.roster-manager select{margin-top:.25rem}.empty-state{padding:1rem;background:#faf6ee;border:1px dashed #bdb4a5;border-radius:12px}@media(max-width:900px){.guided-workflow{grid-template-columns:1fr 1fr}.roster-manager{grid-template-columns:1fr 1fr}}@media(max-width:600px){.guided-workflow,.roster-manager{grid-template-columns:1fr}}
+
+.access-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin: 1rem 0;
+}
+.access-choice .btn {
+  flex: 1 1 10rem;
+}
+.instructions-lead code,
+.section-summary code {
+  display: inline-block;
+  padding: .18rem .42rem;
+  border: 1px solid #c9bdae;
+  border-radius: 7px;
+  color: #292a25;
+  background: #fffdf8;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+@media (max-width: 600px) {
+  .access-choice .btn { flex-basis: 100%; }
+}
