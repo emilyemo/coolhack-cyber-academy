@@ -252,3 +252,37 @@ begin
     null;
   end;
 end $$;
+
+
+-- Guided administrator workflow safeguards
+create or replace function public.pending_professors()
+returns table (user_id uuid, display_name text)
+language sql stable security definer set search_path = public, auth
+as $$
+  select u.id, p.display_name
+  from auth.users u
+  join public.profiles p on p.id = u.id
+  where public.is_platform_admin()
+    and u.raw_user_meta_data ->> 'account_kind' = 'professor_alias_pending'
+    and p.app_role::text = 'student'
+  order by lower(p.display_name);
+$$;
+revoke all on function public.pending_professors() from public;
+grant execute on function public.pending_professors() to authenticated;
+create unique index if not exists team_members_one_team_per_user on public.team_members(user_id);
+create or replace function public.enforce_team_roster_limit()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if tg_op = 'INSERT' or new.team_id is distinct from old.team_id then
+    perform pg_advisory_xact_lock(hashtextextended(new.team_id::text, 0));
+    if (select count(*) from public.team_members where team_id = new.team_id) >= 4 then
+      raise exception 'This team already has all four student seats filled';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists enforce_team_roster_limit on public.team_members;
+create trigger enforce_team_roster_limit before insert or update of team_id on public.team_members
+for each row execute function public.enforce_team_roster_limit();
+grant select, insert, update, delete on table public.sections, public.teams, public.team_members to authenticated;
