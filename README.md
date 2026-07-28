@@ -13,6 +13,8 @@ individual reflections.
 ## What is included
 
 - Six-mission student dashboard and evidence rooms
+- Professor-controlled weekly scenario reveal/hide by class
+- Scenario 1 professor launch script and student employer-relevance guide
 - Clickable cybersecurity acronym refreshers
 - Downloadable browser-only case notes
 - Optional Supabase-backed live classroom
