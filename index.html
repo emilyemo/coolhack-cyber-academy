@@ -366,6 +366,34 @@
     .dialog-body { padding: 1rem 1.15rem 1.2rem; }
     .dialog-body p { margin: 0; }
     .dialog-body p + p { margin-top: .75rem; }
+    /* Bright, readable academy palette */
+    body {
+      background:
+        radial-gradient(circle at 92% 4%, rgba(239,111,81,.16), transparent 23rem),
+        radial-gradient(circle at 8% 22%, rgba(8,127,140,.15), transparent 27rem),
+        linear-gradient(180deg, #f7fcfb 0%, #fffaf0 56%, #f5fbff 100%);
+    }
+    header { background: rgba(247,252,251,.94); border-bottom-color: #a8d9d5; }
+    .mark { background: #087f8c; }
+    h1 span { color: #087f8c; }
+    .btn.primary { background: #087f8c; border-color: #087f8c; }
+    .eyebrow, .status { color: #9b3f2b; background: #ffe7df; border-color: #f4ad9b; }
+    .brief-card { border-top-color: #087f8c; background: linear-gradient(145deg,#ffffff,#fff5dd); }
+    .metric b { color: #ef6f51; }
+    .app-tabs { background: #dff4f2; border-color: #9dd7d1; }
+    .app-tab[aria-selected="true"] { background: #087f8c; }
+    .instructions-lead { border-left-color: #ef6f51; background: #fff; }
+    .mission-tab.active { background: #dff4f2; border-color: #087f8c; }
+    .chip { color: #195b91; background: #e6f3ff; border-color: #a7cdeb; }
+    .chip.high { color: #9b3f2b; background: #ffe7df; border-color: #f4ad9b; }
+    .decision { background: #fff1cb; border-left-color: #d99a18; }
+    .evidence-room { background: #edf9f7; border-color: #8bd5ce; }
+    .learning-path { background: #eef6ff; border-color: #a9cdea; }
+    .roleplay-room { background: #fff5dd; border-color: #e7bd62; }
+    .role:nth-child(1) { border-top: 5px solid #087f8c; }
+    .role:nth-child(2) { border-top: 5px solid #ef6f51; }
+    .role:nth-child(3) { border-top: 5px solid #3478c0; }
+    .role:nth-child(4) { border-top: 5px solid #d99a18; }
     @media (max-width: 600px) {
       .nav-links { display: none; }
       .app-tabs { grid-template-columns: 1fr; }
@@ -373,7 +401,7 @@
       .clock-panel { align-items: flex-start; flex-direction: column; }
     }
   </style>
-  <link rel="stylesheet" href="classroom.css?v=self-service-professor-1">
+  <link rel="stylesheet" href="classroom.css?v=classroom-visibility-2">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to missions</a>
@@ -540,7 +568,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=self-service-professor-1"></script>
+  <script src="classroom.js?v=classroom-visibility-2"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -624,6 +652,8 @@
     const acronymPattern = new RegExp(`\\b(${Object.keys(acronymGlossary).sort((a, b) => b.length - a.length).join("|")})\\b`, "g");
     const acronymSkipSelector = "script, style, textarea, input, select, option, button, a, code, [data-info], .cyber-term, dialog";
 
+    const definedAcronyms = new Set();
+
     function decorateAcronyms(root = document.body) {
       if (!root || root.nodeType !== Node.ELEMENT_NODE || root.matches?.(acronymSkipSelector)) return;
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -642,14 +672,19 @@
         for (const match of node.nodeValue.matchAll(acronymPattern)) {
           fragment.append(node.nodeValue.slice(cursor, match.index));
           const term = acronymGlossary[match[0]];
-          const trigger = document.createElement("button");
-          trigger.type = "button";
-          trigger.className = "cyber-term";
-          trigger.dataset.infoTitle = term.title;
-          trigger.dataset.info = term.info;
-          trigger.setAttribute("aria-label", `${match[0]}: open definition`);
-          trigger.textContent = match[0];
-          fragment.append(trigger);
+          if (!definedAcronyms.has(match[0])) {
+            const trigger = document.createElement("button");
+            trigger.type = "button";
+            trigger.className = "cyber-term";
+            trigger.dataset.infoTitle = term.title;
+            trigger.dataset.info = term.info;
+            trigger.setAttribute("aria-label", `${match[0]}: open definition`);
+            trigger.textContent = match[0];
+            fragment.append(trigger);
+            definedAcronyms.add(match[0]);
+          } else {
+            fragment.append(match[0]);
+          }
           cursor = match.index + match[0].length;
         }
         fragment.append(node.nodeValue.slice(cursor));
