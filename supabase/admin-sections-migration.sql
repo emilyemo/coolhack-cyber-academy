@@ -232,7 +232,19 @@ using (
   )
 );
 
-do $$
+-- Explicit privileges are required in addition to row-level security.
+-- RLS policies above remain the per-row authorization gate.
+grant select, insert, update, delete on table
+  public.profiles,
+  public.teams,
+  public.team_members,
+  public.role_notes,
+  public.team_reports,
+  public.reflections,
+  public.sections
+to authenticated;
+
+do $
 begin
   begin
     alter publication supabase_realtime add table public.sections;
