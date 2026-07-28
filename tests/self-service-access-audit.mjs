@@ -11,6 +11,10 @@ const releaseMigration = readFileSync(
   new URL("../supabase/weekly-scenario-release.sql", import.meta.url),
   "utf8",
 );
+const codeMigration = readFileSync(
+  new URL("../supabase/code-regeneration.sql", import.meta.url),
+  "utf8",
+);
 
 for (const role of ["Student", "Professor", "Administrator"]) {
   assert.ok(classroom.includes(`>${role}<`), `welcome page is missing ${role}`);
@@ -32,8 +36,22 @@ for (const required of [
   'new CustomEvent("coolhack:mission-release"',
   "Scenario 1 professor launch guide",
   "What do we know from the evidence",
+  "Professor answer guide",
+  'db.rpc("get_professor_scenario_key"',
+  'db.rpc("regenerate_section_code"',
+  'db.rpc("regenerate_team_code"',
+  "One website, three entrances",
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
+}
+
+for (const required of [
+  "public.regenerate_section_code",
+  "public.regenerate_team_code",
+  "public.manages_team",
+  "instructor_id = auth.uid()",
+]) {
+  assert.ok(codeMigration.includes(required), `code migration is missing ${required}`);
 }
 
 for (const forbidden of [
