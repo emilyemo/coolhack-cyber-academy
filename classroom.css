@@ -132,3 +132,32 @@
 @media (max-width: 600px) {
   .access-choice .btn { flex-basis: 100%; }
 }
+
+.role-landing .hero,
+.role-landing .clock-panel,
+.role-landing .app-tabs,
+.role-landing .acronym-guide,
+.role-landing [data-view],
+.role-landing footer {
+  display: none !important;
+}
+.role-landing main { padding-top: 1rem; }
+.role-landing #classroom-access { min-height: calc(100vh - 120px); }
+.role-welcome { max-width: 980px; margin: 0 auto; }
+.role-entry-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1rem 0 2rem; }
+.role-entry-card { display:flex; min-height:270px; flex-direction:column; padding:1.25rem; color:#292c27; background:#fffdf8; border:1px solid #d2c7b5; border-radius:16px; box-shadow:var(--shadow); text-decoration:none; }
+.role-entry-card:hover,.role-entry-card:focus-visible { transform:translateY(-2px); border-color:#a3422f; outline:3px solid rgba(163,66,47,.18); }
+.role-entry-card h3 { margin:.9rem 0 .3rem; font-size:1.4rem; }
+.role-entry-card p { flex:1; color:#5f5c53; }
+.role-entry-card>strong { color:#7e3324; }
+.role-entry-icon { display:grid; place-items:center; width:48px; height:48px; color:#fffdf8; background:#4e6754; border-radius:13px; font-weight:850; letter-spacing:.08em; }
+.section-code-actions { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.45rem; }
+.access-audit { margin-top:1rem; }
+.audit-list { display:grid; gap:.5rem; margin-top:1rem; }
+.audit-list article { display:grid; grid-template-columns:minmax(120px,1fr) minmax(140px,1fr) auto; gap:.8rem; align-items:center; padding:.7rem .8rem; background:#f4f0e7; border:1px solid #ddd3c3; border-radius:10px; }
+.audit-list span,.audit-list time { color:#5f5c53; font-size:.86rem; }
+@media (max-width:760px) {
+  .role-entry-grid { grid-template-columns:1fr; }
+  .role-entry-card { min-height:0; }
+  .audit-list article { grid-template-columns:1fr; gap:.15rem; }
+}
