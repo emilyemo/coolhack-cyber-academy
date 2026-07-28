@@ -24,8 +24,9 @@ email solely for account recovery.
 
 - Supabase authentication for all live-classroom accounts
 - Unique passwords for administrator, professors, and students
-- Pending approval for professor accounts
-- Section assignment for authorized professors
+- Single-use professor access codes
+- Automatic class assignment for the professor who claims the code
+- Administrator-only audit of recent successful sign-ins
 - Private team codes for student enrollment
 - Row-level security on classroom tables
 - Team-scoped live updates
@@ -64,7 +65,7 @@ uses an email-shaped identifier internally. These derived values:
 - must not be treated as identities;
 - do not replace passwords;
 - may be predictable from a known username or team-code/alias pair; and
-- are protected by the password, approval, membership, and row-level policies.
+- are protected by the password, private codes, membership, and row-level policies.
 
 ## Privacy responsibilities
 
