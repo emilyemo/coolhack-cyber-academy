@@ -4,6 +4,11 @@ Notable project changes are documented here. Dates use ISO format.
 
 ## Unreleased
 
+- Added migration verification for the `platform_admin` enum value.
+- Replaced email-matching administrator promotion with a guarded, one-verified-
+  account procedure.
+- Added recovery guidance for the `invalid input value for enum app_role`
+  error.
 - Added complete installation, architecture, administrator, professor, student,
   security, testing, troubleshooting, backup, contribution, and reuse
   documentation.
