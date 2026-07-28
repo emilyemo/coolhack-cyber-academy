@@ -129,6 +129,8 @@
       return;
     }
     setPortalHeading("CoolHack student portal", "Create a team, join a team, or return to your live team workspace.");
+    window.CoolHackReleasedMission = 0;
+    window.dispatchEvent(new CustomEvent("coolhack:mission-release",{detail:{mission:0}}));
     renderStudentAccess();
   }
 
@@ -267,7 +269,7 @@
   }
 
   async function studentScreen() {
-    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,join_code,active_mission,mission_locked)").eq("user_id",currentUser.id).maybeSingle();
+    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,join_code,active_mission,mission_locked,sections(released_mission))").eq("user_id",currentUser.id).maybeSingle();
     if (m.error) throw m.error;
     membership = m.data;
     if (!membership) {
@@ -275,7 +277,19 @@
       bindSignOut(); return;
     }
     const teamId = membership.team_id;
-    const mission = membership.teams.active_mission;
+    const mission = Number(membership.teams.sections?.released_mission || 0);
+    window.CoolHackReleasedMission = mission;
+    window.dispatchEvent(new CustomEvent("coolhack:mission-release",{detail:{mission}}));
+    if (!mission) {
+      mount.innerHTML = accountBar() + `
+        <div class="classroom-card scenario-waiting">
+          <span class="card-kicker">Weekly activity</span>
+          <h3>Your professor has not revealed this week's scenario yet</h3>
+          <p>Your account and team are ready. Return after your professor opens the activity; no previous work will be lost.</p>
+        </div>`;
+      bindSignOut();
+      return;
+    }
     const [rosterResult, notesResult, reportResult, reflectionResult] = await Promise.all([
       db.from("team_members").select("user_id,assigned_role,profiles(display_name)").eq("team_id",teamId),
       db.from("role_notes").select("*").eq("team_id",teamId).eq("mission_number",mission),
@@ -353,9 +367,9 @@
 
   async function staffScreen() {
   const isAdmin=profile.app_role==="platform_admin";
-  const sectionFields=isAdmin
-    ?"id,name,class_code,professor_access_code,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)"
-    :"id,name,class_code,instructor_id,is_active,profiles!sections_instructor_id_fkey(display_name)";
+    const sectionFields=isAdmin
+    ?"id,name,class_code,professor_access_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)"
+    :"id,name,class_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
   const accessPromise=isAdmin
     ? db.from("access_events").select("id,portal,app_role,accessed_at,profiles(display_name)").order("accessed_at",{ascending:false}).limit(30)
     : Promise.resolve({data:[],error:null});
@@ -384,8 +398,24 @@
       <div class="classroom-card"><span class="card-kicker">Student self-service</span><h3>Students create their teams</h3><p>The professor shares the student section code. One student chooses the team name and creates the team; the other three join with the generated team code.</p></div>
       <div class="classroom-card"><span class="card-kicker">Professor control</span><h3>Professor manages the live roster</h3><p>Teams appear automatically. The professor sees only this class and assigns the four distinct seats.</p></div>
     </div>
+    ${sections.some(section=>Number(section.released_mission)===1)?`
+      <section class="classroom-card professor-briefing">
+        <span class="card-kicker">Scenario 1 professor launch guide</span>
+        <h3>Introducing “The Urgent Invoice”</h3>
+        <p><strong>Suggested opening:</strong> “Today, you are the incident-response team at CoolHack Solutions. A finance employee received what appears to be an urgent vendor invoice, clicked the link, and then reported it. Your job is not to guess whether it is phishing. Your job is to examine the available evidence, identify what is confirmed, explain what is still uncertain, and recommend a defensible response.”</p>
+        <p><strong>Set the workplace expectation:</strong> “Each person has a different professional responsibility, but the team owns one decision. Refer to evidence by artifact number, challenge unsupported claims respectfully, and document why your recommended action is proportionate to the risk.”</p>
+        <p><strong>Before teams begin:</strong> Remind students not to enter real names, passwords, employer information, or institutional data into the AI role-play. Tell them to record their initial conclusion before opening the AI supervisor so they can show how their reasoning improved.</p>
+        <details><summary>Discussion prompts for the professor</summary><ul>
+          <li>What do we know from the evidence, and what are we merely assuming?</li>
+          <li>Which artifact most strongly supports the team’s current conclusion?</li>
+          <li>What could have been exposed after the click?</li>
+          <li>What response protects the organization without causing unnecessary disruption?</li>
+          <li>How would you explain the next action to the affected employee in plain language?</li>
+        </ul></details>
+        <details><summary>Closing debrief</summary><p>Ask each team to state its decision, strongest evidence, remaining uncertainty, and first recommended action in sixty seconds. Close by connecting evidence handling, escalation, documentation, and professional communication to entry-level security operations work.</p></details>
+      </section>`:""}
     <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
-      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${section.profiles?.display_name?`Professor: ${esc(section.profiles.display_name)}`:"Awaiting professor activation"}</span><small>Student section code: <code>${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small>${isAdmin?(section.instructor_id?`<small>Professor access: claimed</small>`:`<small>Professor access code: <code>${esc(section.professor_access_code)}</code></small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-code="${esc(section.professor_access_code)}">Copy professor code</button><button class="btn compact" type="button" data-professor-code-refresh="${section.id}">Generate new code</button></div>`):""}</article>`).join("")||"<p>Create a class to begin.</p>"}</div>
+      <div class="section-summary">${sections.map(section=>`<article><strong>${esc(section.name)}</strong><span>${section.profiles?.display_name?`Professor: ${esc(section.profiles.display_name)}`:"Awaiting professor activation"}</span><small>Student section code: <code>${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small><div class="scenario-release"><label>Weekly scenario<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}<small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div>${isAdmin?(section.instructor_id?`<small>Professor access: claimed</small>`:`<small>Professor access code: <code>${esc(section.professor_access_code)}</code></small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-code="${esc(section.professor_access_code)}">Copy professor code</button><button class="btn compact" type="button" data-professor-code-refresh="${section.id}">Generate new code</button></div>`):""}</article>`).join("")||"<p>Create a class to begin.</p>"}</div>
       <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
     </section>
     ${isAdmin?`<section class="classroom-card access-audit"><div class="operations-head"><div><span class="card-kicker">Access audit</span><h3>Recent successful sign-ins</h3><p>CoolHack records role-based access without displaying student emails.</p></div></div><div class="audit-list">${accessEvents.map(event=>`<article><strong>${esc(event.profiles?.display_name||"Account")}</strong><span>${esc(event.app_role)} · ${esc(event.portal)}</span><time datetime="${esc(event.accessed_at)}">${esc(formatAccessTime(event.accessed_at))}</time></article>`).join("")||"<p>No successful sign-ins have been recorded yet.</p>"}</div></section>`:""}`;
@@ -397,6 +427,8 @@
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
   function bindOperationButtons(){
     document.querySelectorAll("[data-copy-code]").forEach(button=>button.addEventListener("click",async()=>{await navigator.clipboard.writeText(button.dataset.copyCode);button.textContent="Code copied";setTimeout(()=>button.textContent="Copy code",1200);}));
+    document.querySelectorAll("[data-scenario-reveal]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-mission="${button.dataset.scenarioReveal}"]`);const mission=Number(select?.value||0);if(!mission){showOperationResult("Choose a scenario before revealing it.",true);return;}const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioReveal,requested_mission:mission});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-scenario-hide]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioHide,requested_mission:0});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
     document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);if(button.dataset.teamControl==="code")changes.join_code=secureTeamCode();const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-member-role]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-role-select="${button.dataset.memberRole}"]`);const result=await db.from("team_members").update({assigned_role:select.value||null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberRole);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
