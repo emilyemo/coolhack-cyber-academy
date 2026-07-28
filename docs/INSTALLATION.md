@@ -112,21 +112,44 @@ that is expected.
    confirmation message.
 6. In Supabase **Authentication → Users**, confirm that exactly one intended
    administrator account exists.
-7. In **SQL Editor**, run the following after replacing the placeholder:
+7. Before promotion, verify the migration installed the administrator role:
 
 ```sql
-update public.profiles
-set app_role = 'platform_admin'
-where id = (
-  select id
-  from auth.users
-  where email = 'YOUR-COOLHACK-PROJECT-EMAIL-HERE'
-);
+select e.enumlabel as allowed_role
+from pg_type t
+join pg_enum e on e.enumtypid = t.oid
+join pg_namespace n on n.oid = t.typnamespace
+where n.nspname = 'public'
+  and t.typname = 'app_role'
+order by e.enumsortorder;
 ```
 
-8. Confirm that one row was updated. Do not promote a professor or student
-   account.
-9. Sign in through the administrator portal and confirm the dashboard appears.
+The result must include `student`, `instructor`, and `platform_admin`. Stop
+and use [Troubleshooting](TROUBLESHOOTING.md) if `platform_admin` is absent.
+
+8. Confirm that exactly one intended administrator account is verified, then
+   run this guarded promotion query. It updates nothing unless there is exactly
+   one verified account:
+
+```sql
+with verified_account as (
+  select id
+  from auth.users
+  where email_confirmed_at is not null
+), only_verified_account as (
+  select id
+  from verified_account
+  where (select count(*) from verified_account) = 1
+)
+update public.profiles as p
+set app_role = 'platform_admin'
+where p.id = (select id from only_verified_account)
+returning p.display_name, p.app_role;
+```
+
+9. Confirm that exactly one row returns `app_role = platform_admin`. If zero
+   rows return, do not rerun the query; verify the account and profile counts.
+10. Sign in through the administrator portal and confirm the dashboard appears.
 
 ## 8. Create a professor test account
 
@@ -160,6 +183,7 @@ Only after all tests pass should a classroom pilot begin.
 
 - [ ] GitHub Pages loads over HTTPS
 - [ ] All three SQL files completed in order
+- [ ] `app_role` includes `student`, `instructor`, and `platform_admin`
 - [ ] Only public Supabase values are in `supabase-config.js`
 - [ ] Administrator account uses a dedicated project email
 - [ ] Administrator role promotion affected exactly one account
