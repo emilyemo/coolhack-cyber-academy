@@ -286,3 +286,83 @@ drop trigger if exists enforce_team_roster_limit on public.team_members;
 create trigger enforce_team_roster_limit before insert or update of team_id on public.team_members
 for each row execute function public.enforce_team_roster_limit();
 grant select, insert, update, delete on table public.sections, public.teams, public.team_members to authenticated;
+
+
+-- Student-led team creation
+-- One student creates a team using the professor's private section code.
+-- The other three students join using the generated private team code.
+alter table public.sections
+  add column if not exists class_code text;
+
+update public.sections
+set class_code = upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8))
+where class_code is null;
+
+alter table public.sections
+  alter column class_code set default upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8)),
+  alter column class_code set not null;
+
+create unique index if not exists sections_class_code_key
+  on public.sections (class_code);
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+declare
+  requested_team uuid;
+  requested_code text;
+  requested_section uuid;
+  requested_section_code text;
+  requested_team_name text;
+begin
+  requested_code := upper(trim(coalesce(new.raw_user_meta_data ->> 'join_code', '')));
+  requested_section_code := upper(trim(coalesce(new.raw_user_meta_data ->> 'section_code', '')));
+  requested_team_name := trim(coalesce(new.raw_user_meta_data ->> 'team_name', ''));
+
+  insert into public.profiles (id, display_name)
+  values (
+    new.id,
+    coalesce(
+      nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''),
+      split_part(new.email, '@', 1)
+    )
+  );
+
+  if new.raw_user_meta_data ->> 'account_kind' = 'student_alias' then
+    select id into requested_team
+    from public.teams
+    where join_code = requested_code;
+
+    if requested_team is null then
+      raise exception 'Invalid team code';
+    end if;
+
+    insert into public.team_members (team_id, user_id)
+    values (requested_team, new.id);
+
+  elsif new.raw_user_meta_data ->> 'account_kind' = 'student_team_creator' then
+    select id into requested_section
+    from public.sections
+    where class_code = requested_section_code
+      and is_active;
+
+    if requested_section is null then
+      raise exception 'Invalid or inactive section code';
+    end if;
+
+    if requested_code !~ '^[A-Z0-9]{8}$' then
+      raise exception 'Invalid generated team code';
+    end if;
+
+    insert into public.teams (name, join_code, section_id, created_by)
+    values (requested_team_name, requested_code, requested_section, new.id)
+    returning id into requested_team;
+
+    insert into public.team_members (team_id, user_id)
+    values (requested_team, new.id);
+  end if;
+
+  return new;
+end;
+$$;
