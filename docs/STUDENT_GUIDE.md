@@ -4,6 +4,18 @@ CoolHack is an independent fictional cybersecurity simulation. Students use one
 of three choices on the ordinary student page: **Sign in**, **Join a team**, or
 **Create a team**.
 
+## Weekly scenario access
+
+Your professor reveals one scenario for the class each week. If the workspace
+says the weekly scenario is unavailable, the team account is still working;
+return after the professor opens the activity. Earlier saved work remains
+stored.
+
+Scenario 1 includes a **From classroom to career** section connecting evidence
+review, team decisions, response recommendations, and incident reporting to
+real security work. It also provides truthful résumé and interview wording that
+identifies the experience as a simulation.
+
 ## Privacy rules
 
 Use an invented screen name and a new CoolHack-only password. Do not use your
