@@ -19,6 +19,9 @@ for (const required of [
   'db.rpc("regenerate_professor_access_code"',
   "Recent successful sign-ins",
   "No approval queue",
+  "Preview student entrance",
+  "The database enforces this boundary",
+  "Teammates see the roster",
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
@@ -47,6 +50,11 @@ for (const required of [
 
 assert.ok(css.includes(".role-entry-grid"), "welcome-page layout is missing");
 assert.ok(css.includes(".access-audit"), "access-audit layout is missing");
+assert.ok(css.includes(".visibility-guide"), "visibility guidance is missing");
+
+const index = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+assert.ok(index.includes("const definedAcronyms = new Set()"), "one-time term definitions are missing");
+assert.ok(index.includes('definedAcronyms.add(match[0])'), "defined terms are not tracked");
 
 const dollarQuotes = migration.match(/\$\$/g) || [];
 assert.equal(dollarQuotes.length % 2, 0, "migration has unmatched dollar quotes");
