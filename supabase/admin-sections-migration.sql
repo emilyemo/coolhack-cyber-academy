@@ -3,6 +3,21 @@
 
 alter type public.app_role add value if not exists 'platform_admin';
 
+do $
+begin
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_enum e on e.enumtypid = t.oid
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public'
+      and t.typname = 'app_role'
+      and e.enumlabel = 'platform_admin'
+  ) then
+    raise exception 'CoolHack migration stopped: platform_admin role was not installed';
+  end if;
+end $;
+
 create table if not exists public.sections (
   id uuid primary key default gen_random_uuid(),
   name text not null unique check (char_length(name) between 2 and 80),
