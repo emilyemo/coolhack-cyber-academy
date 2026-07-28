@@ -1,28 +1,30 @@
 # Professor Guide
 
-Professors use a CoolHack username and password. No professor email address is
-requested. Access remains blocked until the platform administrator authorizes
-the username and assigns a section.
+Professors use a CoolHack username, password, and the private professor access
+code created for their class. No professor email address or separate
+administrator approval is required.
 
 ## Create an account
 
 1. Open the private professor route provided by the administrator:
    `https://YOUR-PAGES-URL/?portal=professor#classroom-access`
-2. Choose a CoolHack-only username that does not contain an institutional email
+2. Select **First visit: activate class**.
+3. Enter the private professor access code supplied by the administrator.
+4. Choose a CoolHack-only username that does not contain an institutional email
    address, employee ID, or other personal identifier.
-3. Create a unique password of at least 12 characters.
-4. Save the password in a password manager.
-5. Select **Create professor access**.
-6. Send only the chosen username to the platform administrator.
-7. Wait for authorization and section assignment.
+5. Create and confirm a unique password of at least 12 characters.
+6. Save the password in a password manager.
+7. Select **Activate my class**.
+8. Confirm that only the intended class appears.
 
-Never send the password to the administrator.
+Never send the password to the administrator. Do not forward the professor
+access code.
 
-## Pending access
+## Code problems
 
-A new professor account should display an authorization-pending message and
-should not show sections, teams, aliases, reports, or reflections. If it shows
-classroom data before approval, sign out and report the issue immediately.
+An invalid, inactive, or previously claimed code cannot create professor
+access. Ask the administrator to confirm or regenerate the professor code.
+Never substitute the student section code or a team code.
 
 ## Prepare the section
 
