@@ -405,7 +405,7 @@
       .clock-panel { align-items: flex-start; flex-direction: column; }
     }
   </style>
-  <link rel="stylesheet" href="classroom.css?v=team-flow-code-verify-4">
+  <link rel="stylesheet" href="classroom.css?v=full-workflow-audit-5">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to missions</a>
@@ -572,7 +572,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=team-flow-code-verify-4"></script>
+  <script src="classroom.js?v=full-workflow-audit-5"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -1198,86 +1198,3 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
       event.preventDefault();
       alert("Training safety notice: This simulated invoice link is disabled. Students should inspect the destination without opening it.");
     });
-
-    const formFields = [...document.querySelectorAll("#caseForm input, #caseForm textarea")];
-    const storageKey = "coolhack-case-draft";
-    function saveDraft() {
-      const draft = {
-        studentName: document.querySelector("#studentName").value,
-        selectedRole: document.querySelector("#selectedRole").value,
-        finding: document.querySelector("#finding").value,
-        timeline: document.querySelector("#timeline").value,
-        decision: document.querySelector("#decision").value,
-        unknowns: document.querySelector("#unknowns").value,
-        aiTranscript: document.querySelector("#aiTranscript").value,
-        aiFeedback: document.querySelector("#aiFeedback").value,
-        reflection: document.querySelector("#reflection").value,
-        checks: [...document.querySelectorAll('.check input:checked')].map(item => item.value)
-      };
-      localStorage.setItem(storageKey, JSON.stringify(draft));
-      document.querySelector("#saveNote").textContent = "Draft saved in this browser. Do not enter passwords or private personal information.";
-    }
-    formFields.forEach(field => field.addEventListener("input", saveDraft));
-    try {
-      const draft = JSON.parse(localStorage.getItem(storageKey) || "{}");
-      ["studentName", "selectedRole", "finding", "timeline", "decision", "unknowns", "aiTranscript", "aiFeedback", "reflection"].forEach(id => {
-        if (draft[id]) document.querySelector(`#${id}`).value = draft[id];
-      });
-      (draft.checks || []).forEach(value => {
-        const box = [...document.querySelectorAll(".check input")].find(item => item.value === value);
-        if (box) box.checked = true;
-      });
-    } catch (_) {}
-
-    document.querySelector("#downloadBtn").addEventListener("click", () => {
-      const checked = [...document.querySelectorAll(".check input:checked")].map(item => `- ${item.value}`).join("\n") || "- None marked complete";
-      const content = `COOLHACK CYBER ACADEMY — CASE NOTES
-
-Mission: ${missions[activeMission].title}
-Team: ${document.querySelector("#studentName").value || "Not entered"}
-Team Members and Roles: ${document.querySelector("#selectedRole").value || "Not entered"}
-
-KEY FINDING
-${document.querySelector("#finding").value || "Not entered"}
-
-INCIDENT TIMELINE
-${document.querySelector("#timeline").value || "Not entered"}
-
-DECISION AND JUSTIFICATION
-${document.querySelector("#decision").value || "Not entered"}
-
-REMAINING QUESTIONS AND EVIDENCE TO COLLECT
-${document.querySelector("#unknowns").value || "Not entered"}
-
-AI SOC SUPERVISOR ROLE-PLAY TRANSCRIPT
-${document.querySelector("#aiTranscript").value || "Not entered"}
-
-AI SUPERVISOR FEEDBACK AND READINESS SCORE
-${document.querySelector("#aiFeedback").value || "Not entered"}
-
-PERSONAL REFLECTION
-${document.querySelector("#reflection").value || "Not entered"}
-
-SUBMISSION CHECK
-${checked}
-
-Reminder: Verify every claim against the evidence and clearly label any remaining assumptions.
-`;
-      const blob = new Blob([content], {type: "text/plain"});
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `coolhack-mission-${activeMission + 1}-report.txt`;
-      link.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.querySelector("#clearBtn").addEventListener("click", () => {
-      if (!confirm("Clear this saved draft from the browser?")) return;
-      localStorage.removeItem(storageKey);
-      document.querySelector("#caseForm").reset();
-      document.querySelector("#saveNote").textContent = "Draft cleared. New notes will save automatically in this browser.";
-    });
-  </script>
-</body>
-</html>
