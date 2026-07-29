@@ -10,6 +10,7 @@
   let channel = null;
   let saveTimer = null;
   let roster = [];
+  let staffSectionFilter = "all";
   const portal = new URLSearchParams(window.location.search).get("portal");
   const staffPortal = portal === "admin" || portal === "professor" || portal === "instructor";
 
@@ -366,13 +367,62 @@
   }
 
   function rpcCodeValue(data) {
-    if (typeof data === "string") return data;
-    if (Array.isArray(data) && data.length === 1) return rpcCodeValue(data[0]);
+    if (typeof data === "string") {
+      const value = data.trim();
+      if (value.startsWith("{") || value.startsWith("[")) {
+        try { return rpcCodeValue(JSON.parse(value)); } catch (_error) {}
+      }
+      return value;
+    }
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        const value = rpcCodeValue(item);
+        if (value) return value;
+      }
+      return "";
+    }
     if (data && typeof data === "object") {
-      const value = Object.values(data).find(item => typeof item === "string");
-      if (value) return value;
+      for (const key of ["code","new_code","class_code","join_code","professor_access_code","regenerate_section_code","regenerate_team_code","regenerate_professor_access_code"]) {
+        const value = rpcCodeValue(data[key]);
+        if (value) return value;
+      }
+      for (const item of Object.values(data)) {
+        const value = rpcCodeValue(item);
+        if (value) return value;
+      }
     }
     return "";
+  }
+
+  async function readCurrentCode(kind, id) {
+    const source = kind === "team"
+      ? await db.from("teams").select("join_code").eq("id", id).single()
+      : await db.from("sections").select(kind === "professor" ? "professor_access_code" : "class_code").eq("id", id).single();
+    if (source.error) return {code:"", error:source.error};
+    return {code:kind === "team" ? source.data?.join_code : kind === "professor" ? source.data?.professor_access_code : source.data?.class_code, error:null};
+  }
+
+  async function regenerateAndVerify(button, kind, rpcName, parameterName, id, label) {
+    const card = button.closest("[data-section-summary], .team-operation");
+    const previous = card?.querySelector(`[data-code-display="${kind}"]`)?.textContent?.trim() || "";
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = "Generating…";
+    const result = await db.rpc(rpcName, {[parameterName]:id});
+    if (result.error) {
+      button.disabled = false;
+      button.textContent = originalText;
+      return {error:`${label} was not changed: ${result.error.message}`};
+    }
+    const readback = await readCurrentCode(kind, id);
+    const code = readback.code || rpcCodeValue(result.data);
+    button.disabled = false;
+    button.textContent = originalText;
+    if (readback.error) return {error:`${label} changed, but CoolHack could not verify it: ${readback.error.message}`};
+    if (!code) return {error:`${label} did not return a usable new code.`};
+    if (previous && code === previous) return {error:`${label} did not change. Please try once more.`};
+    replaceVisibleCode(button, code, kind);
+    return {code};
   }
 
   function replaceVisibleCode(button, code, kind) {
@@ -447,33 +497,52 @@
         <details><summary>Closing debrief</summary><p>Ask each team to state its decision, strongest evidence, remaining uncertainty, and first recommended action in sixty seconds. Close by connecting evidence handling, escalation, documentation, and professional communication to entry-level security operations work.</p></details>
       </section>`:""}
     <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
-      <div class="section-summary">${sections.map(section=>`<article data-section-summary="${section.id}"><strong>${esc(section.name)}</strong><span>${section.profiles?.display_name?`Professor: ${esc(section.profiles.display_name)}`:"Awaiting professor activation"}</span><small>Student section code: <code data-code-display="section">${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="section" data-copy-code="${esc(section.class_code)}">Copy student section code</button><button class="btn compact" type="button" data-section-code-refresh="${section.id}">Regenerate student section code</button></div><div class="scenario-release"><label>Weekly scenario<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}<small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div>${isAdmin?(section.instructor_id?`<small>Professor access: already claimed; no professor code is needed now.</small>`:`<small>One-time professor access code: <code data-code-display="professor">${esc(section.professor_access_code)}</code></small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="professor" data-copy-code="${esc(section.professor_access_code)}">Copy professor code</button><button class="btn compact" type="button" data-professor-code-refresh="${section.id}">Regenerate professor code</button></div>`):""}</article>`).join("")||"<p>Create a class to begin.</p>"}</div>
+      <div class="section-summary">${sections.map(section=>`<article data-section-summary="${section.id}"><strong>${esc(section.name)}</strong><span>${section.profiles?.display_name?`Professor: ${esc(section.profiles.display_name)}`:"Awaiting professor activation"}</span><small>Student section code: <code data-code-display="section">${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="section" data-copy-code="${esc(section.class_code)}">Copy student section code</button><button class="btn compact" type="button" data-section-code-refresh="${section.id}">Regenerate student section code</button>${isAdmin?`<button class="btn compact danger-outline" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button>`:""}</div>${isAdmin?(section.instructor_id?`<small>Professor access: already claimed; no professor code is needed now.</small>`:`<small>One-time professor access code: <code data-code-display="professor">${esc(section.professor_access_code)}</code></small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="professor" data-copy-code="${esc(section.professor_access_code)}">Copy professor code</button><button class="btn compact" type="button" data-professor-code-refresh="${section.id}">Regenerate professor code</button></div>`):""}</article>`).join("")||"<p>Create a class to begin.</p>"}</div>
+      <div class="weekly-control-stack">${sections.map(section=>`<section class="weekly-activity-control" data-section-work="${section.id}"><div><span class="card-kicker">Weekly activity control</span><h4>${esc(section.name)}</h4><p>Reveal one scenario for this class, then review team work and reports directly below.</p></div><div class="scenario-release"><label>Scenario available to students<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><div class="section-code-actions"><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}</div><small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div></section>`).join("")}</div>
+      <div class="work-review-heading"><span class="card-kicker">Student work and reports</span><h3>Team workspaces</h3></div>
       <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
     </section>
     ${isAdmin?`<section class="classroom-card access-audit"><div class="operations-head"><div><span class="card-kicker">Access audit</span><h3>Recent successful sign-ins</h3><p>CoolHack records role-based access without displaying student emails.</p></div></div><div class="audit-list">${accessEvents.map(event=>`<article><strong>${esc(event.profiles?.display_name||"Account")}</strong><span>${esc(event.app_role)} · ${esc(event.portal)}</span><time datetime="${esc(event.accessed_at)}">${esc(formatAccessTime(event.accessed_at))}</time></article>`).join("")||"<p>No successful sign-ins have been recorded yet.</p>"}</div></section>`:""}`;
   bindSignOut();
-  field("sectionFilter")?.addEventListener("change",event=>{
-    const selected=event.target.value;
-    const visible=selected==="all"?teams:teams.filter(t=>t.section_id===selected);
+  function applySectionFilter(selected) {
+    staffSectionFilter = selected;
+    const visible = selected === "all" ? teams : teams.filter(t=>t.section_id===selected);
     document.querySelectorAll("[data-section-summary]").forEach(card=>{
       card.classList.toggle("classroom-hidden",selected!=="all"&&card.dataset.sectionSummary!==selected);
     });
+    document.querySelectorAll("[data-section-work]").forEach(card=>{
+      card.classList.toggle("classroom-hidden",selected!=="all"&&card.dataset.sectionWork!==selected);
+    });
     field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);
-    bindOperationButtons();
-  });
+  }
+  const sectionFilter = field("sectionFilter");
+  if (sectionFilter) {
+    if (staffSectionFilter !== "all" && sections.some(section=>section.id===staffSectionFilter)) sectionFilter.value=staffSectionFilter;
+    else if (!isAdmin && sections.length===1) { staffSectionFilter=sections[0].id; sectionFilter.value=staffSectionFilter; }
+    applySectionFilter(sectionFilter.value);
+    sectionFilter.addEventListener("change",event=>{applySectionFilter(event.target.value);bindOperationButtons();});
+  }
   field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.from("sections").insert({name:field("sectionName").value.trim(),created_by:currentUser.id}).select("name,professor_access_code").single();field("sectionMessage").textContent=result.error?result.error.message:`${result.data.name} created. Professor code: ${result.data.professor_access_code}`;if(!result.error)setTimeout(staffScreen,1000);});
-  document.querySelectorAll("[data-professor-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{button.disabled=true;button.textContent="Generating…";const result=await db.rpc("regenerate_professor_access_code",{requested_section:button.dataset.professorCodeRefresh});const code=rpcCodeValue(result.data);field("staffReview").innerHTML=`<p class="${result.error||!code?"auth-message":"form-message"}">${esc(result.error?`Professor code was not changed: ${result.error.message}`:!code?"Professor code changed, but the new value could not be displayed. Refresh once to view it.":`Professor code regenerated. The previous code no longer works. New code: ${code}`)}</p>`;if(!result.error&&code)replaceVisibleCode(button,code,"professor");button.disabled=false;button.textContent="Regenerate professor code";}));
+  document.querySelectorAll("[data-professor-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{
+    const result=await regenerateAndVerify(button,"professor","regenerate_professor_access_code","requested_section",button.dataset.professorCodeRefresh,"Professor code");
+    field("staffReview").innerHTML=`<p class="${result.error?"auth-message":"form-message"}">${esc(result.error||`Professor code regenerated. The previous code no longer works. New code: ${result.code}`)}</p>`;
+  }));
   bindOperationButtons();
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
   function bindOperationButtons(){
     document.querySelectorAll("[data-copy-code]").forEach(button=>button.addEventListener("click",async()=>{await navigator.clipboard.writeText(button.dataset.copyCode);button.textContent="Code copied";setTimeout(()=>button.textContent="Copy code",1200);}));
-    document.querySelectorAll("[data-section-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{button.disabled=true;button.textContent="Generating…";const result=await db.rpc("regenerate_section_code",{requested_section:button.dataset.sectionCodeRefresh});const code=rpcCodeValue(result.data);if(result.error||!code){showOperationResult(result.error?`Student section code was not changed: ${result.error.message}`:"Student section code changed, but the new value could not be displayed. Refresh once to view it.",true);}else{replaceVisibleCode(button,code,"section");showOperationResult(`Student section code regenerated. The previous code no longer works. New code: ${code}`);}button.disabled=false;button.textContent="Regenerate student section code";}));
+    document.querySelectorAll("[data-section-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{
+      const result=await regenerateAndVerify(button,"section","regenerate_section_code","requested_section",button.dataset.sectionCodeRefresh,"Student section code");
+      showOperationResult(result.error||`Student section code regenerated. The previous code no longer works. New code: ${result.code}`,Boolean(result.error));
+    }));
     document.querySelectorAll("[data-scenario-reveal]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-mission="${button.dataset.scenarioReveal}"]`);const mission=Number(select?.value||0);if(!mission){showOperationResult("Choose a scenario before revealing it.",true);return;}const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioReveal,requested_mission:mission});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-scenario-hide]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioHide,requested_mission:0});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
-    document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{if(button.dataset.teamControl==="code"){button.disabled=true;button.textContent="Generating…";const result=await db.rpc("regenerate_team_code",{requested_team:button.dataset.teamId});const code=rpcCodeValue(result.data);if(result.error||!code){showOperationResult(result.error?`Team code was not changed: ${result.error.message}`:"Team code changed, but the new value could not be displayed. Refresh once to view it.",true);}else{replaceVisibleCode(button,code,"team");showOperationResult(`Team code regenerated. The previous code no longer works. New code: ${code}`);}button.disabled=false;button.textContent="Regenerate team code";return;}const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{if(button.dataset.teamControl==="code"){const result=await regenerateAndVerify(button,"team","regenerate_team_code","requested_team",button.dataset.teamId,"Team code");showOperationResult(result.error||`Team code regenerated. The previous code no longer works. New code: ${result.code}`,Boolean(result.error));return;}const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-member-role]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-role-select="${button.dataset.memberRole}"]`);const result=await db.from("team_members").update({assigned_role:select.value||null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberRole);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-member-move]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-move-select="${button.dataset.memberMove}"]`);if(!select?.value){showOperationResult("Choose a destination team first.",true);return;}const result=await db.from("team_members").update({team_id:select.value,assigned_role:null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberMove);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-member-remove]").forEach(button=>button.addEventListener("click",async()=>{const student=button.dataset.memberName||"this student";if(!confirm(`Remove ${student} from this team? Their saved submissions will be retained for staff review.`))return;const result=await db.from("team_members").delete().eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberRemove);if(result.error)showOperationResult(`Student was not removed: ${result.error.message}`,true);else staffScreen();}));
+    document.querySelectorAll("[data-section-archive]").forEach(button=>button.addEventListener("click",async()=>{const name=button.dataset.sectionName||"this section";if(!confirm(`Archive ${name}? Students and the professor will lose active access, but saved work will remain in the database.`))return;const result=await db.from("sections").update({is_active:false}).eq("id",button.dataset.sectionArchive);if(result.error)showOperationResult(`Section was not archived: ${result.error.message}`,true);else{staffSectionFilter="all";staffScreen();}}));
   }
 }
 
@@ -494,6 +563,7 @@
         <button class="btn compact" type="button" data-member-role="${member.user_id}" data-current-team="${team.id}">Save seat</button>
         <label>Move to team<select data-member-move-select="${member.user_id}" ${destinations.length?"":"disabled"}><option value="">Choose destination</option>${destinations.map(destination=>`<option value="${destination.id}">${esc(destination.name)}</option>`).join("")}</select></label>
         <button class="btn compact" type="button" data-member-move="${member.user_id}" data-current-team="${team.id}" ${destinations.length?"":"disabled"}>Move student</button>
+        <button class="btn compact danger-outline" type="button" data-member-remove="${member.user_id}" data-member-name="${esc(member.profiles?.display_name||"Student")}" data-current-team="${team.id}">Remove member</button>
       </div>`).join("")||"<p>No students yet. Give the private team code to up to four students; they will appear here automatically after creating access.</p>"}</div>
       <div class="team-code-row"><code data-code-display="team">${esc(team.join_code)}</code><button class="btn compact" type="button" data-copy-kind="team" data-copy-code="${esc(team.join_code)}">Copy team code</button><button class="btn compact" type="button" data-team-control="code" data-team-id="${team.id}">Regenerate team code</button></div>
       <div class="mission-controls">
