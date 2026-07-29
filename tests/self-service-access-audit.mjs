@@ -45,6 +45,9 @@ for (const required of [
   'card.classList.toggle("classroom-hidden"',
   "rpcCodeValue",
   "replaceVisibleCode",
+  "storedCode",
+  "Team leader:",
+  "Other three members:",
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
@@ -54,6 +57,7 @@ for (const required of [
   "public.regenerate_team_code",
   "public.manages_team",
   "instructor_id = auth.uid()",
+  "exit when new_code is distinct from old_code",
 ]) {
   assert.ok(codeMigration.includes(required), `code migration is missing ${required}`);
 }
