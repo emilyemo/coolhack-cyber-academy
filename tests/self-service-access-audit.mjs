@@ -41,6 +41,10 @@ for (const required of [
   'db.rpc("regenerate_section_code"',
   'db.rpc("regenerate_team_code"',
   "One website, three entrances",
+  'data-section-summary="${section.id}"',
+  'card.classList.toggle("classroom-hidden"',
+  "rpcCodeValue",
+  "replaceVisibleCode",
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
