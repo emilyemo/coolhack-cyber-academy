@@ -221,3 +221,16 @@
     font-size:.82rem;
   }
 }
+
+.weekly-control-stack { display:grid; gap:.8rem; margin:1rem 0 .75rem; }
+.weekly-activity-control { display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,.75fr); gap:1rem; align-items:center; padding:1rem; color:#17323a; background:linear-gradient(135deg,#eef9ff 0%,#effaf7 100%); border:1px solid #9ccfea; border-left:6px solid #3478c0; border-radius:13px; }
+.weekly-activity-control h4,.work-review-heading h3 { margin:.18rem 0 .35rem; }
+.weekly-activity-control p { margin:.2rem 0; color:#53636a; }
+.weekly-activity-control .scenario-release { margin:0; }
+.work-review-heading { margin:1rem 0 .65rem; padding-top:.85rem; border-top:1px solid #d2c7b5; }
+.danger-outline { color:#7a241c; background:#fff8f6; border-color:#d89489; }
+.danger-outline:hover,.danger-outline:focus-visible { color:#fff; background:#a33a2e; border-color:#a33a2e; }
+.roster-manager { grid-template-columns:minmax(120px,1fr) minmax(150px,1fr) auto minmax(150px,1fr) auto auto; }
+@media (max-width:1000px) { .roster-manager { grid-template-columns:1fr 1fr 1fr; } }
+@media (max-width:760px) { .weekly-activity-control { grid-template-columns:1fr; } }
+@media (max-width:600px) { .roster-manager { grid-template-columns:1fr; } .weekly-activity-control .section-code-actions,.weekly-activity-control .btn { width:100%; } }
