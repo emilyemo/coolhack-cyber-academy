@@ -9,6 +9,7 @@ set search_path = public
 as $$
 declare
   new_code text;
+  old_code text;
 begin
   if not (
     public.is_platform_admin()
@@ -22,7 +23,11 @@ begin
     raise exception 'You may regenerate the student section code only for your assigned class';
   end if;
 
-  new_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8));
+  select class_code into old_code from public.sections where id = requested_section;
+  loop
+    new_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8));
+    exit when new_code is distinct from old_code;
+  end loop;
   update public.sections
   set class_code = new_code
   where id = requested_section and is_active;
@@ -42,12 +47,17 @@ set search_path = public
 as $$
 declare
   new_code text;
+  old_code text;
 begin
   if not public.manages_team(requested_team) then
     raise exception 'You may regenerate codes only for a team in your class';
   end if;
 
-  new_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8));
+  select join_code into old_code from public.teams where id = requested_team;
+  loop
+    new_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8));
+    exit when new_code is distinct from old_code;
+  end loop;
   update public.teams
   set join_code = new_code
   where id = requested_team;
