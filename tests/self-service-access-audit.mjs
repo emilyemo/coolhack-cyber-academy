@@ -53,9 +53,21 @@ for (const required of [
   "Other three members:",
   "AI Security Brief",
   "AI security coaching guide",
+  'student: "students.coolhack.example.com"',
+  'professor: "professors.coolhack.example.com"',
+  "signInWithAliasFallback",
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
+
+assert.ok(
+  !classroom.includes("return \`${token}@students.coolhack.invalid\`"),
+  "student registration still uses the rejected .invalid email domain",
+);
+assert.ok(
+  !classroom.includes("return \`${token}@professors.coolhack.invalid\`"),
+  "professor registration still uses the rejected .invalid email domain",
+);
 
 for (const required of [
   "ai_security_brief",
