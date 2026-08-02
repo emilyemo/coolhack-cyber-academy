@@ -26,17 +26,31 @@
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
   const field = id => document.querySelector(`#${id}`);
   const normalizeAlias = value => value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
-  async function aliasEmail(displayName, teamCode) {
+  const aliasDomains = {
+    student: "students.coolhack.example.com",
+    professor: "professors.coolhack.example.com"
+  };
+  const legacyAliasDomains = {
+    student: "students.coolhack.invalid",
+    professor: "professors.coolhack.invalid"
+  };
+  async function aliasEmail(displayName, teamCode, legacy = false) {
     const bytes = new TextEncoder().encode(`${teamCode.trim().toUpperCase()}:${normalizeAlias(displayName)}`);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
     const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
-    return `${token}@students.coolhack.invalid`;
+    return `${token}@${legacy ? legacyAliasDomains.student : aliasDomains.student}`;
   }
-  async function professorAliasEmail(userName) {
+  async function professorAliasEmail(userName, legacy = false) {
     const bytes = new TextEncoder().encode(`professor:${normalizeAlias(userName)}`);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
     const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
-    return `${token}@professors.coolhack.invalid`;
+    return `${token}@${legacy ? legacyAliasDomains.professor : aliasDomains.professor}`;
+  }
+  async function signInWithAliasFallback(primaryEmail, legacyEmail, password) {
+    const primary = await db.auth.signInWithPassword({email:primaryEmail,password});
+    if (!primary.error) return primary;
+    const legacy = await db.auth.signInWithPassword({email:legacyEmail,password});
+    return legacy.error ? primary : legacy;
   }
 
   function setPortalHeading(titleText, introText) {
@@ -246,7 +260,8 @@
         }
         say("Professor account verified. Opening your dashboard…");
       } else {
-        const {error}=await db.auth.signInWithPassword({email,password});
+        const legacyEmail=await professorAliasEmail(displayName,true);
+        const {error}=await signInWithAliasFallback(email,legacyEmail,password);
         if(error)say("That professor username or password did not match. If this is your first visit, choose “First visit: create account.”");
       }
     } catch (_error) {
@@ -264,7 +279,8 @@
     try {
       const email = await aliasEmail(displayName, joinCode);
       if (mode === "signin") {
-        const { error } = await db.auth.signInWithPassword({email, password});
+        const legacyEmail = await aliasEmail(displayName, joinCode, true);
+        const { error } = await signInWithAliasFallback(email, legacyEmail, password);
         if (error) say("That team code, screen name, or password did not match.");
         return;
       }
