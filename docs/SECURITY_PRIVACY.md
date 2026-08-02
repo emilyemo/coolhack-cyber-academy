@@ -24,8 +24,9 @@ email solely for account recovery.
 
 - Supabase authentication for all live-classroom accounts
 - Unique passwords for administrator, professors, and students
-- Single-use professor access codes
-- Automatic class assignment for the professor who claims the code
+- Self-service professor accounts with no institutional email requested
+- Automatic ownership of every class created by a professor
+- Database-enforced isolation between professors' classes
 - Administrator-only audit of recent successful sign-ins
 - Private team codes for student enrollment
 - Row-level security on classroom tables

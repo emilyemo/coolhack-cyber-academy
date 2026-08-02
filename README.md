@@ -20,7 +20,10 @@ individual reflections.
 - Optional Supabase-backed live classroom
 - Platform-administrator, professor, section, team, and student role separation
 - Role-selection welcome page with separate student, professor, and administrator entrances
-- Nickname-only student access and class-code professor activation
+- Nickname-only student access and self-service professor accounts
+- Professor-created classes with professor-to-professor isolation
+- Six mandatory AI Security Challenges and interview-practice answers
+- Shared five-sentence AI Security Brief in every mission
 - Administrator access audit for recent successful sign-ins
 - Row-level security and live team updates
 
@@ -60,7 +63,7 @@ sections, cloud saving, live updates, and staff dashboards, complete the
 | Person | Sign-in information | Access |
 |---|---|---|
 | Platform administrator | One dedicated project email and CoolHack-only password | All sections |
-| Professor | Private professor code, CoolHack username, and CoolHack-only password; no email requested | Code-claimed class only |
+| Professor | CoolHack username and CoolHack-only password; no email or administrator code requested | Classes created by that professor only |
 | Student | Private team code, invented screen name, and CoolHack-only password; no email requested | Assigned team only |
 
 The application internally converts professor usernames and student
@@ -73,6 +76,7 @@ as real email addresses.
 - Four students take four distinct roles.
 - Each student maintains separate role notes.
 - The team maintains one shared report and one shared AI transcript.
+- The team completes one five-sentence AI Security Brief in every mission.
 - Each student completes a private reflection of at least 100 words.
 - The public evidence does not reveal the mission answer.
 - Private instructor materials must be stored outside this repository.

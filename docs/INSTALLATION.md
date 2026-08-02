@@ -36,7 +36,7 @@ At this point the browser-only workspace works, but the live classroom does not.
 
 ## 4. Install the database
 
-For the current release, a **new installation must run all four files in this
+For the current release, a **new installation must run all eight files in this
 exact order**:
 
 1. `supabase/schema.sql`
@@ -44,6 +44,9 @@ exact order**:
 3. `supabase/admin-sections-migration.sql`
 4. `supabase/self-service-professor-migration.sql`
 5. `supabase/weekly-scenario-release.sql`
+6. `supabase/code-regeneration.sql`
+7. `supabase/class-management-controls.sql`
+8. `supabase/professor-independence-ai-security.sql`
 
 For each file:
 
@@ -157,20 +160,17 @@ returning p.display_name, p.app_role;
 
 ## 8. Create a professor test account
 
-1. Sign in as administrator and create a neutral test class.
-2. Copy its generated professor access code.
-3. Open a private/incognito window.
-4. Open:
+1. Open a private/incognito window.
+2. Open:
    `https://YOUR-PAGES-URL/?portal=professor#classroom-access`
-5. Select **First visit: activate class**.
-6. Enter the professor access code.
-7. Choose a non-identifying CoolHack username and a unique password of at least
+3. Select **First visit: create account**.
+4. Choose a non-identifying CoolHack username and a unique password of at least
    12 characters.
-8. Create the account.
-9. Confirm that the professor immediately sees only the claimed class.
-10. Confirm that reusing the same professor code cannot create another
-    professor account.
-11. Confirm that the administrator access audit records the successful sign-in.
+5. Create the account, then create a neutral test class.
+6. Confirm that its student section code appears immediately.
+7. Create a second professor test account and confirm it cannot see, change, or
+   archive the first professor's class.
+8. Confirm that the administrator access audit records both successful sign-ins.
 
 ## 9. Create and isolate two test teams
 
@@ -193,8 +193,8 @@ Only after all tests pass should a classroom pilot begin.
 - [ ] Only public Supabase values are in `supabase-config.js`
 - [ ] Administrator account uses a dedicated project email
 - [ ] Administrator role promotion affected exactly one account
-- [ ] Invalid or claimed professor code cannot create access
-- [ ] Professor sees only the code-claimed class
+- [ ] Professor self-registration creates an instructor profile
+- [ ] Professor sees only classes created by that professor
 - [ ] Administrator can review recent successful sign-ins
 - [ ] Students see only their own team
 - [ ] Teammates cannot read another student's reflection

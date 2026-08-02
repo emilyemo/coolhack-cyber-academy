@@ -405,7 +405,7 @@
       .clock-panel { align-items: flex-start; flex-direction: column; }
     }
   </style>
-  <link rel="stylesheet" href="classroom.css?v=full-workflow-audit-5">
+  <link rel="stylesheet" href="classroom.css?v=ai-security-independent-professors-1">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to missions</a>
@@ -539,13 +539,15 @@
         <div class="field"><label for="unknowns">4. Remaining questions</label><textarea id="unknowns" placeholder="What is still unknown? What additional evidence would you collect?"></textarea></div>
         <div class="field"><label for="aiTranscript">5. AI role-play transcript</label><textarea id="aiTranscript" placeholder="Paste the complete conversation with the AI SOC supervisor here. Do not include private information, passwords, or real company data."></textarea></div>
         <div class="field"><label for="aiFeedback">6. AI supervisor feedback and readiness score</label><textarea id="aiFeedback" placeholder="Paste the AI supervisor's final feedback and score here."></textarea></div>
-        <div class="field"><label for="reflection">7. Individual reflection draft (at least 100 words)</label><textarea id="reflection" placeholder="Each member writes a separate reflection: What did you contribute? What did you initially miss? How did the AI supervisor challenge your reasoning? What would you do differently in a real SOC? Submit the final reflection separately in the course assignment."></textarea></div>
+        <div class="field"><label for="aiSecurityBrief">7. AI Security Brief</label><textarea id="aiSecurityBrief" placeholder="Write five sentences: What is the AI-related risk? What asset or data could be harmed? What evidence supports your concern? Which control reduces the risk? Which human role remains accountable?"></textarea></div>
+        <div class="field"><label for="reflection">8. Individual reflection draft (at least 100 words)</label><textarea id="reflection" placeholder="Each member writes a separate reflection: What did you contribute? What did you initially miss? How did the AI supervisor challenge your reasoning? What AI security risk and control will you remember? What would you do differently in a real SOC? Submit the final reflection separately in the course assignment."></textarea></div>
         <fieldset style="border:0;padding:0;margin:0">
           <legend style="font-weight:750">Submission check</legend>
           <div class="checklist">
             <label class="check"><input type="checkbox" value="All evidence artifacts examined"><span>I examined every evidence artifact</span></label>
             <label class="check"><input type="checkbox" value="Initial decision made before AI role-play"><span>I made my initial decision before using AI</span></label>
             <label class="check"><input type="checkbox" value="Complete AI transcript included"><span>I included the complete AI transcript</span></label>
+            <label class="check"><input type="checkbox" value="AI Security Brief completed"><span>I completed the five-sentence AI Security Brief</span></label>
             <label class="check"><input type="checkbox" value="Reflection is at least 100 words"><span>My reflection is at least 100 words</span></label>
           </div>
         </fieldset>
@@ -572,7 +574,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=full-workflow-audit-5"></script>
+  <script src="classroom.js?v=ai-security-independent-professors-1"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -823,42 +825,84 @@
         scenario: "A finance employee received an urgent invoice email that appears to come from a trusted vendor. The employee opened the message and clicked the link before reporting it. Your team must determine whether the message is malicious and what may have been exposed.",
         evidence: ["Email headers and sender details", "Message language and embedded URL", "User statement and login activity", "Endpoint and web-filter alerts"],
         deliverables: ["Phishing-analysis ticket", "Evidence table with facts and indicators", "Containment recommendation", "Plain-language user notification"],
-        decision: "Do you disable the user account immediately, monitor it, or take another action? Defend the choice using the evidence available—not fear or guesswork."
+        decision: "Do you disable the user account immediately, monitor it, or take another action? Defend the choice using the evidence available—not fear or guesswork.",
+        aiSecurity: {
+          lens: "Defend against AI-enabled attacks + use AI securely",
+          focus: "AI-assisted phishing, sensitive-data protection, and verification of AI output",
+          challenge: "Assume an AI assistant confidently claims the email is safe because it uses HTTPS. Explain why that conclusion is unsupported, identify the evidence you would verify, and state what case data must never be pasted into a public AI tool.",
+          controls: ["Data minimization and redaction", "Independent evidence verification", "Human approval before containment", "Logging the prompt, output, and final analyst decision"],
+          interview: "AI can help triage phishing faster, but it can be wrong and attackers can also use AI to create convincing messages. I would protect sensitive data, verify the AI's claims against headers and security logs, and keep a human accountable for the response."
+        }
       },
       {
         title: "Impossible Travel", subtitle: "Identity investigation", severity: "High", tracks: ["SOC", "IAM"],
         scenario: "The monitoring system reports successful logins for one employee from two distant locations within an impossible time window. One login used a familiar device; the other did not. Decide whether this is credential theft, legitimate travel, or a false positive.",
         evidence: ["Authentication log timestamps", "IP and location context", "MFA events and device history", "Recent password-reset records"],
         deliverables: ["Login timeline", "Account-compromise assessment", "Escalation and containment plan", "Manager status update"],
-        decision: "When is the evidence strong enough to lock the account, revoke sessions, and require a password reset?"
+        decision: "When is the evidence strong enough to lock the account, revoke sessions, and require a password reset?",
+        aiSecurity: {
+          lens: "Use AI securely",
+          focus: "AI risk scoring, false positives, explainability, and human oversight",
+          challenge: "An AI identity tool assigns a 92% compromise score but does not explain which signals mattered. Decide whether that score alone is enough to lock the account, list the evidence needed to validate it, and describe the harm of both a false positive and a false negative.",
+          controls: ["Explainable alert factors", "Human review of high-impact decisions", "False-positive and false-negative monitoring", "Appeal and recovery procedures"],
+          interview: "AI can prioritize identity alerts, but a risk score is not proof. I would validate the underlying login, device, MFA, and user-context evidence before taking a high-impact action and monitor the model for errors."
+        }
       },
       {
         title: "The Noisy Workstation", subtitle: "Endpoint malware", severity: "High", tracks: ["DFIR", "Endpoint"],
         scenario: "A workstation begins making repeated outbound connections shortly after a free utility was installed. The user says the computer still works normally. Your team must decide whether to isolate it without unnecessarily disrupting operations.",
         evidence: ["Process and network-connection data", "Endpoint detection alerts", "Download and browser history", "File hash and persistence clues"],
         deliverables: ["Host investigation worksheet", "Indicators of compromise", "Isolation decision", "Recovery and validation checklist"],
-        decision: "Would you isolate the workstation now? Explain the business impact of both acting and waiting."
+        decision: "Would you isolate the workstation now? Explain the business impact of both acting and waiting.",
+        aiSecurity: {
+          lens: "Secure AI",
+          focus: "Indirect prompt injection, unsafe tool use, and excessive AI-agent permissions",
+          challenge: "A log file sent to an AI SOC assistant contains hidden text telling the assistant to ignore the analyst and run a cleanup command. Explain why evidence must be treated as untrusted input and design a safe approval boundary before any AI-generated command can run.",
+          controls: ["Treat retrieved content as untrusted", "Separate instructions from evidence", "Least-privilege tool access", "Human approval and sandboxing before execution"],
+          interview: "An AI assistant can be manipulated by instructions hidden in logs, webpages, or documents. I would treat retrieved content as untrusted, limit the assistant's permissions, and require human approval before it takes action."
+        }
       },
       {
         title: "After-Hours Database Query", subtitle: "Insider-risk analysis", severity: "Medium", tracks: ["SOC", "Data Security"],
         scenario: "A staff member with legitimate database access downloaded an unusually large set of customer records after normal business hours. Authorization alone does not explain intent. Investigate without assuming guilt.",
         evidence: ["Database audit logs", "Role and access permissions", "Work schedule and business context", "File-transfer and removable-media events"],
         deliverables: ["Evidence-based activity summary", "Data-scope estimate", "Interview and escalation questions", "Privacy-conscious incident notes"],
-        decision: "How will you investigate the activity fairly while preserving evidence and protecting the employee's privacy?"
+        decision: "How will you investigate the activity fairly while preserving evidence and protecting the employee's privacy?",
+        aiSecurity: {
+          lens: "Secure AI + use AI securely",
+          focus: "Sensitive-information disclosure, data governance, and purpose-limited AI access",
+          challenge: "A teammate proposes uploading the complete customer-record export to a public AI chatbot for faster analysis. Reject or revise that plan, identify the minimum data actually needed, and specify an approved secure alternative and retention limit.",
+          controls: ["Data classification before AI use", "Minimum necessary data", "Approved private AI environment", "Access, retention, and deletion controls"],
+          interview: "AI does not cancel data-governance rules. I would classify the data, minimize or de-identify what is shared, use only an approved environment, restrict access, and define how long the data and prompts are retained."
+        }
       },
       {
         title: "Website Under Pressure", subtitle: "Availability incident", severity: "Medium", tracks: ["NET", "Incident Response"],
         scenario: "The public website has become slow and intermittently unavailable. Traffic volume has spiked, but marketing also launched a campaign today. Determine whether the organization faces a denial-of-service attack or a legitimate surge.",
         evidence: ["Traffic volume and source patterns", "Web and firewall logs", "Application response times", "Marketing launch timeline"],
         deliverables: ["Traffic-analysis summary", "Attack-versus-demand conclusion", "Short-term mitigation plan", "Customer-facing status message"],
-        decision: "Which traffic would you block or rate-limit, and how will you avoid blocking legitimate customers?"
+        decision: "Which traffic would you block or rate-limit, and how will you avoid blocking legitimate customers?",
+        aiSecurity: {
+          lens: "Secure AI + use AI securely",
+          focus: "AI availability, adversarial evasion, safe fallback, and resilient automation",
+          challenge: "An AI traffic-control service recommends blocking a large customer region automatically. Decide what evidence and approval are required, how attackers might manipulate the model, and what fallback keeps the website available if the AI service fails.",
+          controls: ["Rate and resource limits", "Adversarial-pattern monitoring", "Bounded automated actions", "Tested manual fallback and rollback"],
+          interview: "AI security includes availability and resilience. I would bound automated blocking, monitor for manipulation, preserve a manual fallback, and test rollback so a bad model decision does not become a second outage."
+        }
       },
       {
         title: "Executive Incident Briefing", subtitle: "Capstone case", severity: "High", tracks: ["SOC", "Leadership"],
         scenario: "Leadership needs a final briefing on a multi-stage incident involving a phishing email, compromised credentials, suspicious endpoint activity, and possible data access. Your team must combine technical findings into one defensible story.",
         evidence: ["Findings from earlier cases", "Verified event timeline", "Containment and recovery records", "Known impact and remaining uncertainty"],
         deliverables: ["Executive incident summary", "Technical timeline and evidence appendix", "Lessons-learned recommendations", "Portfolio-ready final report"],
-        decision: "What can you state with confidence, what remains unknown, and what should leadership fund or change next?"
+        decision: "What can you state with confidence, what remains unknown, and what should leadership fund or change next?",
+        aiSecurity: {
+          lens: "Secure AI + use AI securely + defend against AI-enabled attacks",
+          focus: "AI governance, supply-chain risk, incident accountability, and measurable controls",
+          challenge: "Leadership wants to purchase an AI SOC platform that can investigate and contain incidents automatically. Prepare five security conditions for approval covering vendor risk, data handling, access, monitoring, human authority, and incident response.",
+          controls: ["Vendor and model supply-chain review", "Identity and least privilege", "Continuous logging and evaluation", "Named human accountability and AI incident response"],
+          interview: "Cybersecurity in AI has three sides: protecting AI systems and data, using AI safely for defense, and defending against AI-enabled attacks. I would apply least privilege, data governance, monitoring, testing, human oversight, and an incident-response plan across the AI lifecycle."
+        }
       }
     ];
 
@@ -1019,6 +1063,8 @@ RULES FOR THE ROLE-PLAY
 8. If the student is stuck, give a small hint or ask them which artifact they should recheck. Do not reveal the answer.
 9. Keep your language clear for a beginning workforce student. Briefly explain any technical term you introduce.
 10. Do not request or accept real passwords, personal data, or employer information.
+11. Include one AI Security Challenge: ask the team to explain how AI could help the investigation, how AI could create or amplify risk, and which control keeps a human accountable.
+12. At least once, present one plausible but unsupported AI claim and require the team to challenge it using the mission evidence. Clearly identify the teaching test after the team responds; never silently leave false information in the final feedback.
 
 ENDING THE ROLE-PLAY
 After the team has answered the major questions, ask for one final team incident decision and justification. Then provide:
@@ -1027,6 +1073,7 @@ After the team has answered the major questions, ask for one final team incident
 - a readiness score for Evidence Use, Reasoning, Response Decision, and Professional Communication, with each category scored from 1 to 5;
 - a total score out of 20;
 - one realistic next skill for the student to practice.
+- one 30-second interview question: “What does cybersecurity in AI mean?” Require the answer to cover protecting AI, using AI securely for defense, and defending against AI-enabled attacks.
 
 Start now. Introduce yourself as the student's SOC supervisor and ask only the first question.</textarea>
         <div class="workspace-actions">
@@ -1090,6 +1137,17 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           <div class="callout"><h4>Portfolio deliverables</h4><ul>${mission.deliverables.map(item => `<li>${item}</li>`).join("")}</ul></div>
         </div>
         <div class="decision"><strong>Your decision point</strong><br>${mission.decision}</div>
+        <section class="ai-security-bridge" aria-labelledby="ai-security-title-${index}">
+          <span class="card-kicker">AI Security Challenge ${index + 1} of 6</span>
+          <h4 id="ai-security-title-${index}">${mission.aiSecurity.focus}</h4>
+          <p><strong>Which side of AI cybersecurity?</strong> ${mission.aiSecurity.lens}</p>
+          <div class="ai-interview-anchor"><strong>The three-side interview anchor</strong><span>Cybersecurity in AI means (1) protecting AI systems and their data, (2) using AI securely to support cyber defense, and (3) defending against attacks that AI makes faster, cheaper, or more convincing.</span></div>
+          <div class="grid-2">
+            <div class="callout"><h5>Your team challenge</h5><p>${mission.aiSecurity.challenge}</p><p><strong>Required output:</strong> Record a five-sentence AI Security Brief in the team workspace: risk, affected asset, evidence, control, and human owner.</p></div>
+            <div class="callout"><h5>Controls to consider</h5><ul>${mission.aiSecurity.controls.map(control => `<li>${control}</li>`).join("")}</ul></div>
+          </div>
+          <details class="interview-practice"><summary>Practice your 30-second interview answer</summary><p>“${mission.aiSecurity.interview}”</p><p>Say it in your own words. Be ready to connect it to the decision your team made in this simulation.</p></details>
+        </section>
         ${index === 0 ? `
           <section class="career-bridge" aria-labelledby="career-bridge-title">
             <span class="card-kicker">From classroom to career</span>

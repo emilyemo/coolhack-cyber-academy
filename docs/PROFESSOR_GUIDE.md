@@ -1,8 +1,8 @@
 # Professor Guide
 
-Professors use a CoolHack username, password, and the private professor access
-code created for their class. No professor email address or separate
-administrator approval is required.
+Professors create their own CoolHack username and password, then create and run
+their own classes. No professor email address, administrator code, or approval
+is required. Database policies keep each professor's classes separate.
 
 ## Release one weekly scenario
 
@@ -15,38 +15,37 @@ Only one scenario is visible to students in the class at a time. Changing the
 released scenario moves every team in that class to the new workspace without
 deleting work saved for an earlier scenario.
 
-When Scenario 1 is released, the dashboard displays a private launch guide with
-an opening speech, discussion prompts, a safety reminder, and a closing debrief.
+For every released scenario, the dashboard displays an AI security coaching
+guide with an opening speech, discussion prompts, and the takeaway students
+should be able to explain in an interview. Scenario 1 also includes the private
+incident answer guide.
 
 ## Create an account
 
-1. Open the private professor route provided by the administrator:
+1. Open the professor sign-in route:
    `https://YOUR-PAGES-URL/?portal=professor#classroom-access`
-2. Select **First visit: activate class**.
-3. Enter the private professor access code supplied by the administrator.
-4. Choose a CoolHack-only username that does not contain an institutional email
+2. Select **First visit: create account**.
+3. Choose a CoolHack-only username that does not contain an institutional email
    address, employee ID, or other personal identifier.
-5. Create and confirm a unique password of at least 12 characters.
-6. Save the password in a password manager.
-7. Select **Activate my class**.
-8. Confirm that only the intended class appears.
+4. Create and confirm a unique password of at least 12 characters.
+5. Save the password in a password manager.
+6. Select **Create professor account**.
+7. In the dashboard, create the class and copy its generated student section code.
 
-Never send the password to the administrator. Do not forward the professor
-access code.
+Never send the password to the administrator or students.
 
-## Code problems
+## Create and archive classes
 
-An invalid, inactive, or previously claimed code cannot create professor
-access. Ask the administrator to confirm or regenerate the professor code.
-Never substitute the student section code or a team code.
+Use **Create my class** for each class you teach. Names must be unique among
+your active classes. You can archive your own class without deleting its saved
+work. You cannot view, change, or archive another professor's class.
 
 ## Prepare the section
 
-After approval:
+After signing in:
 
-1. Sign in through the professor portal.
-2. Confirm the displayed section is correct.
-3. Copy the private section code shown for your assigned section.
+1. Create or select your class.
+2. Copy its private student section code.
 4. Share the section code with the class.
 5. Tell one student in each four-person group to create the team and choose a
    neutral team name.
@@ -70,8 +69,12 @@ details inside CoolHack.
 5. Require the team to record its initial reasoning.
 6. One student operates a permitted AI tool while sharing the screen.
 7. The team stores one shared AI transcript and one shared report.
-8. Each student writes an individual reflection of at least 100 words.
-9. Confirm saving, then lock the mission for review.
+8. Require the five-sentence **AI Security Brief**: risk, affected asset,
+   evidence, control, and accountable human.
+9. Ask at least one student to give the mission's 30-second AI-security
+   interview answer in their own words.
+10. Each student writes an individual reflection of at least 100 words.
+11. Confirm saving, then lock the mission for review.
 
 The AI supervisor is intended to challenge reasoning, not provide an answer
 key. Students must not paste real personal, employer, credential, or incident

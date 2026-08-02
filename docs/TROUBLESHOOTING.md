@@ -36,12 +36,11 @@ Repeated clicks can produce duplicate attempts and prolong confusion.
 - Confirm the code has not been replaced.
 - Never publish the code while troubleshooting.
 
-## Professor code is rejected
+## Professor account cannot be created
 
-Confirm that the professor entered the dedicated professor access code, not the
-student section code or a team code. The class must be active and unassigned.
-If the code may be exposed or was already claimed, the administrator should use
-**Generate new code** and send the replacement privately.
+Confirm that `professor-independence-ai-security.sql` was installed after the
+earlier migrations. The professor should choose **First visit: create account**;
+no student section code or team code is used for professor registration.
 
 ## Administrator dashboard does not appear
 

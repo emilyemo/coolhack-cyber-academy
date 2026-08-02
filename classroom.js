@@ -12,6 +12,15 @@
   let roster = [];
   const portal = new URLSearchParams(window.location.search).get("portal");
   const staffPortal = portal === "admin" || portal === "professor" || portal === "instructor";
+  const aiSecurityGuides = [
+    null,
+    {title:"AI-assisted phishing and trustworthy analysis", opening:"The AI is not the evidence and confidence is not accuracy. Today, your team must catch one unsupported AI claim, protect case data, and show how a human analyst verifies the result.", prompts:["How could an attacker use AI in this incident?","What information is unsafe to paste into a public AI tool?","Which AI statement did your team verify rather than trust?"], takeaway:"AI can support phishing triage, but analysts must minimize data, verify outputs against original evidence, and retain accountability."},
+    {title:"AI risk scores and human oversight", opening:"A high AI risk score can help us prioritize an alert, but it is not proof of compromise. Today, your team must inspect the signals behind the score and consider the cost of both kinds of error.", prompts:["What makes the score explainable?","What would a false positive harm?","What would a false negative harm?"], takeaway:"AI may prioritize identity risk; humans validate the underlying evidence before high-impact action."},
+    {title:"Prompt injection and bounded AI agents", opening:"Logs and webpages are evidence, but an AI assistant may also interpret their text as instructions. Today, treat retrieved content as untrusted and design a boundary the assistant cannot cross alone.", prompts:["Where could indirect prompt injection hide?","Which permissions does the assistant truly need?","Which actions always require human approval?"], takeaway:"AI agents need least privilege, untrusted-input handling, sandboxing, logging, and human approval for consequential actions."},
+    {title:"AI data security and privacy", opening:"Speed does not justify uploading confidential records to an unapproved AI service. Today, your team must decide the minimum data needed and prove that its proposed AI use follows classification and retention rules.", prompts:["What is the data classification?","Can the task use redacted or synthetic data?","Who may access prompts and outputs, and for how long?"], takeaway:"AI use inherits normal data-governance duties: classify, minimize, de-identify, restrict, retain only as needed, and delete safely."},
+    {title:"AI availability and resilient automation", opening:"An automated defense can become part of the outage if attackers manipulate it or the service fails. Today, your team must bound the AI's authority and preserve a tested fallback.", prompts:["How could an attacker influence the model's decision?","What is the maximum action AI may take automatically?","How will the team roll back safely?"], takeaway:"Secure AI must remain available and resilient, with bounded automation, monitoring, fallback, and rollback."},
+    {title:"AI governance and lifecycle security", opening:"Leadership is not buying magic; it is accepting a new system, supplier, data flow, and attack surface. Today, your team must define the security conditions for adopting an AI SOC platform.", prompts:["How will we assess the vendor and model supply chain?","What data and tool access will the system receive?","Who owns AI incidents and can stop automated action?"], takeaway:"Cybersecurity in AI covers securing AI systems, using AI safely for defense, and defending against AI-enabled attacks across the lifecycle."}
+  ];
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
@@ -53,13 +62,13 @@
           <a class="role-entry-card" href="?portal=professor#classroom-access">
             <span class="role-entry-icon" aria-hidden="true">PR</span>
             <h3>Professor</h3>
-            <p>Use the professor access code supplied for your class. No approval request is required.</p>
+            <p>Create your own professor account and classes. No administrator code or approval is required.</p>
             <strong>Enter as a professor →</strong>
           </a>
           <a class="role-entry-card" href="?portal=admin#classroom-access">
             <span class="role-entry-icon" aria-hidden="true">AD</span>
             <h3>Administrator</h3>
-            <p>Create classes, issue professor codes, and review access across the academy.</p>
+            <p>Review activity across the academy and provide support when needed.</p>
             <strong>Enter as administrator →</strong>
           </a>
         </div>
@@ -89,23 +98,22 @@
 
   function renderProfessorAccess(mode = "signin") {
     const creating = mode === "create";
-    setPortalHeading("CoolHack professor portal", "Sign in or activate the class code supplied by the platform administrator.");
+    setPortalHeading("CoolHack professor portal", "Create your professor account or sign in, then create and run your own classes.");
     mount.innerHTML = `
       <div class="instructions-lead"><strong>Professor access</strong><br>Use a CoolHack-only username and password. Do not use an institutional email, employee ID, or institutional password.</div>
       <div class="access-choice" aria-label="Professor access choices">
         <button class="btn ${creating ? "" : "primary"}" type="button" data-professor-mode="signin">Sign in</button>
-        <button class="btn ${creating ? "primary" : ""}" type="button" data-professor-mode="create">First visit: activate class</button>
+        <button class="btn ${creating ? "primary" : ""}" type="button" data-professor-mode="create">First visit: create account</button>
       </div>
       <form class="classroom-card" id="professorAccessForm" data-mode="${mode}">
-        <h3>${creating ? "Activate professor access" : "Professor sign-in"}</h3>
-        <p>${creating ? "Enter the private professor access code for your class. A valid unused code gives you immediate control of that class only." : "Use the same CoolHack username and password you created for this class."}</p>
-        ${creating ? `<label for="professorClassCode">Professor access code</label><input id="professorClassCode" minlength="8" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>` : ""}
+        <h3>${creating ? "Create professor account" : "Professor sign-in"}</h3>
+        <p>${creating ? "Create a CoolHack professor account. After sign-in, create each class you teach; CoolHack assigns it to you automatically." : "Use the same CoolHack username and password you created."}</p>
         <label for="professorAlias">Professor username</label><input id="professorAlias" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" required>
         <small>Use letters, numbers, underscores, or hyphens. This is a CoolHack username—not an email address.</small>
         <label for="professorPassword">${creating ? "Create a CoolHack password" : "CoolHack password"}</label><input id="professorPassword" type="password" minlength="12" autocomplete="${creating ? "new-password" : "current-password"}" required>
         ${creating ? `<label for="professorPasswordConfirm">Confirm CoolHack password</label><input id="professorPasswordConfirm" type="password" minlength="12" autocomplete="new-password" required>` : ""}
         <p class="auth-message inline-auth-message" id="authMessage" role="status"></p>
-        <div class="hero-actions"><button class="btn primary" type="submit">${creating ? "Activate my class" : "Sign in"}</button></div>
+        <div class="hero-actions"><button class="btn primary" type="submit">${creating ? "Create professor account" : "Sign in"}</button></div>
       </form>
       `;
     field("professorAccessForm").addEventListener("submit", professorAccess);
@@ -197,7 +205,7 @@
     const action=event.currentTarget.dataset.mode||"signin";
     const displayName=field("professorAlias").value.trim();
     const password=field("professorPassword").value;
-    say(action==="create"?"Activating your class…":"Signing in…");
+    say(action==="create"?"Creating professor account…":"Signing in…");
     try {
       const email=await professorAliasEmail(displayName);
       if(action==="create"){
@@ -210,16 +218,15 @@
           password,
           options:{data:{
             display_name:displayName,
-            account_kind:"professor_code_claim",
-            professor_code:field("professorClassCode").value.trim().toUpperCase()
+            account_kind:"professor_self_service"
           }}
         });
         if(signup.error){
-          say(`Activation failed: ${signup.error.message}`);
+          say(`Account creation failed: ${signup.error.message}`);
           return;
         }
         if(signup.data.user && Array.isArray(signup.data.user.identities) && signup.data.user.identities.length===0){
-          say("That professor username is already in use. Choose Sign in, or activate the class with a different username.");
+          say("That professor username is already in use. Choose Sign in, or create the account with a different username.");
           return;
         }
         let session=signup.data.session;
@@ -234,13 +241,13 @@
         const verification=await db.from("profiles").select("app_role").eq("id",session.user.id).single();
         if(verification.error||verification.data?.app_role!=="instructor"){
           await db.auth.signOut();
-          say("Activation did not assign this account as a professor. The access code may be invalid, inactive, or already claimed.");
+          say("Account creation did not assign the professor role. The self-service professor migration may not be installed yet.");
           return;
         }
-        say("Professor access verified. Opening your assigned class…");
+        say("Professor account verified. Opening your dashboard…");
       } else {
         const {error}=await db.auth.signInWithPassword({email,password});
-        if(error)say("That professor username or password did not match. If this is your first visit, choose “First visit: activate class.”");
+        if(error)say("That professor username or password did not match. If this is your first visit, choose “First visit: create account.”");
       }
     } catch (_error) {
       say("Professor access could not be created. Check the entries and try again.");
@@ -333,7 +340,7 @@
           <div class="classroom-card"><h3>My role notes</h3><label for="liveRoleNotes">What I observe and recommend</label><textarea id="liveRoleNotes" ${membership.teams.mission_locked?"disabled":""}>${esc(myNote)}</textarea></div>
           <form class="classroom-card" id="sharedReport">
             <h3>Shared team report</h3>
-            ${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback"].map(k=>`<label for="cloud_${k}">${k.replaceAll("_"," ")}</label><textarea id="cloud_${k}" data-report-field="${k}" ${membership.teams.mission_locked?"disabled":""}>${esc(report[k]||"")}</textarea>`).join("")}
+            ${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback","ai_security_brief"].map(k=>`<label for="cloud_${k}">${k==="ai_security_brief"?"AI Security Brief — risk, asset, evidence, control, and human owner":k.replaceAll("_"," ")}</label><textarea id="cloud_${k}" data-report-field="${k}" ${membership.teams.mission_locked?"disabled":""}>${esc(report[k]||"")}</textarea>`).join("")}
             <p class="cloud-state">Everyone on this team can see this report. Coordinate before editing the same section.</p>
           </form>
           <div class="classroom-card"><h3>My private reflection</h3><p>Your teammates cannot read this reflection. Your instructor can.</p><textarea id="privateReflection" ${reflectionResult.data?.submitted_at?"disabled":""}>${esc(reflectionResult.data?.reflection_text||"")}</textarea></div>
@@ -416,7 +423,7 @@
   async function staffScreen() {
   const isAdmin=profile.app_role==="platform_admin";
     const sectionFields=isAdmin
-    ?"id,name,class_code,professor_access_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)"
+    ?"id,name,class_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)"
     :"id,name,class_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
   const accessPromise=isAdmin
     ? db.from("access_events").select("id,portal,app_role,accessed_at,profiles(display_name)").order("accessed_at",{ascending:false}).limit(30)
@@ -436,18 +443,19 @@
   const sections=sectionsResult.data||[],teams=teamsResult.data||[],profiles=profilesResult.data||[],members=membersResult.data||[],accessEvents=accessResult.data||[];
   const answerKey=answerKeyResult.error?null:answerKeyResult.data;
   const professors=profiles.filter(p=>p.app_role==="instructor");
+  const releasedAiGuides=[...new Set(sections.map(section=>Number(section.released_mission)).filter(Boolean))].map(mission=>({mission,guide:aiSecurityGuides[mission]})).filter(item=>item.guide);
   const title=isAdmin?"Platform administrator dashboard":"Professor dashboard";
-  const lead=isAdmin?"Create classes, share one-time professor codes, and review activity across the academy.":"Manage only your assigned class, share its student section code, assign seats, and review submissions.";
+  const lead=isAdmin?"Review activity across the academy and provide support when needed.":"Create and manage your own classes, release weekly scenarios, assign seats, and review submissions.";
   mount.innerHTML=accountBar()+`
     <div class="admin-hero"><div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div><span class="privacy-badge">De-identified classroom data only</span></div>
     <div class="visibility-guide"><strong>One website, three entrances</strong><span>Student, Professor, and Administrator are role-based entrances to this same CoolHack website and database—not three separate sites.</span></div>
-    <div class="visibility-guide staff-visibility"><strong>${isAdmin?"Administrator visibility":"Professor visibility"}</strong><span>${isAdmin?"You can review every class, professor, team, student alias, and submission in CoolHack.":"You can review only the class assigned to your account and its teams, student aliases, shared work, and private reflections."}</span><span>The database enforces this boundary; it is not merely hidden by the dashboard.</span></div>
-    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Admin creates class</span><span><b>2</b> Professor claims code</span><span><b>3</b> Student creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
+    <div class="visibility-guide staff-visibility"><strong>${isAdmin?"Administrator visibility":"Professor visibility"}</strong><span>${isAdmin?"You can review every class, professor, team, student alias, and submission in CoolHack.":"You can review only the classes created by your account and their teams, student aliases, shared work, and private reflections."}</span><span>The database enforces this boundary; it is not merely hidden by the dashboard.</span></div>
+    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Professor creates class</span><span><b>2</b> Professor shares section code</span><span><b>3</b> Team leader creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
     <div class="admin-stats" aria-label="Classroom overview"><div><strong>${sections.length}</strong><span>Active sections</span></div><div><strong>${teams.length}</strong><span>Teams</span></div><div><strong>${members.length}</strong><span>Student accounts</span></div><div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div></div>
-    ${isAdmin?`<div class="admin-panel-grid">
-      <form class="classroom-card" id="createSection"><span class="card-kicker">Create class</span><h3>Open a Capstone class</h3><p>CoolHack generates a private professor code automatically. Give it to the intended professor; the first valid claim takes control of this class only.</p><label for="sectionName">Class label</label><input id="sectionName" placeholder="Example: Capstone Section 1" maxlength="80" required><div class="hero-actions"><button class="btn primary">Create class and code</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
-      <div class="classroom-card"><span class="card-kicker">Automatic access</span><h3>No approval queue</h3><p>You do not type a professor's name here and no request waits for approval. Create the class, copy its professor code below, and send it privately. After activation, the professor appears on that class automatically.</p></div>
-    </div>`:""}
+    ${!isAdmin?`<div class="admin-panel-grid">
+      <form class="classroom-card" id="createSection"><span class="card-kicker">Create class</span><h3>Open your Capstone class</h3><p>Name the class. CoolHack assigns it to you and generates the student section code immediately; no administrator action is required.</p><label for="sectionName">Class label</label><input id="sectionName" placeholder="Example: Fall 2026 Thursday Capstone" maxlength="80" required><div class="hero-actions"><button class="btn primary">Create my class</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
+      <div class="classroom-card"><span class="card-kicker">Independent professor</span><h3>You run your own class</h3><p>Create or archive your classes, release one scenario each week, manage team codes and rosters, and review student work. Other professors cannot see or control your classes.</p></div>
+    </div>`:`<div class="classroom-card"><span class="card-kicker">Administrator oversight</span><h3>Professors are independent</h3><p>Professors create and manage their own classes. Use this dashboard for academy-wide monitoring and support; no professor access code is required.</p></div>`}
     <div class="admin-panel-grid">
       <div class="classroom-card"><span class="card-kicker">Student self-service</span><h3>Students create their teams</h3><p>The professor shares the student section code. One student chooses the team name and creates the team; the other three join with the generated team code.</p></div>
       <div class="classroom-card"><span class="card-kicker">Professor control</span><h3>Professor manages the live roster</h3><p>Teams appear automatically. The professor sees only this class and assigns the four distinct seats.</p></div>
@@ -476,8 +484,23 @@
         </details>`:`<p class="auth-message">The private professor answer guide is temporarily unavailable. Student-facing files do not contain the answer key.</p>`}
         <details><summary>Closing debrief</summary><p>Ask each team to state its decision, strongest evidence, remaining uncertainty, and first recommended action in sixty seconds. Close by connecting evidence handling, escalation, documentation, and professional communication to entry-level security operations work.</p></details>
       </section>`:""}
+    ${releasedAiGuides.map(({mission,guide})=>`<section class="classroom-card professor-briefing ai-professor-briefing">
+      <span class="card-kicker">Scenario ${mission} AI security coaching guide</span>
+      <h3>${esc(guide.title)}</h3>
+      <p><strong>Suggested introduction:</strong> “${esc(guide.opening)}”</p>
+      <details><summary>AI security discussion prompts</summary><ul>${guide.prompts.map(prompt=>`<li>${esc(prompt)}</li>`).join("")}</ul></details>
+      <details><summary>What students should be able to say afterward</summary><p>${esc(guide.takeaway)}</p><p>Ask one student from each team to answer: <strong>What is the AI risk, what control reduces it, and which human remains accountable?</strong></p></details>
+    </section>`).join("")}
     <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
-      <div class="section-summary">${sections.map(section=>`<article data-section-summary="${section.id}"><strong>${esc(section.name)}</strong><span>${section.profiles?.display_name?`Professor: ${esc(section.profiles.display_name)}`:"Awaiting professor activation"}</span><small>Student section code: <code data-code-display="section">${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="section" data-copy-code="${esc(section.class_code)}">Copy student section code</button><button class="btn compact" type="button" data-section-code-refresh="${section.id}">Regenerate student section code</button></div><div class="scenario-release"><label>Weekly scenario<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}<small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div>${isAdmin?(section.instructor_id?`<small>Professor access: already claimed; no professor code is needed now.</small>`:`<small>One-time professor access code: <code data-code-display="professor">${esc(section.professor_access_code)}</code></small><div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="professor" data-copy-code="${esc(section.professor_access_code)}">Copy professor code</button><button class="btn compact" type="button" data-professor-code-refresh="${section.id}">Regenerate professor code</button></div>`)+`<div class="section-danger-actions"><button class="btn compact danger" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button><small>Archives the class without deleting student work.</small></div>`:""}</article>`).join("")||"<p>Create a class to begin.</p>"}</div>
+      <div class="section-summary">${sections.map(section=>`
+        <article data-section-summary="${section.id}">
+          <strong>${esc(section.name)}</strong>
+          <span>Professor: ${esc(section.profiles?.display_name||(isAdmin?"Unassigned legacy class":profile.display_name))}</span>
+          <small>Student section code: <code data-code-display="section">${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small>
+          <div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="section" data-copy-code="${esc(section.class_code)}">Copy student section code</button><button class="btn compact" type="button" data-section-code-refresh="${section.id}">Regenerate student section code</button></div>
+          <div class="scenario-release"><label>Weekly scenario<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}<small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div>
+          <div class="section-danger-actions"><button class="btn compact danger" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button><small>Archives the class without deleting student work.</small></div>
+        </article>`).join("")||"<p>No active classes yet.</p>"}</div>
       <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
     </section>
     ${isAdmin?`<details class="classroom-card access-audit"><summary><span><span class="card-kicker">Access audit</span><strong>Recent successful sign-ins</strong></span><span>${accessEvents.length} records</span></summary><p>CoolHack records role-based access without displaying student emails.</p><div class="audit-list">${accessEvents.map(event=>`<article><strong>${esc(event.profiles?.display_name||"Account")}</strong><span>${esc(event.app_role)} · ${esc(event.portal)}</span><time datetime="${esc(event.accessed_at)}">${esc(formatAccessTime(event.accessed_at))}</time></article>`).join("")||"<p>No successful sign-ins have been recorded yet.</p>"}</div></details>`:""}`;
@@ -491,8 +514,7 @@
     field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);
     bindOperationButtons();
   });
-  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.from("sections").insert({name:field("sectionName").value.trim(),created_by:currentUser.id}).select("name,professor_access_code").single();field("sectionMessage").textContent=result.error?result.error.message:`${result.data.name} created. Professor code: ${result.data.professor_access_code}`;if(!result.error)setTimeout(staffScreen,1000);});
-  document.querySelectorAll("[data-professor-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{button.disabled=true;button.textContent="Generating…";const oldCode=button.closest("[data-section-summary]")?.querySelector('[data-code-display="professor"]')?.textContent.trim()||"";const result=await db.rpc("regenerate_professor_access_code",{requested_section:button.dataset.professorCodeRefresh});const stored=await storedCode("sections",button.dataset.professorCodeRefresh,"professor_access_code");const code=stored.code||rpcCodeValue(result.data);const failed=result.error||stored.error||!code||code===oldCode;field("staffReview").innerHTML=`<p class="${failed?"auth-message":"form-message"}">${esc(result.error?`Professor code was not changed: ${result.error.message}`:stored.error?`The new professor code could not be verified: ${stored.error.message}`:!code?"No new professor code was returned.":code===oldCode?"The stored professor code did not change. Please try again.":`Professor code regenerated and verified. Old code: ${oldCode}. New code: ${code}`)}</p>`;if(!failed)replaceVisibleCode(button,code,"professor");button.disabled=false;button.textContent="Regenerate professor code";}));
+  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("create_professor_section",{requested_name:field("sectionName").value.trim()});const created=Array.isArray(result.data)?result.data[0]:result.data;field("sectionMessage").textContent=result.error?result.error.message:`${created.name} created. Student section code: ${created.class_code}`;if(!result.error)setTimeout(staffScreen,1400);});
   bindOperationButtons();
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
   function bindOperationButtons(){
@@ -550,7 +572,7 @@
     const report=reportResult.data||{};
     field("staffReview").innerHTML=`<div class="review-drawer">
       <div class="operations-head"><div><span class="card-kicker">Mission ${mission} review</span><h3>${esc(teamName)}</h3></div><button class="btn compact" id="closeReview" type="button">Close review</button></div>
-      <h4>Shared team report</h4>${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback"].map(k=>`<div class="review-entry"><strong>${k.replaceAll("_"," ")}</strong><p>${esc(report[k]||"No entry yet.")}</p></div>`).join("")}
+      <h4>Shared team report</h4>${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback","ai_security_brief"].map(k=>`<div class="review-entry"><strong>${k.replaceAll("_"," ")}</strong><p>${esc(report[k]||"No entry yet.")}</p></div>`).join("")}
       <h4>Role notes</h4>${(notesResult.data||[]).map(n=>`<div class="review-entry"><strong>${esc(n.profiles?.display_name||"Team member")}</strong><p>${esc(n.note_text||"No entry yet.")}</p></div>`).join("")||"<p>No role notes yet.</p>"}
       <h4>Private reflections</h4>${(reflectionsResult.data||[]).map(r=>`<div class="review-entry"><strong>${esc(r.profiles?.display_name||"Student")} · ${r.submitted_at?"Submitted":"Draft"}</strong><p>${esc(r.reflection_text||"No entry yet.")}</p></div>`).join("")||"<p>No reflections yet.</p>"}
     </div>`;

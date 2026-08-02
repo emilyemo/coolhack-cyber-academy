@@ -11,10 +11,12 @@ says the weekly scenario is unavailable, the team account is still working;
 return after the professor opens the activity. Earlier saved work remains
 stored.
 
-Scenario 1 includes a **From classroom to career** section connecting evidence
-review, team decisions, response recommendations, and incident reporting to
-real security work. It also provides truthful résumé and interview wording that
-identifies the experience as a simulation.
+Every scenario includes an **AI Security Challenge**, controls to consider, and
+a truthful 30-second interview answer. Use the repeating three-side anchor:
+
+1. Protect AI systems and their data.
+2. Use AI securely to support cyber defense.
+3. Defend against attacks that AI makes faster, cheaper, or more convincing.
 
 ## Privacy rules
 
@@ -73,8 +75,11 @@ responsibility.
 7. Answer the AI supervisor's questions as a team; do not ask it for the answer.
 8. Paste the complete conversation into the shared AI transcript.
 9. Complete one shared team report.
-10. Write your own private reflection of at least 100 words.
-11. Wait until the page confirms saving before leaving.
+10. Complete the five-sentence **AI Security Brief**: risk, affected asset,
+    evidence, control, and accountable human.
+11. Practice the mission's 30-second interview answer in your own words.
+12. Write your own private reflection of at least 100 words.
+13. Wait until the page confirms saving before leaving.
 
 ## Who can see what
 

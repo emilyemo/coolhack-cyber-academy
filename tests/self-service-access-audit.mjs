@@ -15,18 +15,21 @@ const codeMigration = readFileSync(
   new URL("../supabase/code-regeneration.sql", import.meta.url),
   "utf8",
 );
+const independenceMigration = readFileSync(
+  new URL("../supabase/professor-independence-ai-security.sql", import.meta.url),
+  "utf8",
+);
 
 for (const role of ["Student", "Professor", "Administrator"]) {
   assert.ok(classroom.includes(`>${role}<`), `welcome page is missing ${role}`);
 }
 
 for (const required of [
-  'account_kind:"professor_code_claim"',
-  "Professor access code",
+  'account_kind:"professor_self_service"',
+  "Create professor account",
   'db.rpc("record_access_event"',
-  'db.rpc("regenerate_professor_access_code"',
   "Recent successful sign-ins",
-  "No approval queue",
+  'db.rpc("create_professor_section"',
   "Preview student entrance",
   "The database enforces this boundary",
   "Teammates see the roster",
@@ -48,8 +51,21 @@ for (const required of [
   "storedCode",
   "Team leader:",
   "Other three members:",
+  "AI Security Brief",
+  "AI security coaching guide",
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
+}
+
+for (const required of [
+  "ai_security_brief",
+  "public.create_professor_section",
+  "professor_self_service",
+  "set app_role = 'instructor'",
+  "instructor_id = auth.uid()",
+  "You may archive only your own active class",
+]) {
+  assert.ok(independenceMigration.includes(required), `independence migration is missing ${required}`);
 }
 
 for (const required of [
@@ -103,6 +119,9 @@ assert.ok(index.includes("const definedAcronyms = new Set()"), "one-time term de
 assert.ok(index.includes('definedAcronyms.add(match[0])'), "defined terms are not tracked");
 assert.ok(index.includes("Why an employer would care about this exercise"), "Scenario 1 employer relevance is missing");
 assert.ok(index.includes("What you can tell an employer"), "Scenario 1 interview language is missing");
+assert.ok(index.includes("The three-side interview anchor"), "AI cybersecurity interview anchor is missing");
+assert.equal((index.match(/aiSecurity:\s*\{/g) || []).length, 6, "all six missions need an AI security challenge");
+assert.ok(index.includes('id="aiSecurityBrief"'), "browser report is missing the AI Security Brief");
 assert.ok(index.includes('window.addEventListener("coolhack:mission-release"'), "student mission gating is missing");
 assert.ok(index.includes("applyMissionRelease(window.CoolHackReleasedMission || 0)"), "student pre-login gating is missing");
 

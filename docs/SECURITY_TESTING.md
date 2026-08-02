@@ -21,9 +21,9 @@ windows. Do not use real people or real records.
 
 ## Professor
 
-- [ ] Invalid professor code cannot create an account.
+- [ ] Professor self-registration creates an instructor profile without an administrator code.
 - [ ] Professor code claims only its matching active, unassigned class.
-- [ ] A claimed professor code cannot create a second professor account.
+- [ ] Professor A cannot read, change, release, archive, or review Professor B's class.
 - [ ] Professor A immediately sees only the code-claimed Section A.
 - [ ] Professor A cannot read or change Section B.
 - [ ] Professor A cannot promote another professor.

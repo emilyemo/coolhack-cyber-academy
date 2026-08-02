@@ -16,44 +16,31 @@ actual protection.
 ## First-day setup
 
 1. Confirm the account has the `platform_admin` role.
-2. Create each Capstone class with a neutral label.
-3. Copy the professor access code generated for that class.
-4. Give the code privately to the intended professor.
-5. The professor activates a username and password with that code and
-   immediately gains control of that class only.
-6. The professor gives students the separate student section code.
-7. One student in each group uses the student section code to create the team
-   and choose its neutral team name.
-8. That student shares the generated private team code only with the other
+2. Confirm the independent-professor migration is installed.
+3. Each professor creates a professor account and their own class.
+4. The professor gives students the generated student section code.
+5. One student in each group uses the student section code to create the team.
+6. That student shares the generated private team code only with the other
    three teammates.
-9. The professor verifies the live roster and assigns the four distinct seats.
+7. The professor verifies the live roster and assigns the four distinct seats.
 
 Do not store official section numbers, employee IDs, student IDs, real rosters,
 or grades in CoolHack.
 
-## Giving a professor access
+## Professor independence
 
-1. Create the intended class.
-2. Copy that class's private professor access code.
-3. Send the code to the intended professor through an approved private channel.
-4. The professor opens the professor entrance, selects **First visit: activate
-   class**, and creates a CoolHack username and password.
-5. Verify that the professor's username appears on the correct class.
-6. Verify that the professor sees only that class.
-
-There is no approval queue. A code can claim only an active, unassigned class.
-Generate a new code immediately if the original code may have been exposed.
+Professors do not need an administrator code or approval. Each professor creates
+their account and classes, manages their own codes and rosters, releases weekly
+scenarios, and archives their own classes. The administrator retains academy-wide
+visibility for monitoring and support. Test periodically that one professor
+cannot retrieve or change another professor's section.
 
 ## Creating sections
 
-Use neutral labels such as `Capstone Section 1`, not institutional course
-records. CoolHack generates the professor access code and student section code
-automatically.
-
-Give the professor access code only to the intended professor. After activation,
-the professor shares the separate student section code with the class. A team
-belongs to one section, and professor visibility is derived from that
-relationship.
+Professors use neutral labels such as `Fall 2026 Thursday Capstone`, not official
+institutional course records. CoolHack generates the student section code
+automatically. A team belongs to one section, and professor visibility is
+derived from that relationship.
 
 ## Reviewing access
 
@@ -110,8 +97,8 @@ course system; do not enter grades in CoolHack.
 
 - Forgotten administrator password: use the dedicated project's email recovery
   process; check rate limits before retrying.
-- Unexpected professor activation: rotate the professor code, preserve the
-  access audit, and investigate before classroom use continues.
+- Unexpected professor account: preserve the access audit, disable the account
+  in Supabase, and investigate before classroom use continues.
 - Exposed team code: pause enrollment, investigate whether an unexpected alias
   joined, and replace/rebuild the team if necessary.
 - Suspected cross-team access: stop classroom use, preserve evidence, and review

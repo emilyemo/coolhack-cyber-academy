@@ -28,8 +28,8 @@ change.
 
 ```mermaid
 flowchart TD
-    A["Platform administrator"] --> B["Capstone section + professor code"]
-    B --> C["Professor claims class"]
+    A["Professor account"] --> B["Professor-created Capstone section"]
+    B --> C["Professor manages class"]
     B --> D["Team"]
     D --> E["Four student aliases"]
     D --> F["Shared report and AI transcript"]
@@ -38,8 +38,8 @@ flowchart TD
 ```
 
 - The platform administrator can manage all sections.
-- A professor uses the administrator-issued professor code to claim one active,
-  unassigned class and can manage only that class.
+- A professor creates an account and can manage only the active classes created
+  from that account.
 - The professor shares the separate student section code with that class.
 - One student creates a team with the section code; the other three members join
   with the generated private team code.
@@ -66,7 +66,7 @@ flowchart TD
 | Table | Stores |
 |---|---|
 | `profiles` | Display name and application role |
-| `sections` | Section name, professor access code, student section code, assigned professor, and active state |
+| `sections` | Section name, student section code, owning professor, and active state |
 | `teams` | Student-chosen team name, private team code, section, mission, and lock state |
 | `team_members` | Student-to-team membership and assigned role |
 | `role_notes` | One student's notes for one team mission |
