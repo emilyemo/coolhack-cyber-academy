@@ -345,10 +345,10 @@
           <div class="classroom-card"><h3>My role notes</h3><label for="liveRoleNotes">What I observe and recommend</label><textarea id="liveRoleNotes" ${membership.teams.mission_locked?"disabled":""}>${esc(myNote)}</textarea></div>
           <form class="classroom-card" id="sharedReport">
             <h3>Shared team report</h3>
-            ${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback","ai_security_brief"].map(k=>`<label for="cloud_${k}">${k==="ai_security_brief"?"AI Security Brief — risk, asset, evidence, control, and human owner":k.replaceAll("_"," ")}</label><textarea id="cloud_${k}" data-report-field="${k}" ${membership.teams.mission_locked?"disabled":""}>${esc(report[k]||"")}</textarea>`).join("")}
+            ${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback","ai_security_brief"].map(k=>`<label for="cloud_${k}">${k==="decision"?"Initial decision, final decision, and what changed — cite the evidence":k==="unknowns"?"Unknowns, next owner, and 60-second SOC shift briefing":k==="ai_feedback"?"AI supervisor feedback, readiness score, and team response":k==="ai_security_brief"?"AI Security Brief — risk, asset, evidence, control, and human owner":k.replaceAll("_"," ")}</label><textarea id="cloud_${k}" data-report-field="${k}" ${membership.teams.mission_locked?"disabled":""}>${esc(report[k]||"")}</textarea>`).join("")}
             <p class="cloud-state">Everyone on this team can see this report. Coordinate before editing the same section.</p>
           </form>
-          <div class="classroom-card"><h3>My private reflection</h3><p>Your teammates cannot read this reflection. Your instructor can.</p><textarea id="privateReflection" ${reflectionResult.data?.submitted_at?"disabled":""}>${esc(reflectionResult.data?.reflection_text||"")}</textarea></div>
+          <div class="classroom-card"><h3>My private career reflection</h3><p>Your teammates cannot read this reflection. Your instructor can. Explain your personal contribution, the concept this mission revised, what changed in your thinking, and how you would describe the simulation honestly in an interview.</p><textarea id="privateReflection" ${reflectionResult.data?.submitted_at?"disabled":""}>${esc(reflectionResult.data?.reflection_text||"")}</textarea></div>
         </div>
       </div>`;
     bindSignOut();

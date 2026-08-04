@@ -171,6 +171,30 @@
     .check input { width: auto; margin-top: .25rem; accent-color: var(--cyan); }
     .workspace-actions { display: flex; flex-wrap: wrap; gap: .7rem; }
     .save-note { color: var(--muted); font-size: .86rem; margin: .7rem 0 0; }
+    .concept-refresh, .learning-gate, .knowledge-check {
+      margin-top: 1rem; padding: 1rem; border: 1px solid #9dd7d1;
+      border-radius: 14px; background: #f3fbfa;
+    }
+    .concept-refresh h4, .learning-gate h4, .knowledge-check h4 { margin: 0 0 .35rem; color: #076b75; }
+    .concept-cards { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .65rem; margin-top: .8rem; }
+    .concept-card { padding: .8rem; border-left: 4px solid #087f8c; border-radius: 8px; background: #fff; }
+    .concept-card strong { display: block; color: #195b91; }
+    .concept-card span { display: block; margin-top: .25rem; color: #4f5149; }
+    .prediction-grid { display: grid; gap: .65rem; margin-top: .8rem; }
+    .prediction-row { display: grid; grid-template-columns: minmax(135px,.55fr) minmax(130px,.45fr) minmax(0,2fr); gap: .55rem; align-items: end; padding: .7rem; border: 1px solid #d2c7b5; border-radius: 10px; background: #fff; }
+    .prediction-row label { margin: 0; color: #344238; }
+    .prediction-row select, .prediction-row input { margin-top: .3rem; }
+    .quiz-question { margin-top: .8rem; padding: .8rem; border: 1px solid #d2c7b5; border-radius: 10px; background: #fff; }
+    .quiz-question fieldset { margin: 0; padding: 0; border: 0; }
+    .quiz-question legend { font-weight: 800; }
+    .quiz-options { display: grid; gap: .35rem; margin-top: .55rem; }
+    .quiz-option { display: flex; gap: .45rem; align-items: flex-start; padding: .45rem .55rem; border-radius: 8px; background: #f7f2e9; }
+    .quiz-option input { width: auto; margin-top: .3rem; }
+    .quiz-feedback { margin: .55rem 0 0; padding: .55rem .65rem; border-left: 4px solid #3478c0; border-radius: 0 8px 8px 0; background: #eef6ff; }
+    .quiz-feedback.correct { border-left-color: #087f8c; background: #e6f8f6; }
+    .unlock-status { margin: .8rem 0 0; padding: .65rem .75rem; border-radius: 9px; color: #6f2d20; background: #fff1cb; font-weight: 750; }
+    .unlock-status.ready { color: #12333a; background: #dff4f2; }
+    #openRoleplay:disabled { cursor: not-allowed; opacity: .55; transform: none; filter: none; }
     footer { border-top: 1px solid var(--line); padding: 28px 0 42px; color: var(--muted); }
     .footer-row { display: flex; justify-content: space-between; gap: 1rem; }
     @media (max-width: 900px) {
@@ -192,6 +216,7 @@
       .mission-list { display: flex; overflow-x: auto; padding-bottom: .25rem; scroll-snap-type: x mandatory; }
       .mission-tab { min-width: 240px; scroll-snap-align: start; }
       .grid-2, .roles, .workflow, .checklist { grid-template-columns: 1fr; }
+      .concept-cards, .prediction-row { grid-template-columns: 1fr; }
       .path-steps { grid-template-columns: 1fr 1fr; }
       .footer-row { flex-direction: column; }
     }
@@ -539,14 +564,18 @@
         <div class="field"><label for="unknowns">4. Remaining questions</label><textarea id="unknowns" placeholder="What is still unknown? What additional evidence would you collect?"></textarea></div>
         <div class="field"><label for="aiTranscript">5. AI role-play transcript</label><textarea id="aiTranscript" placeholder="Paste the complete conversation with the AI SOC supervisor here. Do not include private information, passwords, or real company data."></textarea></div>
         <div class="field"><label for="aiFeedback">6. AI supervisor feedback and readiness score</label><textarea id="aiFeedback" placeholder="Paste the AI supervisor's final feedback and score here."></textarea></div>
-        <div class="field"><label for="aiSecurityBrief">7. AI Security Brief</label><textarea id="aiSecurityBrief" placeholder="Write five sentences: What is the AI-related risk? What asset or data could be harmed? What evidence supports your concern? Which control reduces the risk? Which human role remains accountable?"></textarea></div>
-        <div class="field"><label for="reflection">8. Individual reflection draft (at least 100 words)</label><textarea id="reflection" placeholder="Each member writes a separate reflection: What did you contribute? What did you initially miss? How did the AI supervisor challenge your reasoning? What AI security risk and control will you remember? What would you do differently in a real SOC? Submit the final reflection separately in the course assignment."></textarea></div>
+        <div class="field"><label for="changedReasoning">7. What changed—and why?</label><textarea id="changedReasoning" placeholder="Compare the team's decision before and after the AI supervisor. State what changed, what did not change, and cite the artifact or reasoning that justified each choice."></textarea></div>
+        <div class="field"><label for="shiftBriefing">8. Sixty-second SOC shift briefing</label><textarea id="shiftBriefing" placeholder="Write the handoff you would give the next analyst: situation, strongest evidence, action taken or recommended, remaining risk, and the next owner."></textarea></div>
+        <div class="field"><label for="aiSecurityBrief">9. AI Security Brief</label><textarea id="aiSecurityBrief" placeholder="Write five sentences: What is the AI-related risk? What asset or data could be harmed? What evidence supports your concern? Which control reduces the risk? Which human role remains accountable?"></textarea></div>
+        <div class="field"><label for="reflection">10. Individual career reflection draft (at least 100 words)</label><textarea id="reflection" placeholder="Each member writes separately: What did you personally contribute? Which concept did this mission revise? What did you initially miss? How did the AI challenge your reasoning? How would you explain this simulation honestly in an interview? Submit the final reflection separately in the course assignment."></textarea></div>
         <fieldset style="border:0;padding:0;margin:0">
           <legend style="font-weight:750">Submission check</legend>
           <div class="checklist">
             <label class="check"><input type="checkbox" value="All evidence artifacts examined"><span>I examined every evidence artifact</span></label>
             <label class="check"><input type="checkbox" value="Initial decision made before AI role-play"><span>I made my initial decision before using AI</span></label>
             <label class="check"><input type="checkbox" value="Complete AI transcript included"><span>I included the complete AI transcript</span></label>
+            <label class="check"><input type="checkbox" value="Reasoning change explained with evidence"><span>I explained what changed after AI and cited the reason</span></label>
+            <label class="check"><input type="checkbox" value="Shift briefing rehearsed aloud"><span>A teammate delivered the 60-second shift briefing aloud</span></label>
             <label class="check"><input type="checkbox" value="AI Security Brief completed"><span>I completed the five-sentence AI Security Brief</span></label>
             <label class="check"><input type="checkbox" value="Reflection is at least 100 words"><span>My reflection is at least 100 words</span></label>
           </div>
@@ -574,7 +603,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=direct-session-handoff-1"></script>
+  <script src="classroom.js?v=guided-learning-loop-1"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -822,7 +851,8 @@
     const reportDraftKey = "coolhack-mission-report-draft-v1";
     const reportFields = [
       "studentName", "selectedRole", "finding", "timeline", "decision",
-      "unknowns", "aiTranscript", "aiFeedback", "aiSecurityBrief", "reflection"
+      "unknowns", "aiTranscript", "aiFeedback", "changedReasoning", "shiftBriefing",
+      "aiSecurityBrief", "reflection"
     ];
     const caseForm = document.querySelector("#caseForm");
 
@@ -854,7 +884,8 @@
         finding: "Evidence-based findings", timeline: "Incident timeline",
         decision: "Decision and justification", unknowns: "Remaining questions",
         aiTranscript: "AI role-play transcript", aiFeedback: "AI feedback and team response",
-        aiSecurityBrief: "AI Security Brief", reflection: "Team reflection"
+        changedReasoning: "What changed—and why", shiftBriefing: "Sixty-second SOC shift briefing",
+        aiSecurityBrief: "AI Security Brief", reflection: "Individual career reflection draft"
       };
       const text = ["COOLHACK CYBER ACADEMY — MISSION REPORT", "", ...reportFields.flatMap(id => [labels[id], values[id] || "No entry.", ""])].join("\n");
       const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
@@ -959,6 +990,160 @@
         }
       }
     ];
+
+    const missionExtensions = [
+      {
+        artifacts: [
+          {title: "Authentication timeline", body: `<p class="clue-note"><strong>How to read this evidence:</strong> Compare time, location, device, password, and MFA results. A location estimate can be wrong, so it must not be treated as proof by itself.</p><table class="artifact-table"><thead><tr><th>Time (CDT)</th><th>Source</th><th>Result</th></tr></thead><tbody><tr><td>8:42 AM</td><td>198.51.100.52 — Houston, TX</td><td>Known laptop; password + MFA; success</td></tr><tr><td>8:51 AM</td><td>203.0.113.91 — Frankfurt, Germany</td><td>Unknown Linux browser; password accepted; MFA push approved</td></tr><tr><td>8:54 AM</td><td>203.0.113.91 — Frankfurt, Germany</td><td>Payroll file opened</td></tr><tr><td>9:06 AM</td><td>198.51.100.52 — Houston, TX</td><td>Known laptop; existing session</td></tr></tbody></table><p>All addresses are documentation-only ranges.</p>`},
+          {title: "Device and network context", body: `<div class="log-block">HOUSTON SESSION\ndevice_id=MFG-LT-118  managed=YES  compliant=YES\nbrowser=Edge 146  first_seen=2026-02-11\nnetwork=Meridian Houston office\n\nFRANKFURT SESSION\ndevice_id=UNREGISTERED  managed=NO  compliant=UNKNOWN\nbrowser=Firefox 143 on Linux  first_seen=2026-09-15\nnetwork=Commercial hosting provider</div><p class="clue-note">A commercial hosting address may be used by a VPN, cloud service, administrator, or attacker. Determine what additional evidence would distinguish those possibilities.</p>`},
+          {title: "MFA and password events", body: `<table class="artifact-table"><thead><tr><th>Time</th><th>Event</th><th>Detail</th></tr></thead><tbody><tr><td>8:50 AM</td><td>MFA push</td><td>Sent to enrolled phone</td></tr><tr><td>8:51 AM</td><td>MFA push</td><td>Approved after 11 seconds</td></tr><tr><td>8:58 AM</td><td>Password reset</td><td>No reset recorded</td></tr><tr><td>9:02 AM</td><td>Risk alert</td><td>Impossible travel; high confidence</td></tr></tbody></table><p>No help-desk identity verification or authorized travel notice is recorded.</p>`},
+          {title: "Employee and manager statements", body: `<p><strong>Employee:</strong> “I am at the Houston office and have not traveled this month. I received several MFA prompts while joining a meeting and may have approved one without reading it. I did not open payroll.”</p><p><strong>Manager:</strong> “The employee needs payroll access for normal duties, but no work was assigned from Europe and no corporate VPN exit is located there.”</p>`},
+          {title: "Investigation worksheet — questions only", body: `<ol><li>Which facts support account compromise, and which evidence could still have an innocent explanation?</li><li>Build the event timeline and cite each artifact.</li><li>What immediate action is proportionate to the evidence?</li><li>Which sessions, files, mailbox rules, and authentication methods should be checked next?</li><li>How would you explain the action to the employee without blaming them?</li></ol>`}
+        ],
+        roleplayAreas: "identity timeline, device trust, MFA behavior, session revocation, account containment, evidence preservation, user communication, and recovery",
+        workplaceSkills: ["Authentication events → identity investigation", "Device and network context → alert validation", "MFA evidence → compromise assessment", "Containment choice → account recovery", "Employee update → professional communication"],
+        employerStatement: "In a team identity investigation, I correlated login, device, network, and MFA evidence, separated risk scores from proof, and helped justify a proportionate account-containment decision."
+      },
+      {
+        artifacts: [
+          {title: "Endpoint detection alert", body: `<div class="log-block">10:14:22  host=OPS-LT-207  severity=HIGH\nparent=FreePDFUtility.exe\nchild=powershell.exe -WindowStyle Hidden -EncodedCommand [REDACTED]\naction=OBSERVED  automatic_isolation=OFF\n\n10:15:09  persistence=Scheduled Task\nname=PDF Update Check  user_context=Current User</div><p class="clue-note">The command is redacted for safe training. Focus on the process relationship, execution style, timing, and persistence behavior.</p>`},
+          {title: "Network connections", body: `<table class="artifact-table"><thead><tr><th>Time</th><th>Process</th><th>Destination</th><th>Pattern</th></tr></thead><tbody><tr><td>10:14 AM</td><td>powershell.exe</td><td>192.0.2.88:443</td><td>Small encrypted connection</td></tr><tr><td>10:19 AM</td><td>powershell.exe</td><td>192.0.2.88:443</td><td>Repeated after 5 minutes</td></tr><tr><td>10:24 AM</td><td>powershell.exe</td><td>192.0.2.88:443</td><td>Repeated after 5 minutes</td></tr></tbody></table><p>The destination is a fictional documentation address. The regular interval may be relevant, but it does not identify the payload.</p>`},
+          {title: "Download and file details", body: `<div class="log-block">download_time=10:11:03\nfile=FreePDFUtility_Setup.exe\nsource=free-tools-download.example\nsigner=NONE\nsha256=7a31...training-only...9c02\nreputation=First seen today; 2 of 70 engines flag suspicious</div><p class="clue-note">A low detection count is not proof that a file is safe or malicious. Explain what local behavior adds to the assessment.</p>`},
+          {title: "User and business context", body: `<p><strong>User statement:</strong> “I installed a free PDF converter because the approved application would not open a vendor document. The laptop still works. I have not noticed pop-ups or missing files.”</p><p><strong>Operations manager:</strong> “This laptop is used to prepare shipping documents. An unexpected outage could delay today’s dispatch, but a loaner device is available within 20 minutes.”</p>`},
+          {title: "Investigation worksheet — questions only", body: `<ol><li>Which behaviors are suspicious, and what remains unknown?</li><li>What does the process tree suggest about execution and persistence?</li><li>Would you isolate now, monitor, or take another action? Include business impact.</li><li>Which volatile and stored evidence should be preserved before remediation?</li><li>What recovery checks would prove the workstation is safe to return?</li></ol>`}
+        ],
+        roleplayAreas: "process trees, persistence, network indicators, containment timing, evidence preservation, business continuity, eradication, and recovery validation",
+        workplaceSkills: ["EDR process tree → endpoint triage", "Network pattern → scope assessment", "File context → malware analysis planning", "Isolation choice → operational risk balance", "Recovery checklist → validated restoration"],
+        employerStatement: "In an endpoint incident simulation, I correlated process, persistence, network, file, and business evidence and helped decide whether isolation was justified before planning recovery validation."
+      },
+      {
+        artifacts: [
+          {title: "Database audit activity", body: `<div class="log-block">18:47:12  user=arivera  source=MFG-LT-063\nquery=SELECT customer_id,region,product_tier,last_contact FROM customer_portfolio\nrows_returned=48,216  duration=41.8s\n\n18:49:06  export=customer_portfolio_q3.csv\nsize=52.4 MB  destination=Local Downloads</div><p class="clue-note">The account was authorized to query the table. Authorization answers whether access was allowed—not whether this particular use had a valid business purpose.</p>`},
+          {title: "Role and normal-use comparison", body: `<table class="artifact-table"><thead><tr><th>Measure</th><th>Previous 30 days</th><th>Current event</th></tr></thead><tbody><tr><td>Largest query</td><td>4,180 rows</td><td>48,216 rows</td></tr><tr><td>Usual hours</td><td>7:30 AM–5:30 PM</td><td>6:47 PM</td></tr><tr><td>Export frequency</td><td>3 approved exports</td><td>1 export</td></tr><tr><td>Access role</td><td>Customer Analytics</td><td>Customer Analytics</td></tr></tbody></table>`},
+          {title: "Work and approval context", body: `<p><strong>Manager:</strong> “A regional planning review is due tomorrow. I asked the analyst for aggregate counts by region, not a customer-level export. The analyst sometimes works late during quarter-end.”</p><p><strong>Change record:</strong> No ticket or written approval references a full customer export. The data-use policy requires customer-level exports to have a documented purpose and approved storage location.</p>`},
+          {title: "File movement evidence", body: `<div class="log-block">18:49  file created in local Downloads\n18:52  cloud sync attempt to personal account BLOCKED\n18:53  corporate drive upload NONE\n18:55  removable media events NONE\n19:02  file still present on managed laptop</div><p>No evidence currently shows that the file left the managed device. The blocked attempt requires investigation but does not by itself establish intent.</p>`},
+          {title: "Investigation worksheet — questions only", body: `<ol><li>What is unusual, what violates policy, and what is not yet proven?</li><li>How can the team preserve evidence without accusing the employee?</li><li>Who should be notified, and why?</li><li>What interview questions would test business purpose fairly?</li><li>What data-containment action protects customers while respecting employee privacy?</li></ol>`}
+        ],
+        roleplayAreas: "authorized access versus appropriate use, baseline comparison, data scope, evidence preservation, fair interviewing, privacy, containment, and escalation",
+        workplaceSkills: ["Database audit → data-access investigation", "Baseline comparison → anomaly validation", "Business context → intent-neutral analysis", "File movement → exposure assessment", "Fair escalation → privacy-conscious response"],
+        employerStatement: "In an insider-risk simulation, I evaluated authorized but unusual database activity, measured the data scope, avoided assumptions about intent, and helped plan a fair, privacy-conscious investigation."
+      },
+      {
+        artifacts: [
+          {title: "Traffic and availability dashboard", body: `<table class="artifact-table"><thead><tr><th>Time</th><th>Requests/min</th><th>Error rate</th><th>Response time</th></tr></thead><tbody><tr><td>1:30 PM</td><td>8,200</td><td>0.8%</td><td>420 ms</td></tr><tr><td>1:45 PM</td><td>19,600</td><td>6.4%</td><td>1.8 sec</td></tr><tr><td>2:00 PM</td><td>71,400</td><td>31.2%</td><td>8.7 sec</td></tr><tr><td>2:15 PM</td><td>76,900</td><td>38.5%</td><td>Timeouts</td></tr></tbody></table>`},
+          {title: "Source and request patterns", body: `<div class="log-block">TOP REQUEST: GET /offers/check-eligibility (68%)\nSOURCE MIX: 74% from 22 hosting-provider networks; 19% residential; 7% known partners\nCLIENT PATTERN: Missing cookies; rotating user agents; repeated identical query strings\nRATE: Many sources remain just below the current per-IP threshold</div><p class="clue-note">Attackers can distribute requests to avoid simple per-address limits. Legitimate campaigns can also create sharp increases, so compare this with the campaign evidence.</p>`},
+          {title: "Marketing campaign brief", body: `<p>The “Meridian Rewards Week” campaign launched at 1:30 PM through email and social media. Marketing forecast traffic at two to three times normal volume, concentrated on <code>/rewards</code> and <code>/apply</code>. Paid-media reports show 14,300 link clicks by 2:15 PM.</p><p>The largest observed request target, <code>/offers/check-eligibility</code>, was not included in the campaign links.</p>`},
+          {title: "Infrastructure and control status", body: `<div class="log-block">CDN cache hit rate: 81% -> 23%\nOrigin CPU: 44% -> 96%\nDatabase connections: 210 / 220\nWAF managed rules: ON\nBot challenge: MONITOR ONLY\nEmergency rate-limit rule: Available; not enabled\nRollback plan: Last tested 2026-07-18</div>`},
+          {title: "Investigation worksheet — questions only", body: `<ol><li>Which evidence supports a legitimate surge, an attack, or a mixture of both?</li><li>What can the team state confidently about the affected service?</li><li>Which bounded mitigation would you test first?</li><li>How will you measure whether the mitigation blocks real customers?</li><li>What status message is accurate without overstating the cause?</li></ol>`}
+        ],
+        roleplayAreas: "traffic baselines, source patterns, campaign context, service impact, rate limiting, customer harm, monitoring, rollback, and status communication",
+        workplaceSkills: ["Traffic metrics → availability triage", "Request patterns → attack analysis", "Campaign context → false-positive control", "Bounded mitigation → service protection", "Status message → customer communication"],
+        employerStatement: "In an availability incident simulation, I compared traffic, request, campaign, and infrastructure evidence and helped design a bounded mitigation with monitoring and rollback."
+      },
+      {
+        artifacts: [
+          {title: "Verified incident timeline", body: `<table class="artifact-table"><thead><tr><th>Time</th><th>Event</th><th>Confidence</th></tr></thead><tbody><tr><td>9:12 AM</td><td>Suspicious invoice email delivered</td><td>Confirmed</td></tr><tr><td>9:17 AM</td><td>User visited credential-harvesting page</td><td>Confirmed</td></tr><tr><td>9:21 AM</td><td>Password accepted from unknown device</td><td>Confirmed</td></tr><tr><td>10:14 AM</td><td>Suspicious endpoint process began</td><td>Confirmed; connection between events unknown</td></tr><tr><td>6:47 PM</td><td>Large customer-data query executed</td><td>Confirmed; intent unknown</td></tr></tbody></table>`},
+          {title: "Containment and recovery record", body: `<div class="log-block">IDENTITY: password reset; sessions revoked; MFA re-enrolled\nEMAIL: message removed from 14 mailboxes; sender indicators blocked\nENDPOINT: OPS-LT-207 isolated; forensic image pending\nDATA: exported file quarantined; customer exposure not confirmed\nWEB: emergency rate limit active; error rate returned below 2%</div>`},
+          {title: "Impact and uncertainty register", body: `<table class="artifact-table"><thead><tr><th>Question</th><th>Current position</th></tr></thead><tbody><tr><td>Were credentials entered?</td><td>Confirmed by employee statement and sign-in evidence</td></tr><tr><td>Was malware installed through the email?</td><td>Not established</td></tr><tr><td>Did customer data leave Meridian?</td><td>No evidence of transfer; investigation continues</td></tr><tr><td>Was the web outage malicious?</td><td>Strong evidence of abusive traffic mixed with legitimate demand</td></tr></tbody></table>`},
+          {title: "Leadership request", body: `<p>The executive team wants a five-minute briefing that answers: What happened? What was affected? What did we do? What remains unknown? What decision or investment is needed next?</p><p>Finance can fund only two immediate improvements this quarter: phishing-resistant MFA, expanded endpoint monitoring, database-export controls, additional DDoS protection, or an AI SOC platform pilot.</p>`},
+          {title: "Briefing worksheet — questions only", body: `<ol><li>Build one defensible story without claiming that every event has the same cause.</li><li>Which three facts matter most to leadership, and why?</li><li>What uncertainty must be stated plainly?</li><li>Which two investments would you prioritize using the evidence?</li><li>What metric would show that each recommendation reduced risk?</li></ol>`}
+        ],
+        roleplayAreas: "incident synthesis, confidence language, business impact, containment status, unresolved questions, executive communication, investment priorities, and measurable recommendations",
+        workplaceSkills: ["Cross-case timeline → incident synthesis", "Confidence labels → defensible reporting", "Impact register → executive relevance", "Investment choice → risk prioritization", "Five-minute briefing → leadership communication"],
+        employerStatement: "In a capstone incident simulation, I combined identity, endpoint, data, and availability findings into an executive briefing that separated confirmed facts from uncertainty and prioritized measurable security improvements."
+      }
+    ];
+
+    missionExtensions.forEach((extension, index) => Object.assign(missions[index + 1], extension));
+
+    const learningExtensions = [
+      {
+        concepts: [
+          ["Phishing indicator", "A clue such as sender mismatch, urgency, unusual wording, or a deceptive link. One clue raises suspicion; several correlated clues strengthen the case."],
+          ["Email header", "Metadata showing how a message traveled and which systems authenticated it. Analysts compare the visible sender with the technical sending path."],
+          ["SPF, DKIM, and DMARC", "Email-authentication controls that help detect spoofing. A pass or fail is useful evidence, but no single result proves a message safe or malicious."],
+          ["Credential exposure", "A clicked link matters because the user may have entered credentials or created a session. Analysts check sign-ins, MFA events, and affected accounts."],
+          ["Proportionate containment", "The response should reduce likely harm while considering evidence and business impact. Containment is justified by risk, not panic."]
+        ],
+        quiz: [
+          {q:"Which statement best describes HTTPS on a suspicious invoice site?", options:["It proves the site is legitimate","It encrypts the connection but does not prove the site's owner is trustworthy","It prevents credential theft"], answer:1, why:"HTTPS protects data in transit. Attackers can also obtain certificates, so analysts must still verify the domain, message, and account activity."},
+          {q:"What should the team do before deciding the account is compromised?", options:["Correlate the email, user statement, login activity, and endpoint evidence","Trust the sender's display name","Wait for the attacker to act again"], answer:0, why:"Correlated evidence produces a defensible conclusion and helps the team choose proportionate containment."},
+          {q:"Which information belongs in a public AI tool?", options:["A real password for testing","Unredacted employee and employer data","Only the fictional, sanitized training evidence"], answer:2, why:"Data minimization protects privacy and security. CoolHack cases are fictional so students can practice without exposing real information."}
+        ]
+      },
+      {
+        concepts: [
+          ["Impossible travel", "A detection showing sign-ins too far apart to be normal physical travel. It is a signal to investigate, not automatic proof of compromise."],
+          ["Device trust", "Managed, known, and compliant devices provide stronger context than an unknown device, although a trusted device can still be abused."],
+          ["MFA fatigue", "Repeated prompts may pressure a user into approving one. An approval confirms the factor was accepted, not that the activity was authorized."],
+          ["Session revocation", "Ending active sessions can contain account misuse even after a password was accepted."],
+          ["False positive vs. false negative", "A false positive disrupts a legitimate user; a false negative misses an attacker. Analysts weigh both harms before acting."]
+        ],
+        quiz: [
+          {q:"What does a 92% AI compromise score prove?", options:["The account is definitely compromised","The alert deserves priority, but the underlying evidence still needs validation","The employee caused the incident"], answer:1, why:"A model score is a risk signal. High-impact actions should be supported by explainable login, device, MFA, and user-context evidence."},
+          {q:"Which evidence most strongly increases concern?", options:["A different city by itself","An unknown unmanaged device, MFA approval, payroll access, and the employee denying travel","A familiar laptop in Houston"], answer:1, why:"Multiple independent signals support a stronger inference than geolocation alone."},
+          {q:"Which response is most proportionate while the investigation continues?", options:["Ignore the alert","Revoke suspicious sessions, protect the account, preserve evidence, and verify with the user","Publicly accuse the employee"], answer:1, why:"This action limits potential harm while preserving evidence and avoiding unsupported blame."}
+        ]
+      },
+      {
+        concepts: [
+          ["Process tree", "The parent-child relationship between programs. An unexpected utility launching hidden PowerShell is more informative than either process name alone."],
+          ["Persistence", "A technique that helps code run again after reboot or sign-in, such as a scheduled task."],
+          ["Beaconing", "Repeated network connections at regular intervals that may indicate automated command-and-control traffic, though the pattern still needs context."],
+          ["Evidence preservation", "Capturing volatile and stored evidence before cleanup so the team can understand scope, cause, and impact."],
+          ["Recovery validation", "Proving the threat is removed and normal operation is safe before returning a device to service."]
+        ],
+        quiz: [
+          {q:"Why is the process relationship suspicious?", options:["PowerShell is always malware","A newly downloaded unsigned utility launched hidden encoded PowerShell and created persistence","The laptop still works"], answer:1, why:"Behavior and context—not a process name alone—create the strongest evidence of malicious or unauthorized activity."},
+          {q:"What should happen before destructive cleanup?", options:["Preserve relevant volatile and stored evidence","Delete every file immediately","Ask a public AI agent to run commands"], answer:0, why:"Evidence may be lost during remediation. Preservation supports scoping, root-cause analysis, and defensible reporting."},
+          {q:"How should an AI-generated cleanup command be handled?", options:["Run it automatically","Treat evidence as trusted instructions","Review it in a sandbox with least privilege and human approval"], answer:2, why:"Prompt injection can hide inside retrieved evidence. Bounded permissions and human approval prevent unsafe autonomous action."}
+        ]
+      },
+      {
+        concepts: [
+          ["Authorized vs. appropriate use", "Permission to access data does not establish a valid purpose for every query, export, or destination."],
+          ["Behavior baseline", "A comparison with normal hours, volume, frequency, and workflow. A deviation is an investigative clue, not proof of malicious intent."],
+          ["Data scope", "The amount, sensitivity, and business value of information involved. Scope helps determine risk and notification needs."],
+          ["Intent-neutral investigation", "Preserving facts, testing explanations, and avoiding accusations until evidence supports a conclusion."],
+          ["Data minimization", "Using only the smallest amount of information needed for the task, especially when an AI system is involved."]
+        ],
+        quiz: [
+          {q:"What is already established by the audit evidence?", options:["The employee intended to steal data","A large customer-level export occurred and a personal-cloud sync attempt was blocked","Customer data definitely left the company"], answer:1, why:"The export and blocked attempt are facts. Intent and successful exfiltration remain unproven."},
+          {q:"What is the fairest next step?", options:["Preserve evidence, contain the file, verify business purpose, and ask neutral questions","Announce insider theft","Delete the logs"], answer:0, why:"An evidence-led, privacy-conscious inquiry protects the organization without treating suspicion as guilt."},
+          {q:"How should AI assist with this case?", options:["Upload the full customer export to any chatbot","Use an approved environment with minimized or de-identified data and retention limits","Let AI decide employee discipline"], answer:1, why:"Data governance still applies to AI. Sensitive data requires approved handling, access limits, purpose limits, and human accountability."}
+        ]
+      },
+      {
+        concepts: [
+          ["Availability", "Keeping systems and services accessible when legitimate users need them."],
+          ["DDoS", "A distributed denial-of-service attack uses many sources to exhaust resources or overwhelm a service."],
+          ["Traffic baseline", "Normal request volume, sources, paths, errors, and response time used to spot meaningful deviations."],
+          ["Rate limiting", "Restricting request frequency to protect capacity. A good rule is bounded, measurable, and designed to reduce harm to legitimate users."],
+          ["Rollback", "A tested way to reverse a mitigation when it causes unexpected customer or system impact."]
+        ],
+        quiz: [
+          {q:"Which fact best separates the suspicious traffic from the marketing campaign?", options:["All traffic increased","Most abusive requests target a path not used in the campaign and come from hosting networks","Marketing launched today"], answer:1, why:"The target path, source mix, missing cookies, and repeated patterns distinguish much of the traffic from forecast customer behavior."},
+          {q:"What is the safest first mitigation?", options:["Block an entire customer region permanently","Apply a bounded challenge or rate limit to the suspicious pattern, monitor impact, and retain rollback","Shut down the website"], answer:1, why:"A narrow, observable control protects availability while reducing the risk of blocking legitimate customers."},
+          {q:"What should the status message say?", options:["State confirmed service impact, current mitigation, and known uncertainty","Declare a nation-state attack without proof","Promise no customer was affected"], answer:0, why:"Professional incident communication distinguishes verified impact from an unconfirmed cause."}
+        ]
+      },
+      {
+        concepts: [
+          ["Incident synthesis", "Combining related evidence into a coherent account without forcing unrelated events into one story."],
+          ["Confidence language", "Labeling statements as confirmed, likely, possible, or unknown so leaders understand the strength of the evidence."],
+          ["Business impact", "Explaining how systems, operations, customers, obligations, and decisions are affected—not merely listing technical events."],
+          ["Risk-based priority", "Choosing improvements by likelihood, consequence, evidence, feasibility, and the risk reduction they can deliver."],
+          ["Security metric", "A measurable indicator that shows whether a control changed exposure, detection, response, or recovery."]
+        ],
+        quiz: [
+          {q:"How should the team describe the relationship among the incidents?", options:["Claim one attacker caused everything","Connect only events supported by evidence and label the remaining relationships unknown","Omit uncertainty"], answer:1, why:"Executive credibility depends on separating a defensible story from an attractive but unsupported theory."},
+          {q:"Which recommendation is strongest?", options:["Buy the newest tool","Fund two controls tied to observed gaps and define a metric for each","Automate every containment action"], answer:1, why:"Evidence-linked recommendations with measurable outcomes let leadership evaluate real risk reduction."},
+          {q:"What belongs in the opening of a five-minute briefing?", options:["Every raw log line","What happened, business impact, current status, key uncertainty, and the decision needed","A long definition of cybersecurity"], answer:1, why:"Leadership needs a concise decision-oriented picture, with technical detail available in an appendix."}
+        ]
+      }
+    ];
+
+    learningExtensions.forEach((extension, index) => Object.assign(missions[index], extension));
 
     const missionOneEvidence = `
       <section class="evidence-room" id="evidenceRoom" aria-labelledby="evidence-title" hidden>
@@ -1080,9 +1265,8 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
           <button class="path-step explainable" type="button" data-info-title="Step 7 — Write your reflection" data-info="Each member writes a separate reflection of at least 100 words. Explain your contribution, what changed in your thinking, and what you would improve next time."><b>Step 7</b><span>Write your reflection</span><small class="tap-hint">Tap for instructions</small></button>
           <button class="path-step explainable" type="button" data-info-title="Step 8 — Download your portfolio file" data-info="The team recorder downloads the final report. Every member keeps a sanitized copy after checking that it contains no private information, passwords, or real employer data."><b>Step 8</b><span>Download your portfolio file</span><small class="tap-hint">Tap for instructions</small></button>
         </div>
-        <div class="hero-actions">
-          <button class="btn primary" type="button" id="openRoleplay" aria-expanded="false" aria-controls="roleplayRoom">Start AI SOC role-play <span aria-hidden="true">→</span></button>
-        </div>
+        ${missionLearningGate(missions[0], 0)}
+        <div class="hero-actions"><button class="btn primary" type="button" id="openRoleplay" aria-expanded="false" aria-controls="roleplayRoom" disabled>Start AI SOC role-play <span aria-hidden="true">→</span></button></div>
       </section>
 
       <section class="roleplay-room" id="roleplayRoom" aria-labelledby="roleplay-title" hidden>
@@ -1109,8 +1293,8 @@ malware_alerts=0  suspicious_processes=0  persistence_alerts=0</div>
 RULES FOR THE ROLE-PLAY
 1. Do not give the student the solution or list the phishing indicators for them.
 2. Ask only one question at a time and wait for the student's response.
-3. Begin by asking for the team's four assigned roles and its initial evidence-based conclusion.
-4. Require the team to identify the exact artifact supporting each important claim and invite contributions from all four roles.
+3. Begin by asking each of the four roles to state the individual pre-AI finding and action recorded in CoolHack; then ask for the team's initial evidence-based conclusion.
+4. Require the team to identify the exact artifact supporting each important claim and invite a new contribution from all four roles before accepting the final decision.
 5. Challenge guesses, vague statements, unsafe actions, and conclusions that are not supported by evidence.
 6. Ask the student to separate confirmed facts from assumptions.
 7. Cover these workplace areas during the conversation: incident timeline, email indicators, account risk, endpoint risk, containment, evidence to collect next, escalation, and a plain-language update to the affected employee.
@@ -1129,7 +1313,7 @@ After the team has answered the major questions, ask for one final team incident
 - one realistic next skill for the student to practice.
 - one 30-second interview question: “What does cybersecurity in AI mean?” Require the answer to cover protecting AI, using AI securely for defense, and defending against AI-enabled attacks.
 
-Start now. Introduce yourself as the student's SOC supervisor and ask only the first question.</textarea>
+    Start now. Introduce yourself as the student's SOC supervisor and ask only the first question.</textarea>
         <div class="workspace-actions">
           <button class="btn primary" type="button" id="copyPrompt">Copy role-play prompt</button>
           <a class="btn" href="#workspace">Go to Mission Report Workspace <span aria-hidden="true">→</span></a>
@@ -1141,11 +1325,162 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           <li>Evidence-based findings and incident timeline</li>
           <li>Final decision with justification</li>
           <li>Complete AI role-play transcript and supervisor feedback</li>
+          <li>What changed—and why, supported by evidence</li>
+          <li>A rehearsed 60-second SOC shift briefing</li>
           <li>One shared team incident report</li>
           <li>One separate personal reflection of at least 100 words from each member</li>
           <li>A downloaded copy of the team report for each member's sanitized portfolio</li>
         </ul>
       </section>`;
+
+    function missionCareerBridge(mission, index) {
+      if (index === 0) return `
+          <section class="career-bridge" aria-labelledby="career-bridge-title">
+            <span class="card-kicker">From classroom to career</span>
+            <h4 id="career-bridge-title">Why an employer would care about this exercise</h4>
+            <p>Security employers need analysts who can inspect suspicious email evidence, separate facts from assumptions, assess account and device risk, recommend proportionate containment, and communicate clearly. This exercise mirrors that work by requiring your team to investigate before deciding and to document the reasoning behind its response.</p>
+            <div class="grid-2">
+              <div class="callout"><h5>Real-work mapping</h5><ul>
+                <li>Email artifacts → phishing triage and header review</li>
+                <li>Timeline building → incident reconstruction</li>
+                <li>Account and endpoint questions → scope assessment</li>
+                <li>Team decision → containment and escalation</li>
+                <li>Written report → incident documentation and handoff</li>
+              </ul></div>
+              <div class="callout"><h5>What you can tell an employer</h5><p>“In a four-person incident-response simulation, I analyzed a suspicious invoice email, correlated multiple evidence artifacts, separated confirmed findings from assumptions, helped recommend containment and escalation actions, and contributed to a professional incident report.”</p></div>
+            </div>
+            <p><strong>Interview follow-up:</strong> Be prepared to explain your assigned role, one artifact you evaluated, how the evidence changed the team’s conclusion, and why the final response was appropriate. Describe the process honestly as a simulation; do not present it as employment experience.</p>
+          </section>`;
+      return `
+        <section class="career-bridge" aria-labelledby="career-bridge-title">
+          <span class="card-kicker">From classroom to career</span>
+          <h4 id="career-bridge-title">Why an employer would care about this exercise</h4>
+          <p>This mission practices the evidence-based judgment, business awareness, documentation, and communication expected from an entry-level cybersecurity professional.</p>
+          <div class="grid-2">
+            <div class="callout"><h5>Real-work mapping</h5><ul>${mission.workplaceSkills.map(skill => `<li>${skill}</li>`).join("")}</ul></div>
+            <div class="callout"><h5>What you can tell an employer</h5><p>“${mission.employerStatement}”</p></div>
+          </div>
+          <p><strong>Interview follow-up:</strong> Explain your assigned role, cite one artifact that changed the team’s thinking, and describe why the final action was proportionate. Present this honestly as a simulation.</p>
+        </section>`;
+    }
+
+    function missionConceptRefresh(mission, index) {
+      return `
+        <section class="concept-refresh" aria-labelledby="concept-refresh-${index}">
+          <span class="card-kicker">Revision before investigation</span>
+          <h4 id="concept-refresh-${index}">Remember these five concepts</h4>
+          <p>Read these aloud as a team. Then look for where each concept appears—or does not appear—in the evidence.</p>
+          <div class="concept-cards">${mission.concepts.map(([name, explanation]) => `<div class="concept-card"><strong>${name}</strong><span>${explanation}</span></div>`).join("")}</div>
+        </section>`;
+    }
+
+    function missionLearningGate(mission, index) {
+      const roles = ["SOC Analyst", "Incident Responder", "Security Lead", "Communications Lead"];
+      const artifactCount = mission.artifacts?.length || 5;
+      const artifactOptions = Array.from({length: artifactCount}, (_, artifactIndex) => `<option value="${artifactIndex + 1}">Artifact ${artifactIndex + 1}</option>`).join("");
+      return `
+        <section class="learning-gate" aria-labelledby="learning-gate-${index}">
+          <span class="card-kicker">Predict before AI</span>
+          <h4 id="learning-gate-${index}">Every role must contribute first</h4>
+          <p><strong>Rotate seats weekly:</strong> move each member one role clockwise from the previous mission. Each person selects one artifact and records a finding plus a proposed action in their own words.</p>
+          <div class="prediction-grid">${roles.map((role, roleIndex) => `
+            <div class="prediction-row">
+              <strong>${role}</strong>
+              <label for="predictionArtifact${roleIndex}">Evidence source<select id="predictionArtifact${roleIndex}" data-prediction-artifact="${roleIndex}"><option value="">Choose artifact</option>${artifactOptions}</select></label>
+              <label for="predictionText${roleIndex}">Finding and proposed action<input id="predictionText${roleIndex}" data-prediction="${roleIndex}" maxlength="320" placeholder="Artifact __ shows __. I recommend __ because __."></label>
+            </div>`).join("")}</div>
+        </section>
+        <section class="knowledge-check" aria-labelledby="knowledge-check-${index}">
+          <span class="card-kicker">Three-question coaching check</span>
+          <h4 id="knowledge-check-${index}">Check the concept—not merely the answer</h4>
+          <p>Choose an answer for each question. CoolHack will explain the reasoning immediately, and you may correct your answer before continuing.</p>
+          ${mission.quiz.map((item, questionIndex) => `
+            <div class="quiz-question" data-quiz-question="${questionIndex}">
+              <fieldset><legend>${questionIndex + 1}. ${item.q}</legend><div class="quiz-options">
+                ${item.options.map((option, optionIndex) => `<label class="quiz-option"><input type="radio" name="mission${index}Quiz${questionIndex}" value="${optionIndex}" data-quiz="${questionIndex}"><span>${option}</span></label>`).join("")}
+              </div></fieldset>
+              <p class="quiz-feedback" data-quiz-feedback="${questionIndex}" hidden></p>
+            </div>`).join("")}
+          <p class="unlock-status" id="roleplayUnlockStatus" role="status" aria-live="polite">Complete all four role predictions and all three coaching questions to unlock the AI supervisor.</p>
+        </section>`;
+    }
+
+    function missionEvidenceRoom(mission, index) {
+      if (index === 0) return missionOneEvidence;
+      return `
+        <section class="evidence-room" id="evidenceRoom" aria-labelledby="evidence-title" hidden>
+          <h4 id="evidence-title">Mission ${index + 1} Evidence Room</h4>
+          <p class="evidence-intro">Open every artifact and record exact observations before deciding what they mean. All people, organizations, addresses, systems, and events are fictional training data.</p>
+          ${mission.artifacts.map((artifact, artifactIndex) => `<details class="artifact" ${artifactIndex === 0 ? "open" : ""}><summary>Artifact ${artifactIndex + 1} — ${artifact.title}</summary><div class="artifact-body">${artifact.body}${artifactIndex === mission.artifacts.length - 1 ? `<p class="clue-note">The public evidence room intentionally contains no answer key. Your team must justify its conclusion from the artifacts.</p>` : ""}</div></details>`).join("")}
+        </section>`;
+    }
+
+    function missionRoleplay(mission, index) {
+      if (index === 0) return missionOneRoleplay;
+      const missionNumber = index + 1;
+      const artifactNames = mission.artifacts.map((artifact, artifactIndex) => `Artifact ${artifactIndex + 1}: ${artifact.title}`).join("; ");
+      return `
+        <section class="learning-path" aria-labelledby="path-title">
+          <h4 id="path-title">Mission ${missionNumber} — What to do, in order</h4>
+          <p class="evidence-intro">Do not jump straight to the AI. Your first analysis must be your own.</p>
+          <div class="path-steps">
+            <button class="path-step explainable" type="button" data-info-title="Step 1 — Learn the case" data-info="Read the Mission ${missionNumber} briefing and decision point. Make sure every team member understands the investigation goal."><b>Step 1</b><span>Learn the case</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 2 — Examine all evidence" data-info="Open every artifact. Record exact observations and artifact numbers before deciding what they mean."><b>Step 2</b><span>Examine all evidence</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 3 — Discuss with your team" data-info="Each role shares its observations and recommended action. Resolve disagreements by returning to the evidence."><b>Step 3</b><span>Discuss with your team</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 4 — Write your initial decision" data-info="Before using AI, record the team's first decision and justification in the workspace."><b>Step 4</b><span>Write your initial decision</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 5 — Meet the AI supervisor" data-info="Copy the prepared prompt into one permitted AI tool. Share the screen and answer one question at a time as a team."><b>Step 5</b><span>Meet the AI supervisor</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 6 — Improve your report" data-info="Use the supervisor's challenges to correct weak claims, add missing evidence, and label uncertainty."><b>Step 6</b><span>Improve your report</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 7 — Write your reflection" data-info="Each member writes a separate reflection of at least 100 words about their contribution and learning."><b>Step 7</b><span>Write your reflection</span><small class="tap-hint">Tap for instructions</small></button>
+            <button class="path-step explainable" type="button" data-info-title="Step 8 — Download your portfolio file" data-info="The recorder downloads the final report. Each member keeps a sanitized copy with no private or real employer information."><b>Step 8</b><span>Download your portfolio file</span><small class="tap-hint">Tap for instructions</small></button>
+          </div>
+          ${missionLearningGate(mission, index)}
+          <div class="hero-actions"><button class="btn primary" type="button" id="openRoleplay" aria-expanded="false" aria-controls="roleplayRoom" disabled>Start AI SOC role-play <span aria-hidden="true">→</span></button></div>
+        </section>
+        <section class="roleplay-room" id="roleplayRoom" aria-labelledby="roleplay-title" hidden>
+          <h4 id="roleplay-title">Mission ${missionNumber} AI SOC Supervisor Role-play</h4>
+          <p>The AI supervisor asks one question at a time, challenges unsupported claims, and requires evidence. It must not complete the investigation for your team.</p>
+          <div class="notice"><strong>Before you begin:</strong> Record your initial findings and decision in the workspace. Use only this fictional case. Never enter real names, passwords, email addresses, employer details, or other private information.</div>
+          <h5>Student instructions</h5>
+          <ol class="student-steps">
+            <li>Click <strong>Copy role-play prompt</strong>.</li>
+            <li>One team member opens a permitted AI tool in a new chat and shares the screen.</li>
+            <li>Paste the prompt. Enter the four assigned roles and the team's initial evidence-based conclusion when asked.</li>
+            <li>Discuss each question together; the operator types only the team's agreed response.</li>
+            <li>Cite artifact numbers, separate facts from assumptions, and challenge unsupported AI claims.</li>
+            <li>Continue through final feedback and the readiness score.</li>
+            <li>Copy the complete conversation into the <strong>AI role-play transcript</strong> box.</li>
+            <li>Submit one shared report and transcript. Each member submits a separate reflection.</li>
+          </ol>
+          <label for="roleplayPrompt">Prompt to paste into your team's permitted AI tool</label>
+          <textarea class="prompt-box" id="roleplayPrompt" readonly>You are the SOC supervisor at CoolHack Solutions. Conduct a beginner-friendly workplace role-play with an AAS cybersecurity team investigating Mission ${missionNumber}, “${mission.title}.”
+
+AVAILABLE FICTIONAL EVIDENCE
+${artifactNames}
+
+RULES
+1. Do not give the solution or analyze the artifacts for the team.
+2. Ask only one question at a time and wait for the team's response.
+3. Begin by asking each of the four roles to state the individual pre-AI finding and action recorded in CoolHack; then ask for the team's initial evidence-based conclusion.
+4. Require an exact artifact number for every important claim and invite a new contribution from all four roles before accepting the final decision.
+5. Challenge guesses, vague claims, unsafe actions, and conclusions unsupported by evidence.
+6. Require the team to separate confirmed facts, reasonable inferences, and unknowns.
+7. Cover these workplace areas: ${mission.roleplayAreas}.
+8. If the team is stuck, give a small hint or direct it to an artifact; never reveal the answer.
+9. Use clear language for beginning workforce students and briefly explain technical terms.
+10. Never request or accept real personal, school, employer, account, or security information.
+11. Include the mission's AI Security Challenge and require a five-sentence brief naming the risk, affected asset, evidence, control, and accountable human owner.
+12. Present one plausible but unsupported AI claim. Require the team to challenge it with evidence, then clearly identify the teaching test and correct the record.
+
+ENDING
+Ask for the final decision and justification. Then provide two strengths, two improvements, four readiness scores from 1–5 (Evidence Use, Reasoning, Response Decision, Professional Communication), a total out of 20, one next skill, and one 30-second interview question connected to this mission.
+
+Start now. Introduce yourself as the SOC supervisor and ask only the first question.</textarea>
+          <div class="workspace-actions"><button class="btn primary" type="button" id="copyPrompt">Copy role-play prompt</button><a class="btn" href="#workspace">Go to Mission Report Workspace <span aria-hidden="true">→</span></a></div>
+          <p class="save-note" id="copyStatus" role="status" aria-live="polite">The prompt will be copied to your clipboard.</p>
+          <h5>What you will submit</h5>
+          <ul class="submission-list"><li>Evidence-based findings and incident timeline</li><li>Final decision with justification</li><li>Complete AI role-play transcript and supervisor feedback</li><li>What changed—and why, supported by evidence</li><li>A rehearsed 60-second SOC shift briefing</li><li>Five-sentence AI Security Brief</li><li>One shared team report</li><li>One separate personal career reflection of at least 100 words from each member</li><li>A sanitized portfolio copy of the team report</li></ul>
+        </section>`;
+    }
 
     const list = document.querySelector("#missionList");
     const panel = document.querySelector("#missionPanel");
@@ -1164,6 +1499,76 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
 
     function priorityExplanation(level) {
       return `${level} priority tells the team how urgently this simulated case should be reviewed. It guides attention and response order; it does not reveal the answer or automatically prove that a security incident occurred.`;
+    }
+
+    function bindLearningLoop(mission, index) {
+      const storageKey = `coolhack-learning-loop-mission-${index + 1}`;
+      let saved = {artifacts:{}, predictions:{}, quiz:{}};
+      try {
+        saved = {...saved, ...JSON.parse(localStorage.getItem(storageKey) || "{}")};
+        saved.artifacts ||= {};
+        saved.predictions ||= {};
+        saved.quiz ||= {};
+      } catch (_) {
+        localStorage.removeItem(storageKey);
+      }
+      const roleplayButton = document.querySelector("#openRoleplay");
+      const unlockStatus = document.querySelector("#roleplayUnlockStatus");
+
+      function showQuizFeedback(questionIndex, selectedValue) {
+        const feedback = document.querySelector(`[data-quiz-feedback="${questionIndex}"]`);
+        if (!feedback || selectedValue === undefined) return;
+        const correct = Number(selectedValue) === mission.quiz[questionIndex].answer;
+        feedback.hidden = false;
+        feedback.classList.toggle("correct", correct);
+        feedback.innerHTML = `<strong>${correct ? "Correct." : "Review this."}</strong> ${mission.quiz[questionIndex].why}`;
+      }
+
+      function updateUnlock() {
+        const completedPredictions = [0,1,2,3].filter(roleIndex =>
+          String(saved.artifacts[roleIndex] || "") && String(saved.predictions[roleIndex] || "").trim().length >= 15
+        ).length;
+        const completedQuestions = [0,1,2].filter(questionIndex => saved.quiz[questionIndex] !== undefined).length;
+        const ready = completedPredictions === 4 && completedQuestions === 3;
+        if (roleplayButton) roleplayButton.disabled = !ready;
+        if (unlockStatus) {
+          unlockStatus.classList.toggle("ready", ready);
+          unlockStatus.textContent = ready
+            ? "Learning check complete. The AI supervisor is unlocked—use it to test your reasoning, not replace it."
+            : `${completedPredictions}/4 role predictions and ${completedQuestions}/3 coaching questions complete.`;
+        }
+      }
+
+      document.querySelectorAll("[data-prediction-artifact]").forEach(select => {
+        const roleIndex = select.dataset.predictionArtifact;
+        select.value = saved.artifacts[roleIndex] || "";
+        select.addEventListener("change", () => {
+          saved.artifacts[roleIndex] = select.value;
+          localStorage.setItem(storageKey, JSON.stringify(saved));
+          updateUnlock();
+        });
+      });
+      document.querySelectorAll("[data-prediction]").forEach(input => {
+        const roleIndex = input.dataset.prediction;
+        input.value = saved.predictions[roleIndex] || "";
+        input.addEventListener("input", () => {
+          saved.predictions[roleIndex] = input.value;
+          localStorage.setItem(storageKey, JSON.stringify(saved));
+          updateUnlock();
+        });
+      });
+      document.querySelectorAll("[data-quiz]").forEach(input => {
+        const questionIndex = input.dataset.quiz;
+        if (String(saved.quiz[questionIndex]) === input.value) input.checked = true;
+        input.addEventListener("change", () => {
+          saved.quiz[questionIndex] = Number(input.value);
+          localStorage.setItem(storageKey, JSON.stringify(saved));
+          showQuizFeedback(Number(questionIndex), saved.quiz[questionIndex]);
+          updateUnlock();
+        });
+      });
+      Object.entries(saved.quiz).forEach(([questionIndex, value]) => showQuizFeedback(Number(questionIndex), value));
+      updateUnlock();
     }
 
     function renderMission(index, moveFocus = false) {
@@ -1191,6 +1596,7 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           <div class="callout"><h4>Portfolio deliverables</h4><ul>${mission.deliverables.map(item => `<li>${item}</li>`).join("")}</ul></div>
         </div>
         <div class="decision"><strong>Your decision point</strong><br>${mission.decision}</div>
+        ${missionConceptRefresh(mission, index)}
         <section class="ai-security-bridge" aria-labelledby="ai-security-title-${index}">
           <span class="card-kicker">AI Security Challenge ${index + 1} of 6</span>
           <h4 id="ai-security-title-${index}">${mission.aiSecurity.focus}</h4>
@@ -1202,26 +1608,12 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           </div>
           <details class="interview-practice"><summary>Practice your 30-second interview answer</summary><p>“${mission.aiSecurity.interview}”</p><p>Say it in your own words. Be ready to connect it to the decision your team made in this simulation.</p></details>
         </section>
-        ${index === 0 ? `
-          <section class="career-bridge" aria-labelledby="career-bridge-title">
-            <span class="card-kicker">From classroom to career</span>
-            <h4 id="career-bridge-title">Why an employer would care about this exercise</h4>
-            <p>Security employers need analysts who can inspect suspicious email evidence, separate facts from assumptions, assess account and device risk, recommend proportionate containment, and communicate clearly. This exercise mirrors that work by requiring your team to investigate before deciding and to document the reasoning behind its response.</p>
-            <div class="grid-2">
-              <div class="callout"><h5>Real-work mapping</h5><ul>
-                <li>Email artifacts → phishing triage and header review</li>
-                <li>Timeline building → incident reconstruction</li>
-                <li>Account and endpoint questions → scope assessment</li>
-                <li>Team decision → containment and escalation</li>
-                <li>Written report → incident documentation and handoff</li>
-              </ul></div>
-              <div class="callout"><h5>What you can tell an employer</h5><p>“In a four-person incident-response simulation, I analyzed a suspicious invoice email, correlated multiple evidence artifacts, separated confirmed findings from assumptions, helped recommend containment and escalation actions, and contributed to a professional incident report.”</p></div>
-            </div>
-            <p><strong>Interview follow-up:</strong> Be prepared to explain your assigned role, one artifact you evaluated, how the evidence changed the team’s conclusion, and why the final response was appropriate. Describe the process honestly as a simulation; do not present it as employment experience.</p>
-          </section>` : ""}
-        ${index === 0 ? `<div class="hero-actions"><button class="btn primary" type="button" id="openEvidence" aria-expanded="false" aria-controls="evidenceRoom">Open Mission 1 evidence <span aria-hidden="true">→</span></button></div>${missionOneEvidence}${missionOneRoleplay}` : ""}
+        ${missionCareerBridge(mission, index)}
+        <div class="hero-actions"><button class="btn primary" type="button" id="openEvidence" aria-expanded="false" aria-controls="evidenceRoom">Open Mission ${index + 1} evidence <span aria-hidden="true">→</span></button></div>
+        ${missionEvidenceRoom(mission, index)}
+        ${missionRoleplay(mission, index)}
         <div class="hero-actions">
-          <a class="btn ${index === 0 ? "" : "primary"}" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
+          <a class="btn" href="#workspace">Open case notes <span aria-hidden="true">→</span></a>
           ${index < missions.length - 1 ? `<button class="btn" type="button" id="nextMission">Next mission</button>` : ""}
         </div>`;
       const evidenceButton = document.querySelector("#openEvidence");
@@ -1231,11 +1623,12 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
           const opening = room.hidden;
           room.hidden = !opening;
           evidenceButton.setAttribute("aria-expanded", String(opening));
-          evidenceButton.firstChild.textContent = opening ? "Close Mission 1 evidence " : "Open Mission 1 evidence ";
+          evidenceButton.firstChild.textContent = opening ? `Close Mission ${index + 1} evidence ` : `Open Mission ${index + 1} evidence `;
           if (opening) room.scrollIntoView({behavior: "smooth", block: "start"});
         });
       }
       const roleplayButton = document.querySelector("#openRoleplay");
+      bindLearningLoop(mission, index);
       if (roleplayButton) {
         roleplayButton.addEventListener("click", () => {
           const room = document.querySelector("#roleplayRoom");

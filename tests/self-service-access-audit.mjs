@@ -167,7 +167,44 @@ assert.ok(!classroom.includes("CoolHack could not confirm the signed-in session.
 assert.ok(!classroom.includes("const existing=await db.auth.getSession()"), "username sign-in must not sign out a valid session before installing its replacement");
 assert.equal((classroom.match(/await render\(\);/g) || []).length >= 3, true, "account access must open the dashboard directly from the accepted session");
 assert.ok(index.includes("@supabase/supabase-js@2.112.0"), "Supabase browser dependency must be pinned");
-assert.ok(index.includes("classroom.js?v=direct-session-handoff-1"), "direct session handoff cache marker is missing");
+assert.ok(index.includes("classroom.js?v=guided-learning-loop-1"), "guided learning-loop cache marker is missing");
+assert.ok(index.includes("const missionExtensions = ["), "Missions 2–6 need complete exercise data");
+assert.equal((index.match(/roleplayAreas:/g) || []).length, 5, "Missions 2–6 each need a mission-specific role-play");
+assert.equal((index.match(/employerStatement:/g) || []).length, 5, "Missions 2–6 each need a career connection");
+assert.ok(index.includes("function missionEvidenceRoom(mission, index)"), "complete mission evidence rooms are missing");
+assert.ok(index.includes("function missionRoleplay(mission, index)"), "complete mission AI role-plays are missing");
+assert.ok(index.includes("missionEvidenceRoom(mission, index)"), "mission renderer does not load every evidence room");
+assert.ok(index.includes("missionRoleplay(mission, index)"), "mission renderer does not load every role-play");
+for (const title of ["Authentication timeline", "Endpoint detection alert", "Database audit activity", "Traffic and availability dashboard", "Verified incident timeline"]) {
+  assert.ok(index.includes(title), `mission evidence is missing: ${title}`);
+}
+
+assert.equal((index.match(/concepts:\s*\[/g) || []).length, 6, "all six missions need a concept refresh");
+assert.equal((index.match(/quiz:\s*\[/g) || []).length, 6, "all six missions need a knowledge check");
+assert.equal((index.match(/q:\"/g) || []).length, 18, "all six missions need three coaching questions");
+for (const required of [
+  "Remember these five concepts",
+  "Every role must contribute first",
+  "Rotate seats weekly",
+  "Three-question coaching check",
+  "data-prediction-artifact",
+  "data-prediction",
+  "data-quiz",
+  "bindLearningLoop(mission, index)",
+  "4 role predictions",
+  "The AI supervisor is unlocked",
+  "What changed—and why?",
+  "Sixty-second SOC shift briefing",
+  "Individual career reflection draft",
+]) {
+  assert.ok(index.includes(required), `guided learning loop is missing: ${required}`);
+}
+assert.ok(index.includes('id="openRoleplay" aria-expanded="false" aria-controls="roleplayRoom" disabled'), "AI role-play must begin locked");
+assert.ok(index.includes("roleplayButton.disabled = !ready"), "AI role-play does not unlock from completed student learning");
+assert.ok(index.includes("Number(selectedValue) === mission.quiz[questionIndex].answer"), "knowledge check does not provide answer-specific coaching");
+assert.ok(classroom.includes("Initial decision, final decision, and what changed"), "cloud report does not preserve reasoning changes");
+assert.ok(classroom.includes("60-second SOC shift briefing"), "cloud report does not preserve the shift handoff");
+assert.ok(classroom.includes("My private career reflection"), "cloud workspace does not prompt individual career reflection");
 
 for (const required of [
   'document.querySelectorAll("[data-open-view]")',
