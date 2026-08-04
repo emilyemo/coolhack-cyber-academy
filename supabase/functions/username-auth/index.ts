@@ -131,8 +131,11 @@ Deno.serve(async (req) => {
             : "Student access could not be created. Check the class link and entries.",
       });
     }
+    return reply(origin, 200, { ok: true });
   }
 
+  // Kept for compatibility with older published clients. Current browsers sign
+  // in directly so Auth and database requests share one client-side session.
   for (const identifier of identifiers) {
     const signedIn = await publicAuth.auth.signInWithPassword({ email: identifier, password });
     if (!signedIn.error && signedIn.data.session) {

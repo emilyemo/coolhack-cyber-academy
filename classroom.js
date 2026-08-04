@@ -29,21 +29,42 @@
   const field = id => document.querySelector(`#${id}`);
   const normalizeAlias = value => value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
   const classToken = new URLSearchParams(location.search).get("class")?.trim().toLowerCase() || "";
+  async function loginIdentifiers(role, username, requestedClassToken = "") {
+    const source = role === "professor" ? `professor:${username}` : `${requestedClassToken}:${username}`;
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+    const token = Array.from(new Uint8Array(digest)).slice(0, 12)
+      .map(value => value.toString(16).padStart(2, "0")).join("");
+    return [
+      `${token}@emilyemo.github.io`,
+      `${token}@${role === "professor" ? "professors" : "students"}.coolhack.example.com`,
+      `${token}@${role === "professor" ? "professors" : "students"}.coolhack.invalid`,
+    ];
+  }
+
+  async function signInWithUsername(payload) {
+    const identifiers = await loginIdentifiers(payload.role, payload.username, payload.class_token || "");
+    let lastError = null;
+    for (const email of identifiers) {
+      const result = await db.auth.signInWithPassword({email, password:payload.password});
+      if (!result.error && result.data.session?.user) {
+        currentUser = result.data.session.user;
+        return result.data;
+      }
+      lastError = result.error;
+    }
+    if (/rate limit|too many/i.test(lastError?.message || "")) throw lastError;
+    throw new Error("That username or password did not match.");
+  }
+
   async function usernameAuth(payload) {
-    const {data,error}=await db.functions.invoke("username-auth",{body:payload});
-    if(error) throw new Error("CoolHack username service is unavailable. Please try again.");
-    if(!data?.ok) throw new Error(data?.message||"The username or password did not match.");
-    if(!data.session?.access_token||!data.session?.refresh_token) throw new Error("CoolHack did not return a valid session.");
     authTransition = true;
     try {
-      const result=await db.auth.setSession({
-        access_token:data.session.access_token,
-        refresh_token:data.session.refresh_token
-      });
-      if(result.error) throw result.error;
-      if(!result.data.session?.user) throw new Error("CoolHack could not start the signed-in session.");
-      currentUser=result.data.session.user;
-      return result.data;
+      if (payload.action === "create") {
+        const {data,error}=await db.functions.invoke("username-auth",{body:payload});
+        if(error) throw new Error("CoolHack username service is unavailable. Please try again.");
+        if(!data?.ok) throw new Error(data?.message||"The account could not be created.");
+      }
+      return await signInWithUsername(payload);
     } finally {
       authTransition = false;
     }

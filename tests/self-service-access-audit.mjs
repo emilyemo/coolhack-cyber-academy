@@ -55,14 +55,16 @@ for (const required of [
   "AI security coaching guide",
   'db.functions.invoke("username-auth"',
   'action:"create",role:"professor"',
-  'action:"signin",role:"student"',
+  "signInWithUsername(payload)",
+  "crypto.subtle.digest",
+  "db.auth.signInWithPassword",
   'action:"class_context"',
   'field("studentTeamId").value',
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
 
-for (const forbidden of ["professors.coolhack.example.com", "students.coolhack.example.com", "professorAliasEmail", "aliasEmail(displayName", "signInWithAliasFallback"]) {
+for (const forbidden of ["professorAliasEmail", "aliasEmail(displayName", "signInWithAliasFallback", "db.auth.setSession("]) {
   assert.ok(!classroom.includes(forbidden), `browser authentication still exposes the old alias-email path: ${forbidden}`);
 }
 
@@ -167,7 +169,7 @@ assert.ok(!classroom.includes("CoolHack could not confirm the signed-in session.
 assert.ok(!classroom.includes("const existing=await db.auth.getSession()"), "username sign-in must not sign out a valid session before installing its replacement");
 assert.equal((classroom.match(/await render\(\);/g) || []).length >= 3, true, "account access must open the dashboard directly from the accepted session");
 assert.ok(index.includes("@supabase/supabase-js@2.112.0"), "Supabase browser dependency must be pinned");
-assert.ok(index.includes("classroom.js?v=guided-learning-loop-1"), "guided learning-loop cache marker is missing");
+assert.ok(index.includes("classroom.js?v=browser-native-session-1"), "browser-native session cache marker is missing");
 assert.ok(index.includes("const missionExtensions = ["), "Missions 2–6 need complete exercise data");
 assert.equal((index.match(/roleplayAreas:/g) || []).length, 5, "Missions 2–6 each need a mission-specific role-play");
 assert.equal((index.match(/employerStatement:/g) || []).length, 5, "Missions 2–6 each need a career connection");
