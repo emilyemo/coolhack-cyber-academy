@@ -11,8 +11,8 @@ const releaseMigration = readFileSync(
   new URL("../supabase/weekly-scenario-release.sql", import.meta.url),
   "utf8",
 );
-const codeMigration = readFileSync(
-  new URL("../supabase/code-regeneration.sql", import.meta.url),
+const classLinkMigration = readFileSync(
+  new URL("../supabase/simple-class-links.sql", import.meta.url),
   "utf8",
 );
 const independenceMigration = readFileSync(
@@ -44,21 +44,20 @@ for (const required of [
   "What do we know from the evidence",
   "Professor answer guide",
   'db.rpc("get_professor_scenario_key"',
-  'db.rpc("regenerate_section_code"',
-  'db.rpc("regenerate_team_code"',
+  'data-copy-link="${esc(section.class_link_token)}"',
+  "Copy class link",
   "One website, three entrances",
   'data-section-summary="${section.id}"',
   'card.classList.toggle("classroom-hidden"',
-  "rpcCodeValue",
-  "replaceVisibleCode",
-  "storedCode",
-  "Team leader:",
-  "Other three members:",
+  "First teammate:",
+  "Other teammates:",
   "AI Security Brief",
   "AI security coaching guide",
   'db.functions.invoke("username-auth"',
   'action:"create",role:"professor"',
   'action:"signin",role:"student"',
+  'action:"class_context"',
+  'field("studentTeamId").value',
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
@@ -75,6 +74,8 @@ for (const required of [
   "allowedOrigins",
   "Too many attempts",
   'account_kind: "professor_self_service"',
+  'action === "class_context"',
+  'class_link_token',
 ]) {
   assert.ok(usernameAuth.includes(required), `username-auth function is missing ${required}`);
 }
@@ -93,13 +94,17 @@ for (const required of [
 }
 
 for (const required of [
-  "public.regenerate_section_code",
-  "public.regenerate_team_code",
-  "public.manages_team",
+  "class_link_token",
+  "public.create_professor_section",
+  "student_team_creator",
+  "student_alias",
   "instructor_id = auth.uid()",
-  "exit when new_code is distinct from old_code",
 ]) {
-  assert.ok(codeMigration.includes(required), `code migration is missing ${required}`);
+  assert.ok(classLinkMigration.includes(required), `class-link migration is missing ${required}`);
+}
+
+for (const forbidden of ["studentSectionCode", "studentTeamCode", "Regenerate team code", "Regenerate student section code", "Private team code:"]) {
+  assert.ok(!classroom.includes(forbidden), `obsolete visible-code workflow returned: ${forbidden}`);
 }
 
 for (const forbidden of [

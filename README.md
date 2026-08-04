@@ -64,10 +64,10 @@ sections, cloud saving, live updates, and staff dashboards, complete the
 |---|---|---|
 | Platform administrator | One dedicated project email and CoolHack-only password | All sections |
 | Professor | CoolHack username and CoolHack-only password; no email or administrator code requested | Classes created by that professor only |
-| Student | Private team code, invented screen name, and CoolHack-only password; no email requested | Assigned team only |
+| Student | Professor's class link, invented screen name, and CoolHack-only password; no email requested | Assigned team only |
 
-The application internally converts professor usernames and student
-team-code/screen-name combinations into non-deliverable authentication
+The application internally converts professor usernames and each student's
+class-link/nickname combination into a non-deliverable authentication
 identifiers. Those identifiers are implementation details and are not presented
 as real email addresses.
 

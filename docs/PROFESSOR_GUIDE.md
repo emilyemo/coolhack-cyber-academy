@@ -45,23 +45,21 @@ work. You cannot view, change, or archive another professor's class.
 After signing in:
 
 1. Create or select your class.
-2. Copy its private student section code.
-4. Share the section code with the class.
-5. Tell one student in each four-person group to create the team and choose a
+2. Copy its class link and post it in Canvas.
+3. Tell one student in each four-person group to create the team and choose a
    neutral team name.
-6. The team leader shares the generated team code only with the other three
-   members.
-7. After all four invented aliases appear, verify the roster and assign one
+4. The other three students open the same link, select the team name, and join.
+5. After all four invented aliases appear, verify the roster and assign one
    distinct role to each student.
-8. Open the intended mission and confirm its lock state.
+6. Open the intended mission and confirm its lock state.
 
 Do not collect real names, institutional emails, IDs, grades, or personal
 details inside CoolHack.
 
 ## Run a mission
 
-1. Confirm that each team leader created the team with the correct section code
-   and shared its private team code only with the other three members.
+1. Confirm that the first student created the intended team and the other three
+   selected it from the class list.
 2. Require every student to use an invented screen name and a unique
    CoolHack-only password.
 3. Confirm that all four roles are assigned.

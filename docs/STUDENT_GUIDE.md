@@ -1,8 +1,8 @@
 # Student Quick Start
 
-CoolHack is an independent fictional cybersecurity simulation. Students use one
-of three choices on the ordinary student page: **Sign in**, **Join a team**, or
-**Create a team**.
+CoolHack is an independent fictional cybersecurity simulation. Open the class
+link your professor posts in Canvas, then choose **Create a team**, **Join a
+team**, or **Sign in** if you are returning.
 
 ## Weekly scenario access
 
@@ -26,30 +26,29 @@ number, real employer information, or real incident data.
 
 ## Create a team — one student per group
 
-1. Get the private section code from your professor.
+1. Open the class link from your professor.
 2. Choose **Create a team**.
-3. Enter the section code and choose a neutral team name.
+3. Choose a neutral team name.
 4. Enter an invented screen name and create a CoolHack-only password of at
    least 10 characters.
 5. Select **Create team and access**.
-6. Copy the generated private team code and share it only with the other three
-   members of your group.
+6. Tell the other members that the team name is now available in the list.
 
 Only one student should create the team. The other three students join it.
 
 ## Join an existing team — the other three students
 
-1. Get the private team code from the student who created the team.
+1. Open the same professor class link.
 2. Choose **Join a team**.
-3. Enter the team code, an invented screen name, and a new CoolHack-only
-   password.
+3. Select the team name, enter an invented screen name, and create a
+   CoolHack-only password.
 4. Select **Create access and join team**.
 5. Save the password privately. Do not share it with teammates or the professor.
 
 ## Return later
 
-Choose **Sign in** and enter the same team code, screen name, and password used
-when the account was created.
+Open the same class link, choose **Sign in**, and enter the same screen name and
+password used when the account was created.
 
 ## Your team
 
@@ -91,13 +90,12 @@ responsibility.
 
 ## Safety and common problems
 
-- Never share the section or team code outside the intended class or group.
-- **Invalid section code:** ask the professor to confirm the code privately.
-- **Invalid team code:** ask the team leader to confirm the code privately.
+- Use only the class link posted by your professor.
+- **Invalid class link:** ask the professor to copy the link again from CoolHack.
 - **Team name already taken:** choose another neutral team name.
 - **Team full:** the four student seats are already occupied; contact the
   professor rather than creating another account.
-- **Account does not match:** use the same spelling, team code, and password used
+- **Account does not match:** use the same nickname and password used
   during account creation.
 - **Role pending:** the professor still needs to assign your seat.
 - **Workspace locked:** the professor has closed editing for that mission.

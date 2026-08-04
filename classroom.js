@@ -26,6 +26,7 @@
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
   const field = id => document.querySelector(`#${id}`);
   const normalizeAlias = value => value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  const classToken = new URLSearchParams(location.search).get("class")?.trim().toLowerCase() || "";
   async function usernameAuth(payload) {
     const {data,error}=await db.functions.invoke("username-auth",{body:payload});
     if(error) throw new Error("CoolHack username service is unavailable. Please try again.");
@@ -137,25 +138,38 @@
       renderProfessorAccess();
       return;
     }
-    setPortalHeading("CoolHack student portal", "Create a team, join a team, or return to your live team workspace.");
+    setPortalHeading("CoolHack student portal", "Enter a nickname, then create your team or select a team to join.");
     window.CoolHackReleasedMission = 0;
     window.dispatchEvent(new CustomEvent("coolhack:mission-release",{detail:{mission:0}}));
     renderStudentAccess();
   }
 
-  function renderStudentAccess(mode = "signin") {
+  async function renderStudentAccess(mode = "create-team") {
+    if (!classToken) {
+      mount.innerHTML = `<div class="classroom-card"><h3>Open your professor's class link</h3><p>Ask your professor for the CoolHack class link posted in Canvas. There is no code to enter.</p></div>`;
+      return;
+    }
+    let context;
+    try {
+      const {data,error}=await db.functions.invoke("username-auth",{body:{action:"class_context",class_token:classToken}});
+      if(error||!data?.ok) throw new Error(data?.message||"This class link could not be opened.");
+      context=data;
+    } catch(error) {
+      mount.innerHTML=`<div class="classroom-card"><h3>Class link unavailable</h3><p>${esc(error.message)}</p></div>`;
+      return;
+    }
     const signingIn = mode === "signin";
     const joining = mode === "join";
     const creatingTeam = mode === "create-team";
     const title = signingIn ? "Student sign-in" : joining ? "Join an existing team" : "Create a new team";
     const intro = signingIn
-      ? "Returning student? Use the same private team code, invented screen name, and CoolHack password."
+      ? "Returning student? Use the same nickname and CoolHack password."
       : joining
-        ? "Use the private team code shared by your team leader."
-        : "One student starts the team with the professor's section code and chooses the team name. CoolHack will create the private team code for the other three students.";
+        ? "Select your team name from the list."
+        : "The first teammate creates the team. Everyone else selects that team name and joins.";
     mount.innerHTML = `
       <div class="instructions-lead"><strong>Independent classroom simulation</strong><br>CoolHack is not an HCC system. Use an invented screen name—never an HCC email, student ID, official password, grade, or other personal information.</div>
-      <div class="visibility-guide student-team-guide"><strong>Starting a team?</strong><span><b>Team leader:</b> choose <b>Create a team</b> first. CoolHack will give you a private team code.</span><span><b>Other three members:</b> choose <b>Join a team</b> and enter the code shared by your team leader.</span></div>
+      <div class="visibility-guide student-team-guide"><strong>${esc(context.class_name)}</strong><span><b>First teammate:</b> create and name the team.</span><span><b>Other teammates:</b> select the team name and join. Teams close automatically at four students.</span></div>
       <div class="access-choice" aria-label="Student access choices">
         <button class="btn ${signingIn ? "primary" : ""}" type="button" data-student-mode="signin">Sign in</button>
         <button class="btn ${creatingTeam ? "primary" : ""}" type="button" data-student-mode="create-team">Create a team</button>
@@ -164,11 +178,8 @@
       <form class="classroom-card" id="studentAccessForm" data-mode="${mode}">
         <h3>${title}</h3><p>${intro}</p>
         ${creatingTeam ? `
-          <label for="studentSectionCode">Professor's section code</label><input id="studentSectionCode" minlength="8" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
           <label for="studentTeamName">Team name</label><input id="studentTeamName" minlength="2" maxlength="50" placeholder="Example: Team Phoenix" required>
-        ` : `
-          <label for="studentTeamCode">Private team code</label><input id="studentTeamCode" minlength="6" maxlength="12" pattern="[A-Za-z0-9]+" autocomplete="off" required>
-        `}
+        ` : joining ? `<label for="studentTeamId">Select your team</label><select id="studentTeamId" required><option value="">Choose a team</option>${context.teams.map(team=>`<option value="${esc(team.id)}">${esc(team.name)} (${team.member_count}/4)</option>`).join("")}</select>${context.teams.length?"":"<small>No open team is available yet. Ask the first teammate to create it.</small>"}` : ""}
         <label for="studentAlias">Invented screen name</label><input id="studentAlias" minlength="2" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="username" aria-describedby="aliasHelp" required>
         <small id="aliasHelp">Use letters, numbers, underscores, or hyphens. Do not use your real full name or student ID.</small>
         <label for="studentPassword">${signingIn ? "CoolHack password" : "Create a private CoolHack password"}</label><input id="studentPassword" type="password" minlength="10" autocomplete="${signingIn ? "current-password" : "new-password"}" required>
@@ -233,29 +244,24 @@
     const displayName = field("studentAlias").value.trim();
     const password = field("studentPassword").value;
     const creatingTeam = mode === "create-team";
-    const joinCode = creatingTeam ? secureTeamCode() : field("studentTeamCode").value.trim().toUpperCase();
     say(mode === "signin" ? "Signing in…" : creatingTeam ? "Creating your team…" : "Joining your team…");
     try {
       if (mode === "signin") {
-        await usernameAuth({action:"signin",role:"student",username:normalizeAlias(displayName),password,team_code:joinCode});
+        await usernameAuth({action:"signin",role:"student",username:normalizeAlias(displayName),password,class_token:classToken});
         return;
       }
       const metadata = {
         display_name: displayName,
-        join_code: joinCode,
         account_kind: creatingTeam ? "student_team_creator" : "student_alias"
       };
       if (creatingTeam) {
-        metadata.section_code = field("studentSectionCode").value.trim().toUpperCase();
         metadata.team_name = field("studentTeamName").value.trim();
       }
-      await usernameAuth({action:"create",role:"student",username:normalizeAlias(displayName),password,team_code:joinCode,metadata});
-      say(creatingTeam
-          ? `Team created. Your private team code is ${joinCode}. Share it only with your other three teammates.`
-          : "Access created and you have joined the team.");
+      await usernameAuth({action:"create",role:"student",username:normalizeAlias(displayName),password,class_token:classToken,team_id:creatingTeam?"":field("studentTeamId").value,metadata});
+      say(creatingTeam ? "Team created. Your teammates can now select its name from this class link." : "Access created and you have joined the team.");
     } catch (error) {
       say(error.message||(creatingTeam
-        ? "The team could not be created. Check the section code and use a team name that is not already taken."
+        ? "The team could not be created. Use a team name that is not already taken."
         : "Student access could not be created. Check the entries and try again."));
     }
   }
@@ -271,7 +277,7 @@
   }
 
   async function studentScreen() {
-    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,join_code,active_mission,mission_locked,sections(released_mission))").eq("user_id",currentUser.id).maybeSingle();
+    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked,sections(released_mission))").eq("user_id",currentUser.id).maybeSingle();
     if (m.error) throw m.error;
     membership = m.data;
     if (!membership) {
@@ -302,7 +308,7 @@
     const report = reportResult.data || {};
     const myNote = (notesResult.data || []).find(n => n.author_id === currentUser.id)?.note_text || "";
     mount.innerHTML = accountBar(`<span class="cloud-state" id="cloudState">Cloud connected</span> `) + `
-      <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Private team code: <code>${esc(membership.teams.join_code)}</code> · Your seat: ${esc(membership.assigned_role || "Not assigned")}. Share the code only with your other three teammates.</div>
+      <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Your seat: ${esc(membership.assigned_role || "Not assigned")}.</div>
       <div class="visibility-guide"><strong>Who can see this work?</strong><span>Teammates see the roster, live role notes, and shared report.</span><span>Your private reflection is visible only to you, your assigned professor, and the platform administrator.</span></div>
       <div class="classroom-grid">
         <aside class="classroom-card"><h3>Team roster</h3><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong><br>${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><h3>Live role notes</h3><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc(roster.find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No notes yet.</p>"}</div></aside>
@@ -353,12 +359,6 @@
       }).subscribe();
   }
 
-  function secureTeamCode() {
-    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const bytes = crypto.getRandomValues(new Uint8Array(8));
-    return Array.from(bytes, value => alphabet[value % alphabet.length]).join("");
-  }
-
   const sectionOptions = (sections, selected="") =>
     `<option value="">Choose a section</option>${sections.map(s=>`<option value="${s.id}" ${s.id===selected?"selected":""}>${esc(s.name)}</option>`).join("")}`;
 
@@ -367,34 +367,9 @@
     return new Intl.DateTimeFormat(undefined, {dateStyle:"medium", timeStyle:"short"}).format(new Date(value));
   }
 
-  function rpcCodeValue(data) {
-    if (typeof data === "string") return data;
-    if (Array.isArray(data) && data.length === 1) return rpcCodeValue(data[0]);
-    if (data && typeof data === "object") {
-      const value = Object.values(data).find(item => typeof item === "string");
-      if (value) return value;
-    }
-    return "";
-  }
-
-  function replaceVisibleCode(button, code, kind) {
-    const card = button.closest("[data-section-summary], .team-operation");
-    const display = card?.querySelector(`[data-code-display="${kind}"]`);
-    const copy = card?.querySelector(`[data-copy-kind="${kind}"]`);
-    if (display) display.textContent = code;
-    if (copy) copy.dataset.copyCode = code;
-  }
-
-  async function storedCode(table, id, column) {
-    const result = await db.from(table).select(column).eq("id", id).single();
-    return {code: result.data?.[column] || "", error: result.error};
-  }
-
   async function staffScreen() {
   const isAdmin=profile.app_role==="platform_admin";
-    const sectionFields=isAdmin
-    ?"id,name,class_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)"
-    :"id,name,class_code,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
+    const sectionFields="id,name,class_link_token,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
   const accessPromise=isAdmin
     ? db.from("access_events").select("id,portal,app_role,accessed_at,profiles(display_name)").order("accessed_at",{ascending:false}).limit(30)
     : Promise.resolve({data:[],error:null});
@@ -420,14 +395,14 @@
     <div class="admin-hero"><div><span class="eyebrow">${isAdmin?"Academy control center":"Section operations"}</span><h3>${title}</h3><p>${lead}</p></div><span class="privacy-badge">De-identified classroom data only</span></div>
     <div class="visibility-guide"><strong>One website, three entrances</strong><span>Student, Professor, and Administrator are role-based entrances to this same CoolHack website and database—not three separate sites.</span></div>
     <div class="visibility-guide staff-visibility"><strong>${isAdmin?"Administrator visibility":"Professor visibility"}</strong><span>${isAdmin?"You can review every class, professor, team, student alias, and submission in CoolHack.":"You can review only the classes created by your account and their teams, student aliases, shared work, and private reflections."}</span><span>The database enforces this boundary; it is not merely hidden by the dashboard.</span></div>
-    <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Professor creates class</span><span><b>2</b> Professor shares section code</span><span><b>3</b> Team leader creates team</span><span><b>4</b> Teammates join</span><span><b>5</b> Professor assigns seats</span></div>
+      <div class="guided-workflow" aria-label="Classroom setup sequence"><span><b>1</b> Professor creates class</span><span><b>2</b> Professor posts class link</span><span><b>3</b> First student creates team</span><span><b>4</b> Others select team</span><span><b>5</b> Professor assigns seats</span></div>
     <div class="admin-stats" aria-label="Classroom overview"><div><strong>${sections.length}</strong><span>Active sections</span></div><div><strong>${teams.length}</strong><span>Teams</span></div><div><strong>${members.length}</strong><span>Student accounts</span></div><div><strong>${teams.filter(t=>!t.mission_locked).length}</strong><span>Open workspaces</span></div></div>
     ${!isAdmin?`<div class="admin-panel-grid">
-      <form class="classroom-card" id="createSection"><span class="card-kicker">Create class</span><h3>Open your Capstone class</h3><p>Name the class. CoolHack assigns it to you and generates the student section code immediately; no administrator action is required.</p><label for="sectionName">Class label</label><input id="sectionName" placeholder="Example: Fall 2026 Thursday Capstone" maxlength="80" required><div class="hero-actions"><button class="btn primary">Create my class</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
-      <div class="classroom-card"><span class="card-kicker">Independent professor</span><h3>You run your own class</h3><p>Create or archive your classes, release one scenario each week, manage team codes and rosters, and review student work. Other professors cannot see or control your classes.</p></div>
+      <form class="classroom-card" id="createSection"><span class="card-kicker">Create class</span><h3>Open your Capstone class</h3><p>Name the class. CoolHack gives you one student link to post in Canvas.</p><label for="sectionName">Class label</label><input id="sectionName" placeholder="Example: Fall 2026 Thursday Capstone" maxlength="80" required><div class="hero-actions"><button class="btn primary">Create my class</button></div><p id="sectionMessage" class="form-message" role="status"></p></form>
+      <div class="classroom-card"><span class="card-kicker">Independent professor</span><h3>You run your own class</h3><p>Create or archive classes, release one scenario each week, manage rosters, and review student work. Other professors cannot see or control your classes.</p></div>
     </div>`:`<div class="classroom-card"><span class="card-kicker">Administrator oversight</span><h3>Professors are independent</h3><p>Professors create and manage their own classes. Use this dashboard for academy-wide monitoring and support; no professor access code is required.</p></div>`}
     <div class="admin-panel-grid">
-      <div class="classroom-card"><span class="card-kicker">Student self-service</span><h3>Students create their teams</h3><p>The professor shares the student section code. One student chooses the team name and creates the team; the other three join with the generated team code.</p></div>
+      <div class="classroom-card"><span class="card-kicker">Student self-service</span><h3>One link—no codes</h3><p>Post the class link in Canvas. One student creates the team; the others select its name and join.</p></div>
       <div class="classroom-card"><span class="card-kicker">Professor control</span><h3>Professor manages the live roster</h3><p>Teams appear automatically. The professor sees only this class and assigns the four distinct seats.</p></div>
     </div>
     ${sections.some(section=>Number(section.released_mission)===1)?`
@@ -466,8 +441,8 @@
         <article data-section-summary="${section.id}">
           <strong>${esc(section.name)}</strong>
           <span>Professor: ${esc(section.profiles?.display_name||(isAdmin?"Unassigned legacy class":profile.display_name))}</span>
-          <small>Student section code: <code data-code-display="section">${esc(section.class_code)}</code> · ${teams.filter(t=>t.section_id===section.id).length} teams</small>
-          <div class="section-code-actions"><button class="btn compact" type="button" data-copy-kind="section" data-copy-code="${esc(section.class_code)}">Copy student section code</button><button class="btn compact" type="button" data-section-code-refresh="${section.id}">Regenerate student section code</button></div>
+          <small>${teams.filter(t=>t.section_id===section.id).length} teams</small>
+          <div class="section-code-actions"><button class="btn compact primary" type="button" data-copy-link="${esc(section.class_link_token)}">Copy class link</button></div>
           <div class="scenario-release"><label>Weekly scenario<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}<small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div>
           <div class="section-danger-actions"><button class="btn compact danger" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button><small>Archives the class without deleting student work.</small></div>
         </article>`).join("")||"<p>No active classes yet.</p>"}</div>
@@ -484,17 +459,16 @@
     field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);
     bindOperationButtons();
   });
-  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("create_professor_section",{requested_name:field("sectionName").value.trim()});const created=Array.isArray(result.data)?result.data[0]:result.data;field("sectionMessage").textContent=result.error?result.error.message:`${created.name} created. Student section code: ${created.class_code}`;if(!result.error)setTimeout(staffScreen,1400);});
+  field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("create_professor_section",{requested_name:field("sectionName").value.trim()});const created=Array.isArray(result.data)?result.data[0]:result.data;field("sectionMessage").textContent=result.error?result.error.message:`${created.name} created. Copy its class link below and post it in Canvas.`;if(!result.error)setTimeout(staffScreen,1400);});
   bindOperationButtons();
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
   function bindOperationButtons(){
-    document.querySelectorAll("[data-copy-code]").forEach(button=>button.addEventListener("click",async()=>{await navigator.clipboard.writeText(button.dataset.copyCode);button.textContent="Code copied";setTimeout(()=>button.textContent="Copy code",1200);}));
-    document.querySelectorAll("[data-section-code-refresh]").forEach(button=>button.addEventListener("click",async()=>{button.disabled=true;button.textContent="Generating…";const oldCode=button.closest("[data-section-summary]")?.querySelector('[data-code-display="section"]')?.textContent.trim()||"";const result=await db.rpc("regenerate_section_code",{requested_section:button.dataset.sectionCodeRefresh});const stored=await storedCode("sections",button.dataset.sectionCodeRefresh,"class_code");const code=stored.code||rpcCodeValue(result.data);if(result.error||stored.error||!code||code===oldCode){showOperationResult(result.error?`Student section code was not changed: ${result.error.message}`:stored.error?`The new student section code could not be verified: ${stored.error.message}`:!code?"No new student section code was returned.":"The stored student section code did not change. Please try again.",true);}else{replaceVisibleCode(button,code,"section");showOperationResult(`Student section code regenerated and verified. Old code: ${oldCode}. New code: ${code}`);}button.disabled=false;button.textContent="Regenerate student section code";}));
+    document.querySelectorAll("[data-copy-link]").forEach(button=>button.addEventListener("click",async()=>{const link=`${location.origin}${location.pathname}?portal=student&class=${button.dataset.copyLink}#classroom-access`;await navigator.clipboard.writeText(link);button.textContent="Class link copied";setTimeout(()=>button.textContent="Copy class link",1200);}));
     document.querySelectorAll("[data-scenario-reveal]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-mission="${button.dataset.scenarioReveal}"]`);const mission=Number(select?.value||0);if(!mission){showOperationResult("Choose a scenario before revealing it.",true);return;}const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioReveal,requested_mission:mission});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-scenario-hide]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioHide,requested_mission:0});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-section-archive]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm(`Archive ${button.dataset.sectionName}? Student work will be retained and the class will disappear from active operations.`))return;button.disabled=true;const result=await db.rpc("archive_section",{requested_section:button.dataset.sectionArchive});if(result.error){showOperationResult(`Section was not archived: ${result.error.message}`,true);button.disabled=false;}else{await staffScreen();}}));
     document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
-    document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{if(button.dataset.teamControl==="code"){button.disabled=true;button.textContent="Generating…";const oldCode=button.closest(".team-operation")?.querySelector('[data-code-display="team"]')?.textContent.trim()||"";const result=await db.rpc("regenerate_team_code",{requested_team:button.dataset.teamId});const stored=await storedCode("teams",button.dataset.teamId,"join_code");const code=stored.code||rpcCodeValue(result.data);if(result.error||stored.error||!code||code===oldCode){showOperationResult(result.error?`Team code was not changed: ${result.error.message}`:stored.error?`The new team code could not be verified: ${stored.error.message}`:!code?"No new team code was returned.":"The stored team code did not change. Please try again.",true);}else{replaceVisibleCode(button,code,"team");showOperationResult(`Team code regenerated and verified. Old code: ${oldCode}. New code: ${code}`);}button.disabled=false;button.textContent="Regenerate team code";return;}const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-member-role]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-role-select="${button.dataset.memberRole}"]`);const result=await db.from("team_members").update({assigned_role:select.value||null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberRole);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-member-move]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-member-move-select="${button.dataset.memberMove}"]`);if(!select?.value){showOperationResult("Choose a destination team first.",true);return;}const result=await db.from("team_members").update({team_id:select.value,assigned_role:null}).eq("team_id",button.dataset.currentTeam).eq("user_id",button.dataset.memberMove);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-member-remove]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm(`Remove ${button.dataset.memberName} from this team? Saved submissions will be retained for staff review.`))return;button.disabled=true;const result=await db.rpc("remove_team_member",{requested_team:button.dataset.currentTeam,requested_user:button.dataset.memberRemove});if(result.error){showOperationResult(`Member was not removed: ${result.error.message}`,true);button.disabled=false;}else{await staffScreen();}}));
@@ -503,7 +477,7 @@
 
   function renderTeamOperations(teams,sections,members,professors,isAdmin) {
   const roles=["SOC Analyst","Incident Responder","Security Lead","Communications Lead"];
-  if(!teams.length)return "<div class=\"empty-state\"><strong>No teams yet.</strong><p>Give students the section code. The first student will create the team, and it will appear here automatically.</p></div>";
+  if(!teams.length)return "<div class=\"empty-state\"><strong>No teams yet.</strong><p>Post the class link in Canvas. The first student will create a team, and it will appear here automatically.</p></div>";
   return `<div class="team-operations">${teams.map(team=>{
     const teamMembers=members.filter(m=>m.team_id===team.id);
     const section=sections.find(s=>s.id===team.section_id);
@@ -519,8 +493,7 @@
         <label>Move to team<select data-member-move-select="${member.user_id}" ${destinations.length?"":"disabled"}><option value="">Choose destination</option>${destinations.map(destination=>`<option value="${destination.id}">${esc(destination.name)}</option>`).join("")}</select></label>
         <button class="btn compact" type="button" data-member-move="${member.user_id}" data-current-team="${team.id}" ${destinations.length?"":"disabled"}>Move student</button>
         <button class="btn compact danger" type="button" data-member-remove="${member.user_id}" data-member-name="${esc(member.profiles?.display_name||"student")}" data-current-team="${team.id}">Remove member</button>
-      </div>`).join("")||"<p>No students yet. Give the private team code to up to four students; they will appear here automatically after creating access.</p>"}</div>
-      <div class="team-code-row"><code data-code-display="team">${esc(team.join_code)}</code><button class="btn compact" type="button" data-copy-kind="team" data-copy-code="${esc(team.join_code)}">Copy team code</button><button class="btn compact" type="button" data-team-control="code" data-team-id="${team.id}">Regenerate team code</button></div>
+      </div>`).join("")||"<p>No students yet. Students will appear here after opening the class link and selecting this team.</p>"}</div>
       <div class="mission-controls">
         <button class="btn compact" type="button" data-team-review="${team.id}" data-team-name="${esc(team.name)}" data-mission="${team.active_mission}">Review live work</button>
         <button class="btn compact" type="button" data-team-control="lock" data-team-id="${team.id}" data-locked="${team.mission_locked}">${team.mission_locked?"Reopen mission":"Lock mission"}</button>

@@ -37,8 +37,8 @@ function allowedAttempt(req: Request, action: string) {
   return current.count <= limit;
 }
 
-async function tokenFor(role: string, username: string, teamCode: string) {
-  const source = role === "professor" ? `professor:${username}` : `${teamCode}:${username}`;
+async function tokenFor(role: string, username: string, classToken: string) {
+  const source = role === "professor" ? `professor:${username}` : `${classToken}:${username}`;
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
   return Array.from(new Uint8Array(bytes)).slice(0, 12)
     .map((value) => value.toString(16).padStart(2, "0")).join("");
@@ -61,8 +61,19 @@ Deno.serve(async (req) => {
   const role = String(body.role || "");
   const username = String(body.username || "").trim().toLowerCase();
   const password = String(body.password || "");
-  const teamCode = String(body.team_code || "").trim().toUpperCase();
+  const classToken = String(body.class_token || "").trim().toLowerCase();
+  const teamId = String(body.team_id || "").trim();
   if (!allowedAttempt(req, action)) return reply(origin, 429, { ok: false, message: "Too many attempts. Wait a few minutes and try again." });
+  if (action === "class_context") {
+    if (!/^[a-f0-9]{36}$/.test(classToken)) return reply(origin, 404, { ok: false, message: "This class link is invalid." });
+    const projectUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const admin = createClient(projectUrl, serviceKey, { auth: { persistSession: false } });
+    const section = await admin.from("sections").select("id,name").eq("class_link_token", classToken).eq("is_active", true).maybeSingle();
+    if (section.error || !section.data) return reply(origin, 404, { ok: false, message: "This class link is invalid or the class is archived." });
+    const teams = await admin.from("teams").select("id,name,team_members(count)").eq("section_id", section.data.id).order("name");
+    return reply(origin, 200, { ok: true, class_name: section.data.name, teams: (teams.data || []).map((team) => ({ id: team.id, name: team.name, member_count: team.team_members?.[0]?.count || 0 })).filter((team) => team.member_count < 4) });
+  }
   if (!['create', 'signin'].includes(action) || !['professor', 'student'].includes(role)) {
     return reply(origin, 400, { ok: false, message: "Invalid account request." });
   }
@@ -72,8 +83,8 @@ Deno.serve(async (req) => {
   if ((role === "professor" && password.length < 12) || (role === "student" && password.length < 10)) {
     return reply(origin, 400, { ok: false, message: "The CoolHack password is too short." });
   }
-  if (role === "student" && !/^[A-Z0-9]{6,12}$/.test(teamCode)) {
-    return reply(origin, 400, { ok: false, message: "Enter a valid private team code." });
+  if (role === "student" && !/^[a-f0-9]{36}$/.test(classToken)) {
+    return reply(origin, 400, { ok: false, message: "Open the class link provided by your professor." });
   }
 
   const projectUrl = Deno.env.get("SUPABASE_URL")!;
@@ -81,7 +92,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(projectUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const publicAuth = createClient(projectUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const token = await tokenFor(role, username, teamCode);
+  const token = await tokenFor(role, username, classToken);
   const identifiers = [
     `${token}@emilyemo.github.io`,
     `${token}@${role === "professor" ? "professors" : "students"}.coolhack.example.com`,
@@ -96,10 +107,10 @@ Deno.serve(async (req) => {
       ? { display_name: String(body.display_name || username).slice(0, 80), account_kind: "professor_self_service" }
       : {
           display_name: String(suppliedMetadata.display_name || username).slice(0, 80),
-          join_code: teamCode,
+          class_token: classToken,
           account_kind: suppliedMetadata.account_kind === "student_team_creator" ? "student_team_creator" : "student_alias",
+          team_id: suppliedMetadata.account_kind === "student_team_creator" ? "" : teamId,
           ...(suppliedMetadata.account_kind === "student_team_creator" ? {
-            section_code: String(suppliedMetadata.section_code || "").trim().toUpperCase(),
             team_name: String(suppliedMetadata.team_name || "").trim().slice(0, 50),
           } : {}),
         };
@@ -117,7 +128,7 @@ Deno.serve(async (req) => {
           ? "That username is already in use. Choose Sign in or use another username."
           : role === "professor"
             ? "The professor account could not be created. Check the username and try again."
-            : "Student access could not be created. Check the classroom code and entries.",
+            : "Student access could not be created. Check the class link and entries.",
       });
     }
   }
@@ -132,5 +143,5 @@ Deno.serve(async (req) => {
       });
     }
   }
-  return reply(origin, 401, { ok: false, message: "That username, code, or password did not match." });
+  return reply(origin, 401, { ok: false, message: "That username or password did not match." });
 });
