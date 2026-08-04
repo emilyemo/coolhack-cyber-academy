@@ -574,7 +574,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=session-tabs-repair-1"></script>
+  <script src="classroom.js?v=complete-interaction-repair-1"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -600,8 +600,14 @@
       }
     }
 
+    document.querySelectorAll("[data-open-view]").forEach(control => {
+      control.addEventListener("click", event => {
+        event.preventDefault();
+        openAcademyView(control.dataset.openView, true);
+      });
+    });
+
     document.querySelectorAll(".app-tab").forEach((tab, index) => {
-      tab.addEventListener("click", () => openAcademyView(tab.dataset.openView, true));
       tab.addEventListener("keydown", event => {
         if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
         event.preventDefault();
@@ -806,16 +812,65 @@
     });
 
     document.addEventListener("click", event => {
-      const viewButton = event.target.closest("[data-open-view]");
-      if (viewButton) {
-        event.preventDefault();
-        return;
-      }
       const workspaceLink = event.target.closest('a[href="#workspace"]');
       if (workspaceLink) {
         event.preventDefault();
         openAcademyView("workspace", true);
       }
+    });
+
+    const reportDraftKey = "coolhack-mission-report-draft-v1";
+    const reportFields = [
+      "studentName", "selectedRole", "finding", "timeline", "decision",
+      "unknowns", "aiTranscript", "aiFeedback", "aiSecurityBrief", "reflection"
+    ];
+    const caseForm = document.querySelector("#caseForm");
+
+    function reportValues() {
+      return Object.fromEntries(reportFields.map(id => [id, document.querySelector(`#${id}`)?.value || ""]));
+    }
+
+    function restoreReportDraft() {
+      try {
+        const draft = JSON.parse(localStorage.getItem(reportDraftKey) || "{}");
+        reportFields.forEach(id => {
+          const input = document.querySelector(`#${id}`);
+          if (input && typeof draft[id] === "string") input.value = draft[id];
+        });
+      } catch (_) {
+        localStorage.removeItem(reportDraftKey);
+      }
+    }
+
+    caseForm?.addEventListener("input", () => {
+      localStorage.setItem(reportDraftKey, JSON.stringify(reportValues()));
+    });
+    restoreReportDraft();
+
+    document.querySelector("#downloadBtn")?.addEventListener("click", () => {
+      const values = reportValues();
+      const labels = {
+        studentName: "Team name", selectedRole: "Team members and assigned roles",
+        finding: "Evidence-based findings", timeline: "Incident timeline",
+        decision: "Decision and justification", unknowns: "Remaining questions",
+        aiTranscript: "AI role-play transcript", aiFeedback: "AI feedback and team response",
+        aiSecurityBrief: "AI Security Brief", reflection: "Team reflection"
+      };
+      const text = ["COOLHACK CYBER ACADEMY — MISSION REPORT", "", ...reportFields.flatMap(id => [labels[id], values[id] || "No entry.", ""])].join("\n");
+      const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `coolhack-mission-report-${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    });
+
+    document.querySelector("#clearBtn")?.addEventListener("click", () => {
+      if (!confirm("Clear this browser's saved CoolHack report draft?")) return;
+      caseForm?.reset();
+      localStorage.removeItem(reportDraftKey);
     });
 
     const missions = [

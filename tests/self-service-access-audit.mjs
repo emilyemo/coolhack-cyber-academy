@@ -160,6 +160,48 @@ assert.ok(index.includes('document.querySelector(`[data-view="${viewName}"]`)?.s
 assert.ok(classroom.includes("authTransition = true"), "username sign-in transition guard is missing");
 assert.ok(classroom.includes("db.auth.refreshSession()"), "profile-load authorization recovery is missing");
 assert.ok(!classroom.includes('const verification=await db.from("profiles")'), "professor registration must not race an immediate profile query");
+assert.ok(classroom.includes('id="professorSignOut"'), "professor access screen needs a visible sign-out control");
+assert.ok(classroom.includes('db.auth.signOut({scope:"local"})'), "sign-out must clear only the current browser session");
+assert.ok(classroom.includes('field("professorSignOut").addEventListener("click", signOutCurrentSession)'), "professor sign-out control is not connected");
+assert.ok(!classroom.includes("CoolHack could not confirm the signed-in session."), "sign-in must not fail on a redundant immediate getSession check");
+assert.ok(index.includes("classroom.js?v=complete-interaction-repair-1"), "complete interaction repair cache marker is missing");
+
+for (const required of [
+  'document.querySelectorAll("[data-open-view]")',
+  'openAcademyView(control.dataset.openView, true)',
+  'document.querySelector("#downloadBtn")?.addEventListener("click"',
+  'document.querySelector("#clearBtn")?.addEventListener("click"',
+  'caseForm?.addEventListener("input"',
+  'localStorage.setItem(reportDraftKey',
+  'URL.createObjectURL(blob)',
+  'infoDialog.showModal()',
+  'clockToggle.addEventListener("click"',
+  'roleplayButton.addEventListener("click"',
+  'copyPrompt.addEventListener("click"',
+  'button.addEventListener("click", () => renderMission(index))',
+]) {
+  assert.ok(index.includes(required), `page control is not connected: ${required}`);
+}
+
+for (const required of [
+  'field("administratorModeSwitch").addEventListener("click"',
+  'field("professorSignOut").addEventListener("click"',
+  'document.querySelectorAll("[data-professor-mode]")',
+  'document.querySelectorAll("[data-student-mode]")',
+  'document.querySelectorAll("[data-copy-link]")',
+  'document.execCommand("copy")',
+  'document.querySelectorAll("[data-scenario-reveal]")',
+  'document.querySelectorAll("[data-scenario-hide]")',
+  'document.querySelectorAll("[data-section-archive]")',
+  'document.querySelectorAll("[data-team-review]")',
+  'document.querySelectorAll("[data-team-control]")',
+  'document.querySelectorAll("[data-member-role]")',
+  'document.querySelectorAll("[data-member-move]")',
+  'document.querySelectorAll("[data-member-remove]")',
+  'field("retryClassroom")?.addEventListener("click"',
+]) {
+  assert.ok(classroom.includes(required), `classroom control is not connected: ${required}`);
+}
 
 const dollarQuotes = migration.match(/\$\$/g) || [];
 assert.equal(dollarQuotes.length % 2, 0, "migration has unmatched dollar quotes");

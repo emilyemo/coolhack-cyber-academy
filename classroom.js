@@ -36,16 +36,18 @@
     if(!data.session?.access_token||!data.session?.refresh_token) throw new Error("CoolHack did not return a valid session.");
     authTransition = true;
     try {
+      const existing=await db.auth.getSession();
+      if(existing.data.session){
+        const cleared=await db.auth.signOut({scope:"local"});
+        if(cleared.error) throw new Error("CoolHack could not clear the previous session. Select Sign out and try again.");
+      }
       const result=await db.auth.setSession({
         access_token:data.session.access_token,
         refresh_token:data.session.refresh_token
       });
       if(result.error) throw result.error;
-      const confirmed=await db.auth.getSession();
-      if(confirmed.error||!confirmed.data.session?.user) {
-        throw confirmed.error||new Error("CoolHack could not confirm the signed-in session.");
-      }
-      currentUser=confirmed.data.session.user;
+      if(!result.data.session?.user) throw new Error("CoolHack could not start the signed-in session.");
+      currentUser=result.data.session.user;
       return result.data;
     } finally {
       authTransition = false;
@@ -126,6 +128,7 @@
       <div class="access-choice" aria-label="Professor access choices">
         <button class="btn ${creating ? "" : "primary"}" type="button" data-professor-mode="signin">Sign in</button>
         <button class="btn ${creating ? "primary" : ""}" type="button" data-professor-mode="create">First visit: create account</button>
+        <button class="btn" id="professorSignOut" type="button">Sign out</button>
       </div>
       <form class="classroom-card" id="professorAccessForm" data-mode="${mode}">
         <h3>${creating ? "Create professor account" : "Professor sign-in"}</h3>
@@ -142,6 +145,7 @@
     document.querySelectorAll("[data-professor-mode]").forEach(button =>
       button.addEventListener("click", () => renderProfessorAccess(button.dataset.professorMode))
     );
+    field("professorSignOut").addEventListener("click", signOutCurrentSession);
   }
 
   function authScreen() {
@@ -493,7 +497,21 @@
   bindOperationButtons();
   function showOperationResult(message,isError=false){field("staffReview").innerHTML=`<p class="${isError?"auth-message":"form-message"}">${esc(message)}</p>`;}
   function bindOperationButtons(){
-    document.querySelectorAll("[data-copy-link]").forEach(button=>button.addEventListener("click",async()=>{const link=`${location.origin}${location.pathname}?portal=student&class=${button.dataset.copyLink}#classroom-access`;await navigator.clipboard.writeText(link);button.textContent="Class link copied";setTimeout(()=>button.textContent="Copy class link",1200);}));
+    document.querySelectorAll("[data-copy-link]").forEach(button=>button.addEventListener("click",async()=>{
+      const link=`${location.origin}${location.pathname}?portal=student&class=${button.dataset.copyLink}#classroom-access`;
+      try {
+        await navigator.clipboard.writeText(link);
+        button.textContent="Class link copied";
+      } catch (_) {
+        const input=document.createElement("textarea");
+        input.value=link;input.setAttribute("readonly","");input.style.position="fixed";input.style.opacity="0";
+        document.body.appendChild(input);input.select();
+        const copied=document.execCommand("copy");input.remove();
+        if(!copied){showOperationResult(`Copy this class link: ${link}`,true);return;}
+        button.textContent="Class link copied";
+      }
+      setTimeout(()=>button.textContent="Copy class link",1200);
+    }));
     document.querySelectorAll("[data-scenario-reveal]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-mission="${button.dataset.scenarioReveal}"]`);const mission=Number(select?.value||0);if(!mission){showOperationResult("Choose a scenario before revealing it.",true);return;}const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioReveal,requested_mission:mission});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-scenario-hide]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioHide,requested_mission:0});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-section-archive]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm(`Archive ${button.dataset.sectionName}? Student work will be retained and the class will disappear from active operations.`))return;button.disabled=true;const result=await db.rpc("archive_section",{requested_section:button.dataset.sectionArchive});if(result.error){showOperationResult(`Section was not archived: ${result.error.message}`,true);button.disabled=false;}else{await staffScreen();}}));
@@ -553,7 +571,27 @@
     field("staffReview").scrollIntoView({behavior:"smooth",block:"start"});
   }
 
-  function bindSignOut(){field("signOut")?.addEventListener("click",()=>db.auth.signOut());}
+  async function signOutCurrentSession(event){
+    const button=event?.currentTarget;
+    if(button){button.disabled=true;button.textContent="Signing out…";}
+    authTransition=true;
+    try {
+      const {error}=await db.auth.signOut({scope:"local"});
+      if(error) throw error;
+      currentUser=null;
+      profile=null;
+      membership=null;
+      if(channel){await db.removeChannel(channel);channel=null;}
+      Object.keys(sessionStorage).filter(key=>key.startsWith("coolhack-access-")).forEach(key=>sessionStorage.removeItem(key));
+      authScreen();
+    } catch(error) {
+      if(button){button.disabled=false;button.textContent="Sign out";}
+      say(error.message||"CoolHack could not sign out. Refresh the page and try again.");
+    } finally {
+      authTransition=false;
+    }
+  }
+  function bindSignOut(){field("signOut")?.addEventListener("click",signOutCurrentSession);}
   async function render() {
     if(channel){await db.removeChannel(channel);channel=null;}
     if(!currentUser){authScreen();return;}
