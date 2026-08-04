@@ -58,14 +58,16 @@ the latest file does not erase it from Git history.
 
 ## Account design
 
-Professor and student forms do not request email addresses. The browser derives
-non-deliverable internal identifiers because Supabase password authentication
-uses an email-shaped identifier internally. These derived values:
+Professor and student forms do not request email addresses. A server-side Edge
+Function maps the CoolHack username and classroom scope to a non-deliverable,
+opaque authentication identifier because Supabase password authentication
+requires an email or phone identity. The service-role credential remains only
+inside Supabase and is never sent to the browser. These internal identifiers:
 
 - are not verified inboxes;
 - must not be treated as identities;
 - do not replace passwords;
-- may be predictable from a known username or team-code/alias pair; and
+- are not displayed to users or returned by the Edge Function; and
 - are protected by the password, private codes, membership, and row-level policies.
 
 ## Privacy responsibilities
@@ -88,8 +90,8 @@ Open source availability does not constitute institutional approval.
 - GitHub Pages is public; private material cannot be hidden in client-side
   source.
 - The administrator is currently promoted through a manual SQL statement.
-- Professor/student alias accounts depend on a project setting that permits
-  account creation without inbox confirmation.
+- Professor/student username accounts depend on the deployed `username-auth`
+  Edge Function and its origin/rate-limit protections.
 - The application does not provide a complete self-service alias password-reset
   workflow.
 - A team code shared with the wrong person can permit an unwanted account to

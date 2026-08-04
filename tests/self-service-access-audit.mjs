@@ -19,13 +19,16 @@ const independenceMigration = readFileSync(
   new URL("../supabase/professor-independence-ai-security.sql", import.meta.url),
   "utf8",
 );
+const usernameAuth = readFileSync(
+  new URL("../supabase/functions/username-auth/index.ts", import.meta.url),
+  "utf8",
+);
 
 for (const role of ["Student", "Professor", "Administrator"]) {
   assert.ok(classroom.includes(`>${role}<`), `welcome page is missing ${role}`);
 }
 
 for (const required of [
-  'account_kind:"professor_self_service"',
   "Create professor account",
   'db.rpc("record_access_event"',
   "Recent successful sign-ins",
@@ -53,21 +56,30 @@ for (const required of [
   "Other three members:",
   "AI Security Brief",
   "AI security coaching guide",
-  'student: "students.coolhack.example.com"',
-  'professor: "professors.coolhack.example.com"',
-  "signInWithAliasFallback",
+  'db.functions.invoke("username-auth"',
+  'action:"create",role:"professor"',
+  'action:"signin",role:"student"',
 ]) {
   assert.ok(classroom.includes(required), `classroom.js is missing ${required}`);
 }
 
-assert.ok(
-  !classroom.includes("return \`${token}@students.coolhack.invalid\`"),
-  "student registration still uses the rejected .invalid email domain",
-);
-assert.ok(
-  !classroom.includes("return \`${token}@professors.coolhack.invalid\`"),
-  "professor registration still uses the rejected .invalid email domain",
-);
+for (const forbidden of ["professors.coolhack.example.com", "students.coolhack.example.com", "professorAliasEmail", "aliasEmail(displayName", "signInWithAliasFallback"]) {
+  assert.ok(!classroom.includes(forbidden), `browser authentication still exposes the old alias-email path: ${forbidden}`);
+}
+
+for (const required of [
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "admin.auth.admin.createUser",
+  "email_confirm: true",
+  "signInWithPassword",
+  "allowedOrigins",
+  "Too many attempts",
+  'account_kind: "professor_self_service"',
+]) {
+  assert.ok(usernameAuth.includes(required), `username-auth function is missing ${required}`);
+}
+assert.ok(!usernameAuth.includes("console.log(serviceKey"), "service-role key must never be logged");
+assert.ok(!usernameAuth.includes("session: { service"), "service-role key must never be returned");
 
 for (const required of [
   "ai_security_brief",

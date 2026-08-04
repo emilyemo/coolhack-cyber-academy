@@ -26,31 +26,17 @@
   const say = message => { const el = document.querySelector("#authMessage"); if (el) el.textContent = message; };
   const field = id => document.querySelector(`#${id}`);
   const normalizeAlias = value => value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
-  const aliasDomains = {
-    student: "students.coolhack.example.com",
-    professor: "professors.coolhack.example.com"
-  };
-  const legacyAliasDomains = {
-    student: "students.coolhack.invalid",
-    professor: "professors.coolhack.invalid"
-  };
-  async function aliasEmail(displayName, teamCode, legacy = false) {
-    const bytes = new TextEncoder().encode(`${teamCode.trim().toUpperCase()}:${normalizeAlias(displayName)}`);
-    const digest = await crypto.subtle.digest("SHA-256", bytes);
-    const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
-    return `${token}@${legacy ? legacyAliasDomains.student : aliasDomains.student}`;
-  }
-  async function professorAliasEmail(userName, legacy = false) {
-    const bytes = new TextEncoder().encode(`professor:${normalizeAlias(userName)}`);
-    const digest = await crypto.subtle.digest("SHA-256", bytes);
-    const token = Array.from(new Uint8Array(digest)).slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
-    return `${token}@${legacy ? legacyAliasDomains.professor : aliasDomains.professor}`;
-  }
-  async function signInWithAliasFallback(primaryEmail, legacyEmail, password) {
-    const primary = await db.auth.signInWithPassword({email:primaryEmail,password});
-    if (!primary.error) return primary;
-    const legacy = await db.auth.signInWithPassword({email:legacyEmail,password});
-    return legacy.error ? primary : legacy;
+  async function usernameAuth(payload) {
+    const {data,error}=await db.functions.invoke("username-auth",{body:payload});
+    if(error) throw new Error("CoolHack username service is unavailable. Please try again.");
+    if(!data?.ok) throw new Error(data?.message||"The username or password did not match.");
+    if(!data.session?.access_token||!data.session?.refresh_token) throw new Error("CoolHack did not return a valid session.");
+    const result=await db.auth.setSession({
+      access_token:data.session.access_token,
+      refresh_token:data.session.refresh_token
+    });
+    if(result.error) throw result.error;
+    return result.data;
   }
 
   function setPortalHeading(titleText, introText) {
@@ -221,37 +207,12 @@
     const password=field("professorPassword").value;
     say(action==="create"?"Creating professor account…":"Signing in…");
     try {
-      const email=await professorAliasEmail(displayName);
       if(action==="create"){
         if(password!==field("professorPasswordConfirm").value){
           say("The two CoolHack passwords do not match.");
           return;
         }
-        const signup=await db.auth.signUp({
-          email,
-          password,
-          options:{data:{
-            display_name:displayName,
-            account_kind:"professor_self_service"
-          }}
-        });
-        if(signup.error){
-          say(`Account creation failed: ${signup.error.message}`);
-          return;
-        }
-        if(signup.data.user && Array.isArray(signup.data.user.identities) && signup.data.user.identities.length===0){
-          say("That professor username is already in use. Choose Sign in, or create the account with a different username.");
-          return;
-        }
-        let session=signup.data.session;
-        if(!session){
-          const login=await db.auth.signInWithPassword({email,password});
-          if(login.error){
-            say("The account was created but could not sign in. CoolHack email confirmation must be disabled for invented professor usernames.");
-            return;
-          }
-          session=login.data.session;
-        }
+        const session=await usernameAuth({action:"create",role:"professor",username:normalizeAlias(displayName),password,display_name:displayName});
         const verification=await db.from("profiles").select("app_role").eq("id",session.user.id).single();
         if(verification.error||verification.data?.app_role!=="instructor"){
           await db.auth.signOut();
@@ -260,12 +221,10 @@
         }
         say("Professor account verified. Opening your dashboard…");
       } else {
-        const legacyEmail=await professorAliasEmail(displayName,true);
-        const {error}=await signInWithAliasFallback(email,legacyEmail,password);
-        if(error)say("That professor username or password did not match. If this is your first visit, choose “First visit: create account.”");
+        await usernameAuth({action:"signin",role:"professor",username:normalizeAlias(displayName),password});
       }
-    } catch (_error) {
-      say("Professor access could not be created. Check the entries and try again.");
+    } catch (error) {
+      say(error.message||"Professor access could not be completed. Check the entries and try again.");
     }
   }
   async function studentAccess(event) {
@@ -277,11 +236,8 @@
     const joinCode = creatingTeam ? secureTeamCode() : field("studentTeamCode").value.trim().toUpperCase();
     say(mode === "signin" ? "Signing in…" : creatingTeam ? "Creating your team…" : "Joining your team…");
     try {
-      const email = await aliasEmail(displayName, joinCode);
       if (mode === "signin") {
-        const legacyEmail = await aliasEmail(displayName, joinCode, true);
-        const { error } = await signInWithAliasFallback(email, legacyEmail, password);
-        if (error) say("That team code, screen name, or password did not match.");
+        await usernameAuth({action:"signin",role:"student",username:normalizeAlias(displayName),password,team_code:joinCode});
         return;
       }
       const metadata = {
@@ -293,16 +249,14 @@
         metadata.section_code = field("studentSectionCode").value.trim().toUpperCase();
         metadata.team_name = field("studentTeamName").value.trim();
       }
-      const { error } = await db.auth.signUp({email, password, options:{data:metadata}});
-      say(error
-        ? error.message
-        : creatingTeam
-          ? `Team created. Your private team code is ${joinCode}. Share it only with your other three teammates.`
-          : "Access created and you have joined the team. If the workspace does not open automatically, choose Sign in.");
-    } catch (_error) {
+      await usernameAuth({action:"create",role:"student",username:normalizeAlias(displayName),password,team_code:joinCode,metadata});
       say(creatingTeam
+          ? `Team created. Your private team code is ${joinCode}. Share it only with your other three teammates.`
+          : "Access created and you have joined the team.");
+    } catch (error) {
+      say(error.message||(creatingTeam
         ? "The team could not be created. Check the section code and use a team name that is not already taken."
-        : "Student access could not be created. Check the entries and try again.");
+        : "Student access could not be created. Check the entries and try again."));
     }
   }
 
