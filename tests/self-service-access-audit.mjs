@@ -164,7 +164,10 @@ assert.ok(classroom.includes('id="professorSignOut"'), "professor access screen 
 assert.ok(classroom.includes('db.auth.signOut({scope:"local"})'), "sign-out must clear only the current browser session");
 assert.ok(classroom.includes('field("professorSignOut").addEventListener("click", signOutCurrentSession)'), "professor sign-out control is not connected");
 assert.ok(!classroom.includes("CoolHack could not confirm the signed-in session."), "sign-in must not fail on a redundant immediate getSession check");
-assert.ok(index.includes("classroom.js?v=complete-interaction-repair-1"), "complete interaction repair cache marker is missing");
+assert.ok(!classroom.includes("const existing=await db.auth.getSession()"), "username sign-in must not sign out a valid session before installing its replacement");
+assert.equal((classroom.match(/await render\(\);/g) || []).length >= 3, true, "account access must open the dashboard directly from the accepted session");
+assert.ok(index.includes("@supabase/supabase-js@2.112.0"), "Supabase browser dependency must be pinned");
+assert.ok(index.includes("classroom.js?v=direct-session-handoff-1"), "direct session handoff cache marker is missing");
 
 for (const required of [
   'document.querySelectorAll("[data-open-view]")',
