@@ -36,11 +36,6 @@
     if(!data.session?.access_token||!data.session?.refresh_token) throw new Error("CoolHack did not return a valid session.");
     authTransition = true;
     try {
-      const existing=await db.auth.getSession();
-      if(existing.data.session){
-        const cleared=await db.auth.signOut({scope:"local"});
-        if(cleared.error) throw new Error("CoolHack could not clear the previous session. Select Sign out and try again.");
-      }
       const result=await db.auth.setSession({
         access_token:data.session.access_token,
         refresh_token:data.session.refresh_token
@@ -253,7 +248,7 @@
       } else {
         await usernameAuth({action:"signin",role:"professor",username:normalizeAlias(displayName),password});
       }
-      scheduleRender(50);
+      await render();
     } catch (error) {
       say(error.message||"Professor access could not be completed. Check the entries and try again.");
     }
@@ -268,7 +263,7 @@
     try {
       if (mode === "signin") {
         await usernameAuth({action:"signin",role:"student",username:normalizeAlias(displayName),password,class_token:classToken});
-        scheduleRender(50);
+        await render();
         return;
       }
       const metadata = {
@@ -280,7 +275,7 @@
       }
       await usernameAuth({action:"create",role:"student",username:normalizeAlias(displayName),password,class_token:classToken,team_id:creatingTeam?"":field("studentTeamId").value,metadata});
       say(creatingTeam ? "Team created. Your teammates can now select its name from this class link." : "Access created and you have joined the team.");
-      scheduleRender(50);
+      await render();
     } catch (error) {
       say(error.message||(creatingTeam
         ? "The team could not be created. Use a team name that is not already taken."
