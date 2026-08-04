@@ -574,7 +574,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="classroom.js?v=simple-class-links-1"></script>
+  <script src="classroom.js?v=session-tabs-repair-1"></script>
   <script>
     const academyViews = ["instructions", "missions", "workspace"];
     const infoDialog = document.querySelector("#infoDialog");
@@ -582,6 +582,35 @@
     const infoDialogBody = document.querySelector("#infoDialogBody");
     const closeInfoDialog = document.querySelector("#closeInfoDialog");
     let lastInfoTrigger = null;
+
+    function openAcademyView(viewName, moveFocus = false) {
+      if (!academyViews.includes(viewName)) return;
+      document.querySelectorAll("[data-view]").forEach(view => {
+        view.hidden = view.dataset.view !== viewName;
+      });
+      document.querySelectorAll(".app-tab").forEach(tab => {
+        const selected = tab.dataset.openView === viewName;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      localStorage.setItem("coolhack-active-view", viewName);
+      if (moveFocus) {
+        document.querySelector(`#view-tab-${viewName}`)?.focus();
+        requestAnimationFrame(() => document.querySelector(`[data-view="${viewName}"]`)?.scrollIntoView({behavior: "smooth", block: "start"}));
+      }
+    }
+
+    document.querySelectorAll(".app-tab").forEach((tab, index) => {
+      tab.addEventListener("click", () => openAcademyView(tab.dataset.openView, true));
+      tab.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+        event.preventDefault();
+        const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+        const nextIndex = (index + (forward ? 1 : -1) + academyViews.length) % academyViews.length;
+        openAcademyView(academyViews[nextIndex], true);
+      });
+    });
+    openAcademyView(localStorage.getItem("coolhack-active-view") || "instructions");
 
     function openInfo(trigger) {
       lastInfoTrigger = trigger;
@@ -776,28 +805,10 @@
       }, 1000);
     });
 
-    function openAcademyView(viewName, moveFocus = false) {
-      if (!academyViews.includes(viewName)) return;
-      document.querySelectorAll("[data-view]").forEach(view => {
-        view.hidden = view.dataset.view !== viewName;
-      });
-      document.querySelectorAll(".app-tab").forEach(tab => {
-        const selected = tab.dataset.openView === viewName;
-        tab.setAttribute("aria-selected", String(selected));
-        tab.tabIndex = selected ? 0 : -1;
-      });
-      localStorage.setItem("coolhack-active-view", viewName);
-      if (moveFocus) {
-        document.querySelector(`#view-tab-${viewName}`)?.focus();
-        document.querySelector(".app-tabs")?.scrollIntoView({behavior: "smooth", block: "start"});
-      }
-    }
-
     document.addEventListener("click", event => {
       const viewButton = event.target.closest("[data-open-view]");
       if (viewButton) {
         event.preventDefault();
-        openAcademyView(viewButton.dataset.openView, true);
         return;
       }
       const workspaceLink = event.target.closest('a[href="#workspace"]');
@@ -806,18 +817,6 @@
         openAcademyView("workspace", true);
       }
     });
-
-    document.querySelectorAll(".app-tab").forEach((tab, index) => {
-      tab.addEventListener("keydown", event => {
-        if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
-        event.preventDefault();
-        const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
-        const nextIndex = (index + (forward ? 1 : -1) + academyViews.length) % academyViews.length;
-        openAcademyView(academyViews[nextIndex], true);
-      });
-    });
-
-    openAcademyView(localStorage.getItem("coolhack-active-view") || "instructions");
 
     const missions = [
       {
@@ -1256,3 +1255,6 @@ Start now. Introduce yourself as the student's SOC supervisor and ask only the f
       event.preventDefault();
       alert("Training safety notice: This simulated invoice link is disabled. Students should inspect the destination without opening it.");
     });
+  </script>
+</body>
+</html>

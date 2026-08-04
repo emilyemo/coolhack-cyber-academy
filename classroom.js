@@ -10,6 +10,8 @@
   let channel = null;
   let saveTimer = null;
   let roster = [];
+  let authTransition = false;
+  let renderTimer = null;
   const portal = new URLSearchParams(window.location.search).get("portal");
   const staffPortal = portal === "admin" || portal === "professor" || portal === "instructor";
   const aiSecurityGuides = [
@@ -32,12 +34,31 @@
     if(error) throw new Error("CoolHack username service is unavailable. Please try again.");
     if(!data?.ok) throw new Error(data?.message||"The username or password did not match.");
     if(!data.session?.access_token||!data.session?.refresh_token) throw new Error("CoolHack did not return a valid session.");
-    const result=await db.auth.setSession({
-      access_token:data.session.access_token,
-      refresh_token:data.session.refresh_token
-    });
-    if(result.error) throw result.error;
-    return result.data;
+    authTransition = true;
+    try {
+      const result=await db.auth.setSession({
+        access_token:data.session.access_token,
+        refresh_token:data.session.refresh_token
+      });
+      if(result.error) throw result.error;
+      const confirmed=await db.auth.getSession();
+      if(confirmed.error||!confirmed.data.session?.user) {
+        throw confirmed.error||new Error("CoolHack could not confirm the signed-in session.");
+      }
+      currentUser=confirmed.data.session.user;
+      return result.data;
+    } finally {
+      authTransition = false;
+    }
+  }
+
+  function scheduleRender(delay = 0) {
+    clearTimeout(renderTimer);
+    renderTimer=setTimeout(async()=>{
+      const sessionResult=await db.auth.getSession();
+      currentUser=sessionResult.data.session?.user||null;
+      await render();
+    },delay);
   }
 
   function setPortalHeading(titleText, introText) {
@@ -223,17 +244,12 @@
           say("The two CoolHack passwords do not match.");
           return;
         }
-        const session=await usernameAuth({action:"create",role:"professor",username:normalizeAlias(displayName),password,display_name:displayName});
-        const verification=await db.from("profiles").select("app_role").eq("id",session.user.id).single();
-        if(verification.error||verification.data?.app_role!=="instructor"){
-          await db.auth.signOut();
-          say("Account creation did not assign the professor role. The self-service professor migration may not be installed yet.");
-          return;
-        }
+        await usernameAuth({action:"create",role:"professor",username:normalizeAlias(displayName),password,display_name:displayName});
         say("Professor account verified. Opening your dashboard…");
       } else {
         await usernameAuth({action:"signin",role:"professor",username:normalizeAlias(displayName),password});
       }
+      scheduleRender(50);
     } catch (error) {
       say(error.message||"Professor access could not be completed. Check the entries and try again.");
     }
@@ -248,6 +264,7 @@
     try {
       if (mode === "signin") {
         await usernameAuth({action:"signin",role:"student",username:normalizeAlias(displayName),password,class_token:classToken});
+        scheduleRender(50);
         return;
       }
       const metadata = {
@@ -259,6 +276,7 @@
       }
       await usernameAuth({action:"create",role:"student",username:normalizeAlias(displayName),password,class_token:classToken,team_id:creatingTeam?"":field("studentTeamId").value,metadata});
       say(creatingTeam ? "Team created. Your teammates can now select its name from this class link." : "Access created and you have joined the team.");
+      scheduleRender(50);
     } catch (error) {
       say(error.message||(creatingTeam
         ? "The team could not be created. Use a team name that is not already taken."
@@ -267,7 +285,19 @@
   }
 
   async function loadProfile() {
-    const result = await db.from("profiles").select("*").eq("id", currentUser.id).single();
+    let result = await db.from("profiles").select("*").eq("id", currentUser.id).single();
+    if(result.error && /permission denied|jwt|unauthorized/i.test(result.error.message||"")){
+      authTransition=true;
+      try {
+        const refreshed=await db.auth.refreshSession();
+        if(!refreshed.error&&refreshed.data.session?.user){
+          currentUser=refreshed.data.session.user;
+          result=await db.from("profiles").select("*").eq("id",currentUser.id).single();
+        }
+      } finally {
+        authTransition=false;
+      }
+    }
     if (result.error) throw result.error;
     profile = result.data;
   }
@@ -536,8 +566,8 @@
       }
       ["instructor","platform_admin"].includes(profile.app_role) ? await staffScreen() : await studentScreen();
     }
-    catch(error){mount.innerHTML=`<div class="classroom-card"><h3>Classroom setup is not finished</h3><p>${esc(error.message)}</p><p>The instructor must run the supplied Supabase database setup script once before accounts can use the workspace.</p></div>`;}
+    catch(error){mount.innerHTML=`<div class="classroom-card"><h3>CoolHack could not open the classroom</h3><p>${esc(error.message)}</p><p>Refresh once. If the message remains, sign out and sign in again.</p><div class="hero-actions"><button class="btn" id="retryClassroom" type="button">Try again</button><button class="btn" id="signOut" type="button">Sign out</button></div></div>`;field("retryClassroom")?.addEventListener("click",()=>scheduleRender());bindSignOut();}
   }
-  db.auth.getSession().then(({data})=>{currentUser=data.session?.user||null;render();});
-  db.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;setTimeout(render,0);});
+  db.auth.getSession().then(()=>scheduleRender());
+  db.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;if(!authTransition)scheduleRender();});
 })();

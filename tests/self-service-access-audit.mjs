@@ -144,6 +144,8 @@ for (const required of [
 }
 
 const index = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+assert.ok(index.trimEnd().endsWith("</html>"), "index.html is missing its closing document tags");
+assert.ok(index.includes("</script>\n</body>\n</html>"), "main page script is not closed before the document ends");
 assert.ok(index.includes("const definedAcronyms = new Set()"), "one-time term definitions are missing");
 assert.ok(index.includes('definedAcronyms.add(match[0])'), "defined terms are not tracked");
 assert.ok(index.includes("Why an employer would care about this exercise"), "Scenario 1 employer relevance is missing");
@@ -153,6 +155,11 @@ assert.equal((index.match(/aiSecurity:\s*\{/g) || []).length, 6, "all six missio
 assert.ok(index.includes('id="aiSecurityBrief"'), "browser report is missing the AI Security Brief");
 assert.ok(index.includes('window.addEventListener("coolhack:mission-release"'), "student mission gating is missing");
 assert.ok(index.includes("applyMissionRelease(window.CoolHackReleasedMission || 0)"), "student pre-login gating is missing");
+assert.ok(index.indexOf('tab.addEventListener("click"') < index.indexOf("decorateAcronyms();"), "primary tabs must bind before optional page enhancements");
+assert.ok(index.includes('document.querySelector(`[data-view="${viewName}"]`)?.scrollIntoView'), "selected tab content must be brought into view");
+assert.ok(classroom.includes("authTransition = true"), "username sign-in transition guard is missing");
+assert.ok(classroom.includes("db.auth.refreshSession()"), "profile-load authorization recovery is missing");
+assert.ok(!classroom.includes('const verification=await db.from("profiles")'), "professor registration must not race an immediate profile query");
 
 const dollarQuotes = migration.match(/\$\$/g) || [];
 assert.equal(dollarQuotes.length % 2, 0, "migration has unmatched dollar quotes");
