@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17324d">
+  <meta name="description" content="CoolHack Service Desk workforce ticketing simulation.">
+  <title>CoolHack Service Desk Simulator</title>
+  <link rel="stylesheet" href="service-desk.css">
+  <link rel="stylesheet" href="service-desk-guided.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to workspace</a>
+  <header class="topbar">
+    <a class="brand" href="service-desk.html" aria-label="CoolHack Service Desk home">
+      <span class="brand-mark" aria-hidden="true">CH</span>
+      <span><strong>CoolHack</strong><small>Service Desk Simulator</small></span>
+    </a>
+    <div class="session-strip">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span id="sessionLabel">Connecting to team workspace…</span>
+      <button class="text-button" id="resetDemo" type="button">Reset demo</button>
+    </div>
+  </header>
+
+  <main id="workspace" class="app-shell">
+    <section class="welcome-card team-welcome" id="welcomeCard">
+      <div>
+        <p class="eyebrow">CoolHack Service Desk · Team workspace</p>
+        <h1>Your team is starting a help-desk shift.</h1>
+        <p>No real person will call. The simulator plays the employee, and your team decides together what to ask, what to document, and how to handle the ticket.</p>
+        <div class="team-name-field" id="teamIdentity">Checking your CoolHack team…</div>
+        <button class="button primary start-shift" id="startShift" type="button" disabled>Start team shift</button>
+        <p class="form-message" id="cloudMessage" role="status">Please wait while the shared team workspace loads.</p>
+      </div>
+      <div class="team-brief">
+        <span class="team-illustration" aria-hidden="true">👥</span>
+        <h2>One team. One shared case.</h2>
+        <p>Work together in any way that suits your team. Suggested roles—interviewer, ticket writer, researcher, and quality checker—are completely optional.</p>
+        <p class="professor-job"><b>Professor:</b> release → observe → review.</p>
+      </div>
+    </section>
+
+    <ol class="shift-progress hidden" id="shiftProgress" aria-label="Team case progress">
+      <li class="active" data-progress="call"><span>1</span> Answer call</li>
+      <li data-progress="interview"><span>2</span> Interview</li>
+      <li data-progress="create"><span>3</span> Create ticket</li>
+      <li data-progress="work"><span>4</span> Work ticket</li>
+      <li data-progress="review"><span>5</span> Team review</li>
+    </ol>
+
+    <nav class="workspace-tabs hidden" id="workspaceTabs" aria-label="Service desk workspace">
+      <button class="tab active" type="button" data-view="create" aria-selected="true">
+        <span aria-hidden="true">＋</span><b>Create Ticket</b><small>Act as the help-desk technician</small>
+      </button>
+      <button class="tab" type="button" data-view="queue" aria-selected="false">
+        <span aria-hidden="true">▤</span><b>Work Queue</b><small>Act as the assigned analyst</small><em id="queueCount">0</em>
+      </button>
+    </nav>
+
+    <section class="view guided-view" id="createView" data-view-panel="create" hidden>
+      <aside class="case-panel instructor-demo">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Team assignment</p><h2>One case released</h2></div>
+        </div>
+        <div class="released-case-summary"><b id="releasedCaseLabel">Case 01</b><span>Your team sees only this call.</span></div>
+        <details class="prototype-controls">
+          <summary>Professor preview controls</summary>
+          <div class="panel-heading">
+          <label class="compact-field">Professor demo
+            <select id="levelFilter">
+              <option value="all">All levels</option>
+              <option value="1">1 · Foundations</option>
+              <option value="2">2 · Security</option>
+              <option value="3">3 · Complex</option>
+            </select>
+          </label>
+          </div>
+          <div class="case-list" id="caseList"></div>
+          <p class="demo-note">Choose another case here only to test the prototype. Students will not have this control.</p>
+        </details>
+      </aside>
+
+      <div class="ticket-stage">
+        <article class="caller-card ringing" id="callerCard">
+          <div class="caller-topline"><span class="phone-icon" aria-hidden="true">☎</span><div><p id="callStatus">Incoming employee call…</p><h2 id="caseTitle">Your team has a call</h2></div><span class="case-level" id="caseLevel">Released case</span></div>
+          <div class="ring-screen" id="ringScreen"><div class="ring-pulse" aria-hidden="true">☎</div><h2>Incoming call</h2><p>Discuss who will speak for the team, then answer when you are ready.</p><button class="button answer-button" id="answerCall" type="button">Answer call</button></div>
+          <blockquote id="callerStatement" hidden></blockquote>
+          <div class="interview-instruction hidden" id="interviewInstruction"><b>Team task:</b> Choose the questions your team would ask. The caller reveals information only when asked.</div>
+          <div class="call-actions" id="questionChips" aria-label="Questions to ask" hidden></div>
+          <div class="caller-response" id="callerResponse" role="status" hidden></div>
+          <button class="button primary hidden" id="beginTicket" type="button">We are ready to create the ticket</button>
+        </article>
+
+        <form class="ticket-form hidden" id="ticketForm">
+          <div class="form-title"><div><p class="eyebrow">Shared team record</p><h2>Create the ticket together</h2><p>Use what the caller told your team. The next analyst should understand the issue without hearing the call.</p></div><span class="record-number">Not yet submitted</span></div>
+          <div class="form-grid">
+            <label>Caller<input id="caller" required readonly></label>
+            <label>Contact method<select id="contactMethod" required><option>Phone</option><option>Walk-in</option><option>Email</option><option>Monitoring alert</option></select></label>
+            <label class="wide">Short description<input id="shortDescription" maxlength="100" placeholder="What is affected + what is happening" required><small><span id="shortCount">0</span>/100 characters</small></label>
+            <label class="wide">Description<textarea id="description" rows="5" placeholder="Record the symptoms, start time, scope, error messages, and useful context. Do not include passwords." required></textarea></label>
+            <label>Record type<select id="recordType" required><option value="">Choose…</option><option>Incident</option><option>Service Request</option><option>Potential Security Incident</option></select></label>
+            <label>Category<select id="category" required><option value="">Choose…</option><option>Access & Identity</option><option>Email & Collaboration</option><option>Hardware</option><option>Network</option><option>Software</option><option>Security</option><option>Business Application</option></select></label>
+            <label>Affected service or device<input id="affectedItem" placeholder="Example: VPN or LAP-1042" required></label>
+            <label>Assignment group<select id="assignmentGroup" required><option value="">Choose…</option><option>Service Desk</option><option>Identity & Access</option><option>Endpoint Support</option><option>Network Operations</option><option>Messaging Support</option><option>Application Support</option><option>Security Operations Center</option></select></label>
+            <label>Impact<select id="impact" required><option value="">Choose…</option><option value="1">1 · High — many users/critical service</option><option value="2">2 · Medium — group or important function</option><option value="3">3 · Low — one user/limited function</option></select></label>
+            <label>Urgency<select id="urgency" required><option value="">Choose…</option><option value="1">1 · High — cannot wait</option><option value="2">2 · Medium — work impaired</option><option value="3">3 · Low — workaround available</option></select></label>
+            <label>Calculated priority<input id="priority" value="Select impact and urgency" readonly></label>
+            <label>State<input value="New" readonly></label>
+          </div>
+          <div class="privacy-reminder"><b>Before submitting:</b> Is the record factual, useful to the next analyst, and free of passwords or unnecessary personal information?</div>
+          <div class="form-actions"><button class="button secondary" type="button" id="saveDraft">Save draft</button><button class="button primary" type="submit">Submit to work queue</button></div>
+          <p class="form-message" id="createMessage" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="view" id="queueView" data-view-panel="queue" hidden>
+      <aside class="queue-panel">
+        <div class="panel-heading"><div><p class="eyebrow">Assigned to your team</p><h2>My Work Queue</h2></div><select id="queueFilter" aria-label="Filter queue"><option value="all">All tickets</option><option>New</option><option>In Progress</option><option>Pending</option><option>Resolved</option></select></div>
+        <div id="queueList" class="queue-list"></div>
+      </aside>
+      <article class="work-ticket empty" id="workTicket">
+        <div class="empty-state"><span aria-hidden="true">▤</span><h2>Select a ticket</h2><p>Open a record from the queue to review its intake quality and begin work.</p></div>
+      </article>
+    </section>
+  </main>
+
+  <template id="workTicketTemplate">
+    <div class="work-head"><div><p class="eyebrow">Active record</p><h2 data-ticket-number></h2><p data-ticket-summary></p></div><span class="priority-badge" data-priority></span></div>
+    <div class="workflow-ribbon" aria-label="Incident lifecycle"><span>Logged</span><span>Triage</span><span>Investigate</span><span>Restore</span><span>Review</span></div>
+    <div class="record-facts" data-record-facts></div>
+    <div class="quality-check"><h3>Intake quality check</h3><p>Before troubleshooting, decide whether the record gives the next analyst enough information.</p><div class="check-row"><label><input type="checkbox" data-quality="scope"> Scope is clear</label><label><input type="checkbox" data-quality="symptoms"> Symptoms are specific</label><label><input type="checkbox" data-quality="routing"> Routing makes sense</label><label><input type="checkbox" data-quality="safe"> No sensitive data exposed</label></div></div>
+    <section class="investigation-console">
+      <div class="console-heading"><div><p class="eyebrow">Available company tools</p><h3>Investigation console</h3><p>Open the evidence sources your team needs. Each action is recorded in the activity history.</p></div><span data-evidence-progress>0 reviewed</span></div>
+      <div class="evidence-tools" data-evidence-tools></div>
+      <div class="evidence-result" data-evidence-result><b>No evidence opened yet.</b><p>Choose a relevant source. Real analysts do not guess—and they do not run every tool without a reason.</p></div>
+      <label class="wide decision-field">Team assessment <small>What does the evidence support?</small><textarea data-assessment rows="3" placeholder="State the likely cause or incident finding and cite the evidence that supports it."></textarea></label>
+    </section>
+    <form class="work-form">
+      <div class="form-grid">
+        <label>State<select data-work-state><option>New</option><option>In Progress</option><option>Pending</option><option>Resolved</option><option>Awaiting Review</option><option disabled>Closed · professor only</option></select></label>
+        <label>Team contact<input data-assignee placeholder="Screen name of teammate updating"></label>
+        <label class="wide">Additional comment <small>Caller-visible; adds a new journal entry</small><textarea data-comments rows="3" placeholder="Give the caller a clear, professional update. Do not expose internal security details."></textarea></label>
+        <label class="wide internal-field">New work note <small>Internal; adds a permanent journal entry</small><textarea data-notes rows="5" placeholder="Action taken → result observed → next step or handoff. Do not rewrite earlier notes."></textarea></label>
+        <label>Transfer group<select data-transfer-group><option value="">No transfer</option><option>Service Desk</option><option>Identity & Access</option><option>Endpoint Support</option><option>Network Operations</option><option>Messaging Support</option><option>Application Support</option><option>Security Operations Center</option><option>Major Incident Management</option></select></label>
+        <label>Transfer reason<select data-transfer-reason><option value="">Choose when transferring</option><option>Specialist access required</option><option>Security containment required</option><option>Major incident coordination required</option><option>Incorrect initial assignment</option><option>Vendor action required</option></select></label>
+        <label>Resolution code<select data-resolution-code><option value="">Not resolved</option><option>Solved (Permanently)</option><option>Solved (Workaround)</option><option>Transferred to Correct Group</option><option>Duplicate</option><option>Unable to Reproduce</option></select></label>
+        <label class="wide">Resolution notes<textarea data-resolution-notes rows="3" placeholder="Root cause/finding → action taken → how restoration or containment was verified"></textarea></label>
+      </div>
+      <div class="form-actions"><button class="button secondary" type="button" data-escalate>Prepare transfer</button><button class="button primary" type="submit">Save journal update</button><button class="button review-button" type="button" data-submit-review>Submit resolved ticket for review</button></div>
+      <p class="form-message" data-work-message role="status"></p>
+    </form>
+    <section class="activity-section"><h3>Activity history</h3><div class="activity-stream" data-activity></div></section>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="service-desk.js"></script>
+</body>
+</html>

@@ -339,7 +339,7 @@
   async function studentScreen() {
     document.body.classList.add("role-landing");
     document.body.classList.remove("staff-dashboard", "capstone-mission-mode");
-    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked,sections(released_mission))").eq("user_id",currentUser.id).maybeSingle();
+    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked,sections(released_mission,released_service_case))").eq("user_id",currentUser.id).maybeSingle();
     if (m.error) throw m.error;
     membership = m.data;
     if (!membership) {
@@ -348,9 +348,10 @@
     }
     const teamId = membership.team_id;
     const mission = Number(membership.teams.sections?.released_mission || 0);
+    const serviceCase = Number(membership.teams.sections?.released_service_case || 0);
     window.CoolHackReleasedMission = mission;
     window.dispatchEvent(new CustomEvent("coolhack:mission-release",{detail:{mission}}));
-    if (!mission) {
+    if (!mission && !serviceCase) {
       mount.innerHTML = accountBar() + `
         <div class="classroom-card scenario-waiting">
           <span class="card-kicker">Weekly activity</span>
@@ -359,6 +360,10 @@
         </div>`;
       bindSignOut();
       return;
+    }
+    if (!mission && serviceCase) {
+      mount.innerHTML = accountBar() + `<div class="classroom-card scenario-waiting"><span class="card-kicker">Service Desk team shift</span><h3>Case ${String(serviceCase).padStart(2,"0")} is ready</h3><p>Open the shared simulator when your team is together. You will answer one employee call, create one incident, investigate it, and submit the resolved record for professor review.</p><div class="hero-actions"><a class="btn primary" href="service-desk.html">Open shared Service Desk</a></div></div>`;
+      bindSignOut(); return;
     }
     const [rosterResult, notesResult, reportResult, reflectionResult] = await Promise.all([
       db.from("team_members").select("user_id,assigned_role,profiles(display_name)").eq("team_id",teamId),
@@ -376,6 +381,7 @@
           <div><span class="card-kicker">Current assignment</span><h3 id="capstoneMissionTitle">Mission ${mission}</h3><p>${esc(membership.teams.name)} · ${esc(membership.assigned_role || "Role not assigned")}</p></div>
           <details class="team-drawer"><summary>Team details</summary><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong> — ${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><p>Shared work is visible to your team and professor. Your reflection is private from teammates.</p></details>
         </header>
+        ${serviceCase?`<div class="classroom-card"><span class="card-kicker">Service Desk team shift</span><h3>Case ${String(serviceCase).padStart(2,"0")} is open</h3><p>Your team shares one call, ticket, investigation record, and review submission.</p><div class="hero-actions"><a class="btn primary" href="service-desk.html">Open shared Service Desk</a></div></div>`:""}
         <nav class="capstone-steps" aria-label="Mission steps">
           ${["Brief","Evidence","Decide","Ask AI","Final response","Reflect"].map((label,index)=>`<button type="button" data-capstone-step="${index}" class="${index===0?"active":""}" aria-current="${index===0?"step":"false"}"><b>${index+1}</b><span>${label}</span></button>`).join("")}
         </nav>
@@ -502,23 +508,25 @@
   document.body.classList.add("role-landing", "staff-dashboard");
   document.body.classList.remove("capstone-mission-mode");
   const isAdmin=profile.app_role==="platform_admin";
-    const sectionFields="id,name,class_link_token,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
+    const sectionFields="id,name,class_link_token,instructor_id,is_active,released_mission,released_service_case,profiles!sections_instructor_id_fkey(display_name)";
   const accessPromise=isAdmin
     ? db.from("access_events").select("id,portal,app_role,accessed_at,profiles(display_name)").order("accessed_at",{ascending:false}).limit(30)
     : Promise.resolve({data:[],error:null});
   const answerKeyPromise=profile.app_role==="instructor"
     ? db.rpc("get_professor_scenario_key",{requested_mission:1})
     : Promise.resolve({data:null,error:null});
-  const [sectionsResult,teamsResult,profilesResult,membersResult,accessResult,answerKeyResult]=await Promise.all([
+  const [sectionsResult,teamsResult,profilesResult,membersResult,accessResult,answerKeyResult,serviceDeskResult]=await Promise.all([
     db.from("sections").select(sectionFields).eq("is_active",true).order("name"),
     db.from("teams").select("*").order("name"),
     db.from("profiles").select("id,display_name,app_role").order("display_name"),
     db.from("team_members").select("team_id,user_id,assigned_role,profiles(display_name)"),
     accessPromise,
-    answerKeyPromise
+    answerKeyPromise,
+    db.from("service_desk_workspaces").select("team_id,case_id,workspace,updated_at")
   ]);
-  const queryError=[sectionsResult,teamsResult,profilesResult,membersResult,accessResult].find(result=>result.error)?.error;if(queryError)throw queryError;
+  const queryError=[sectionsResult,teamsResult,profilesResult,membersResult,accessResult,serviceDeskResult].find(result=>result.error)?.error;if(queryError)throw queryError;
   const sections=sectionsResult.data||[],teams=teamsResult.data||[],profiles=profilesResult.data||[],members=membersResult.data||[],accessEvents=accessResult.data||[];
+  const serviceDeskWorkspaces=serviceDeskResult.data||[];
   const answerKey=answerKeyResult.error?null:answerKeyResult.data;
   const professors=profiles.filter(p=>p.app_role==="instructor");
   const releasedAiGuides=[...new Set(sections.map(section=>Number(section.released_mission)).filter(Boolean))].map(mission=>({mission,guide:aiSecurityGuides[mission]})).filter(item=>item.guide);
@@ -578,9 +586,10 @@
           <div class="section-code-actions"><button class="btn compact primary" type="button" data-copy-link="${esc(section.class_link_token)}">Copy class link</button></div>
           ${Number(section.released_mission)>0?`<div class="current-mission-card"><span class="card-kicker">Current mission students can see</span><h4>Mission ${section.released_mission}: ${esc(missionCatalog[Number(section.released_mission)]?.title||"")}</h4><p>${esc(missionCatalog[Number(section.released_mission)]?.subtitle||"")}</p><details><summary class="btn compact">Preview scenario</summary><div class="scenario-preview"><p>${esc(missionCatalog[Number(section.released_mission)]?.scenario||"")}</p><small>This is the opening brief. Students receive the evidence and guided workspace after entering their team.</small></div></details></div>`:`<div class="current-mission-card mission-hidden"><span class="card-kicker">Current mission</span><h4>No mission released</h4><p>Students cannot see a scenario yet.</p></div>`}
           <div class="scenario-release"><label>Change released mission<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Choose a mission</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Mission ${n}: ${esc(missionCatalog[n].title)}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change mission":"Release mission"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide mission</button>`:""}</div>
+          <div class="scenario-release"><label>Service Desk case<select data-service-case="${section.id}"><option value="">Hidden</option>${Array.from({length:30},(_,i)=>i+1).map(n=>`<option value="${n}" ${Number(section.released_service_case)===n?"selected":""}>Case ${String(n).padStart(2,"0")}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-service-release="${section.id}">${section.released_service_case?"Change released case":"Release case"}</button><a class="btn compact" href="service-desk.html">Open simulator</a><small>${section.released_service_case?`Teams share Case ${String(section.released_service_case).padStart(2,"0")} in real time.`:"No Service Desk case is visible to students."}</small></div>
           <div class="section-danger-actions"><button class="btn compact danger" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button><small>Archives the class without deleting student work.</small></div>
         </article>`).join("")||"<p>No active classes yet.</p>"}</div>
-      <details class="team-management-drawer"><summary>View teams and submissions</summary><div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div></details>
+      <details class="team-management-drawer"><summary>View teams and submissions</summary><div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin,serviceDeskWorkspaces)}</div><div id="staffReview" aria-live="polite"></div></details>
     </section>
     ${isAdmin?`<details class="classroom-card access-audit"><summary><span><span class="card-kicker">Access audit</span><strong>Recent successful sign-ins</strong></span><span>${accessEvents.length} records</span></summary><p>CoolHack records role-based access without displaying student emails.</p><div class="audit-list">${accessEvents.map(event=>`<article><strong>${esc(event.profiles?.display_name||"Account")}</strong><span>${esc(event.app_role)} · ${esc(event.portal)}</span><time datetime="${esc(event.accessed_at)}">${esc(formatAccessTime(event.accessed_at))}</time></article>`).join("")||"<p>No successful sign-ins have been recorded yet.</p>"}</div></details>`:""}`;
   bindSignOut();
@@ -590,7 +599,7 @@
     document.querySelectorAll("[data-section-summary]").forEach(card=>{
       card.classList.toggle("classroom-hidden",selected!=="all"&&card.dataset.sectionSummary!==selected);
     });
-    field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin);
+    field("teamOperations").innerHTML=renderTeamOperations(visible,sections,members,professors,isAdmin,serviceDeskWorkspaces);
     bindOperationButtons();
   });
   field("createSection")?.addEventListener("submit",async event=>{event.preventDefault();const result=await db.rpc("create_professor_section",{requested_name:field("sectionName").value.trim()});const created=Array.isArray(result.data)?result.data[0]:result.data;field("sectionMessage").textContent=result.error?result.error.message:`${created.name} created. Copy its class link below and post it in Canvas.`;if(!result.error)setTimeout(staffScreen,1400);});
@@ -614,6 +623,13 @@
     }));
     document.querySelectorAll("[data-scenario-reveal]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-mission="${button.dataset.scenarioReveal}"]`);const mission=Number(select?.value||0);if(!mission){showOperationResult("Choose a scenario before revealing it.",true);return;}const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioReveal,requested_mission:mission});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-scenario-hide]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioHide,requested_mission:0});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-service-release]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-service-case="${button.dataset.serviceRelease}"]`);const chosen=select?.value?Number(select.value):null;const result=await db.rpc("release_service_desk_case",{requested_section:button.dataset.serviceRelease,requested_case:chosen});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
+    document.querySelectorAll("[data-desk-review]").forEach(button=>button.addEventListener("click",async()=>{
+      const row=serviceDeskWorkspaces.find(item=>item.team_id===button.dataset.deskTeam&&(item.workspace?.tickets||[]).some(ticket=>ticket.id===button.dataset.deskTicket));const workspace=structuredClone(row?.workspace||{});const ticket=(workspace.tickets||[]).find(item=>item.id===button.dataset.deskTicket);
+      if(!ticket){showOperationResult("That Service Desk ticket could not be found.",true);return;}
+      const approved=button.dataset.deskReview==="approve";const at=new Date().toISOString();ticket.state=approved?"Closed":"In Progress";ticket.reviewStatus=approved?"Approved":"Returned";ticket.updatedAt=at;ticket.activity=Array.isArray(ticket.activity)?ticket.activity:[];ticket.activity.push({at,type:approved?"Professor approval":"Returned for correction",text:approved?"Professor quality review completed. The record is approved and permanently closed.":"Professor returned the record for correction. Review the documented assessment, evidence, and resolution before resubmitting."});
+      const result=await db.from("service_desk_workspaces").update({workspace,updated_at:at,last_editor:profile.id}).eq("team_id",row.team_id).eq("case_id",row.case_id);if(result.error)showOperationResult(result.error.message,true);else staffScreen();
+    }));
     document.querySelectorAll("[data-section-archive]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm(`Archive ${button.dataset.sectionName}? Student work will be retained and the class will disappear from active operations.`))return;button.disabled=true;const result=await db.rpc("archive_section",{requested_section:button.dataset.sectionArchive});if(result.error){showOperationResult(`Section was not archived: ${result.error.message}`,true);button.disabled=false;}else{await staffScreen();}}));
     document.querySelectorAll("[data-team-review]").forEach(button=>button.addEventListener("click",()=>reviewTeam(button.dataset.teamReview,button.dataset.teamName,Number(button.dataset.mission))));
     document.querySelectorAll("[data-team-control]").forEach(button=>button.addEventListener("click",async()=>{const changes={};if(button.dataset.teamControl==="lock")changes.mission_locked=button.dataset.locked!=="true";if(button.dataset.teamControl==="mission")changes.active_mission=Number(document.querySelector(`[data-mission-select="${button.dataset.teamId}"]`)?.value);const result=await db.from("teams").update(changes).eq("id",button.dataset.teamId);if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
@@ -623,17 +639,21 @@
   }
 }
 
-  function renderTeamOperations(teams,sections,members,professors,isAdmin) {
+  function renderTeamOperations(teams,sections,members,professors,isAdmin,serviceDeskWorkspaces=[]) {
   const roles=["SOC Analyst","Incident Responder","Security Lead","Communications Lead"];
   if(!teams.length)return "<div class=\"empty-state\"><strong>No teams yet.</strong><p>Post the class link in Canvas. The first student will create a team, and it will appear here automatically.</p></div>";
   return `<div class="team-operations">${teams.map(team=>{
     const teamMembers=members.filter(m=>m.team_id===team.id);
     const section=sections.find(s=>s.id===team.section_id);
+    const teamDeskRows=serviceDeskWorkspaces.filter(workspace=>workspace.team_id===team.id);
+    const desk=teamDeskRows.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))[0];
+    const deskTickets=teamDeskRows.flatMap(row=>Array.isArray(row?.workspace?.tickets)?row.workspace.tickets:[]);
     const destinations=teams.filter(t=>t.id!==team.id&&t.section_id===team.section_id);
     return `<article class="team-operation">
       <div class="team-operation-title"><div><span>${esc(section?.name||"Section pending")}</span><h4>${esc(team.name)}</h4></div><span class="status-pill ${team.mission_locked?"locked":"open"}">${team.mission_locked?"Work paused":"Work active"}</span></div>
       <div class="mission-progress" aria-label="Mission ${team.active_mission} of 6"><span style="width:${team.active_mission/6*100}%"></span></div>
       <p><strong>Mission ${team.active_mission}: ${esc(missionCatalog[team.active_mission]?.title||"")}</strong> · ${teamMembers.length} of 4 seats filled</p>
+      ${desk?`<div class="visibility-guide"><strong>Service Desk · Case ${String(desk.case_id).padStart(2,"0")}</strong><span>${deskTickets.length} ticket${deskTickets.length===1?"":"s"} · ${deskTickets.filter(ticket=>!["Resolved","Awaiting Review","Closed"].includes(ticket.state)).length} working · ${deskTickets.filter(ticket=>ticket.state==="Awaiting Review").length} awaiting review · ${deskTickets.filter(ticket=>ticket.state==="Closed").length} closed</span><span>Last team activity: ${esc(formatAccessTime(desk.updated_at))}</span>${deskTickets.map(ticket=>`<details><summary>${esc(ticket.number)} · ${esc(ticket.shortDescription)} · ${esc(ticket.state)}</summary><p><b>Assessment:</b> ${esc(ticket.assessment||"Not documented")}</p><p><b>Resolution:</b> ${esc(ticket.resolutionNotes||"Not documented")}</p><p><b>Evidence sources:</b> ${(ticket.evidenceReviewed||[]).length}</p>${ticket.state==="Awaiting Review"?`<div class="section-code-actions"><button class="btn compact primary" type="button" data-desk-review="approve" data-desk-team="${team.id}" data-desk-ticket="${ticket.id}">Approve & close</button><button class="btn compact" type="button" data-desk-review="return" data-desk-team="${team.id}" data-desk-ticket="${ticket.id}">Return for correction</button></div>`:""}</details>`).join("")}</div>`:""}
       <div class="team-roster-manager">${teamMembers.map(member=>`<div class="roster-manager">
         <strong>${esc(member.profiles?.display_name||"Student")}</strong>
         <label>Seat<select data-member-role-select="${member.user_id}"><option value="">Seat pending</option>${roles.map(role=>`<option value="${role}" ${member.assigned_role===role?"selected":""}>${role}</option>`).join("")}</select></label>

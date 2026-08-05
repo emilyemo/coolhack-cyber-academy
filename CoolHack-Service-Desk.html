@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17324d">
+  <meta name="description" content="CoolHack Service Desk workforce ticketing simulation.">
+  <title>CoolHack Service Desk Simulator</title>
+  <style>
+:root{--navy:#17324d;--navy-2:#234766;--blue:#1769aa;--blue-soft:#eaf4fb;--teal:#087f75;--amber:#b46b08;--red:#ad342b;--ink:#202b35;--muted:#63717d;--line:#ced8df;--surface:#fff;--canvas:#f3f6f8;--shadow:0 12px 34px rgba(23,50,77,.10);--radius:14px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--canvas);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.skip-link{position:fixed;top:-4rem;left:1rem;z-index:50;padding:.7rem 1rem;color:#fff;background:var(--navy);border-radius:8px}.skip-link:focus{top:1rem}.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:68px;padding:.65rem clamp(.8rem,3vw,2rem);color:#fff;background:var(--navy);box-shadow:0 4px 18px rgba(15,35,54,.18)}.brand{display:flex;align-items:center;gap:.7rem;color:inherit;text-decoration:none}.brand-mark{display:grid;place-items:center;width:42px;height:42px;color:var(--navy);background:#7dd8cd;border-radius:10px;font-weight:900}.brand strong,.brand small{display:block}.brand small{color:#bfd0df;font-size:.76rem}.session-strip{display:flex;align-items:center;gap:.55rem;color:#d7e3ec;font-size:.84rem}.live-dot{width:8px;height:8px;background:#52d6a5;border-radius:50%;box-shadow:0 0 0 4px rgba(82,214,165,.13)}.text-button{padding:.35rem .5rem;color:#d7e3ec;background:transparent;border:0;text-decoration:underline}.app-shell{width:min(1440px,100%);margin:auto;padding:clamp(.8rem,2vw,1.5rem)}.welcome-card{display:grid;grid-template-columns:1.05fr .95fr;gap:1.5rem;align-items:center;margin-bottom:1rem;padding:clamp(1.1rem,3vw,1.8rem);background:linear-gradient(125deg,#fff 0%,#f6fbfe 100%);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.eyebrow{margin:0 0 .25rem;color:var(--blue);font-size:.73rem;font-weight:850;letter-spacing:.09em;text-transform:uppercase}.welcome-card h1{margin:.1rem 0 .45rem;color:var(--navy);font-size:clamp(1.75rem,4vw,2.65rem);line-height:1.12;letter-spacing:-.035em}.welcome-card p:last-child{max-width:700px;margin:.3rem 0;color:var(--muted)}.two-part-flow{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:0;padding:0;list-style:none}.two-part-flow li{display:grid;grid-template-columns:auto 1fr;gap:.05rem .65rem;padding:1rem;background:#fff;border:1px solid var(--line);border-top:4px solid var(--blue);border-radius:11px}.two-part-flow li:last-child{border-top-color:var(--teal)}.two-part-flow span{grid-row:span 2;display:grid;place-items:center;width:32px;height:32px;color:#fff;background:var(--navy);border-radius:50%;font-weight:850}.two-part-flow b{color:var(--navy)}.two-part-flow small{color:var(--muted)}.workspace-tabs{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem}.tab{position:relative;display:grid;grid-template-columns:auto 1fr;gap:0 .7rem;text-align:left;padding:.9rem 1rem;color:var(--muted);background:#e7edf1;border:1px solid var(--line);border-radius:12px}.tab>span{grid-row:span 2;align-self:center;color:var(--navy);font-size:1.35rem}.tab b{color:var(--navy);font-size:1rem}.tab small{font-size:.78rem}.tab em{position:absolute;top:.6rem;right:.7rem;min-width:24px;padding:.12rem .4rem;color:#fff;background:var(--red);border-radius:999px;text-align:center;font-size:.72rem;font-style:normal;font-weight:850}.tab.active{background:#fff;border-color:var(--blue);box-shadow:0 4px 14px rgba(23,105,170,.12)}.view{display:none;grid-template-columns:minmax(255px,340px) minmax(0,1fr);gap:1rem;align-items:start}.view.active{display:grid}.case-panel,.queue-panel{position:sticky;top:84px;max-height:calc(100vh - 100px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.panel-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:.7rem;padding:1rem;border-bottom:1px solid var(--line)}.panel-heading h2{margin:0;color:var(--navy);font-size:1.2rem}.compact-field{font-size:.75rem;font-weight:750}.compact-field select,.panel-heading>select{display:block;max-width:135px;margin-top:.2rem;padding:.38rem;border:1px solid var(--line);border-radius:7px;background:#fff}.case-list,.queue-list{display:grid}.case-button,.queue-button{display:grid;grid-template-columns:auto 1fr auto;gap:.2rem .7rem;width:100%;padding:.82rem 1rem;text-align:left;color:var(--ink);background:#fff;border:0;border-bottom:1px solid #e8edf0}.case-button:hover,.case-button:focus-visible,.queue-button:hover,.queue-button:focus-visible{background:var(--blue-soft)}.case-button.active,.queue-button.active{background:#e8f3fa;box-shadow:inset 4px 0 var(--blue)}.case-number{display:grid;grid-row:span 2;place-items:center;width:31px;height:31px;color:var(--navy);background:#e5edf2;border-radius:8px;font-size:.78rem;font-weight:850}.case-button b,.queue-button b{color:var(--navy);line-height:1.3}.case-button small,.queue-button small{color:var(--muted)}.level-dot{align-self:center;padding:.18rem .4rem;color:#37566d;background:#e8f0f4;border-radius:999px;font-size:.66rem;font-weight:800}.ticket-stage{display:grid;gap:1rem}.caller-card,.ticket-form,.work-ticket{padding:clamp(1rem,2.5vw,1.5rem);background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.caller-card{border-left:6px solid var(--blue)}.caller-topline{display:flex;align-items:center;gap:.7rem}.caller-topline p,.caller-topline h2{margin:0}.caller-topline p{color:var(--muted);font-size:.76rem}.caller-topline h2{color:var(--navy);font-size:1.25rem}.phone-icon{display:grid;place-items:center;width:40px;height:40px;color:#fff;background:var(--blue);border-radius:50%;font-size:1.1rem}.case-level{margin-left:auto;padding:.26rem .55rem;color:#31546e;background:#e8f0f4;border-radius:999px;font-size:.72rem;font-weight:800}.caller-card blockquote{margin:1rem 0;padding:1rem;color:#263d50;background:#f2f7fa;border-left:4px solid #8cbad7;border-radius:0 10px 10px 0;font-size:1.03rem;font-weight:600}.call-actions{display:flex;flex-wrap:wrap;gap:.45rem}.question-chip{padding:.43rem .65rem;color:#174f79;background:#edf7fc;border:1px solid #a9cee5;border-radius:999px;font-size:.79rem}.question-chip:hover,.question-chip:focus-visible{background:#d9edf8}.question-chip.asked{color:#52626e;background:#eef1f3;border-color:#d1d8dd}.caller-response{margin-top:.75rem;padding:.75rem;color:#234235;background:#edf8f3;border:1px solid #b5dfcd;border-radius:9px}.form-title,.work-head{display:flex;justify-content:space-between;gap:1rem;align-items:start;padding-bottom:.9rem;border-bottom:1px solid var(--line)}.form-title h2,.work-head h2{margin:0;color:var(--navy)}.record-number{padding:.3rem .55rem;color:#586875;background:#edf1f4;border-radius:7px;font-size:.73rem;font-weight:750}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem 1rem;margin-top:1rem}.form-grid label{display:block;color:#344755;font-weight:750}.form-grid label.wide{grid-column:1/-1}.form-grid input,.form-grid select,.form-grid textarea{display:block;width:100%;margin-top:.32rem;padding:.7rem .75rem;color:#202b35;background:#fff;border:1px solid #aebdc7;border-radius:8px}.form-grid input[readonly]{color:#566875;background:#f3f6f8}.form-grid textarea{resize:vertical}.form-grid label small{float:right;color:var(--muted);font-size:.7rem;font-weight:500}.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus{outline:3px solid rgba(23,105,170,.18);border-color:var(--blue)}.internal-field{padding:.75rem;background:#fff9ec;border:1px solid #ead5a3;border-radius:9px}.privacy-reminder{margin-top:1rem;padding:.75rem;color:#634d24;background:#fff8e8;border-left:4px solid var(--amber);border-radius:0 8px 8px 0}.form-actions{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem}.button{min-height:42px;padding:.65rem .9rem;border-radius:8px;font-weight:800}.button.primary{color:#fff;background:var(--blue);border:1px solid var(--blue)}.button.secondary{color:var(--navy);background:#fff;border:1px solid #9fb2bf}.form-message{min-height:1.3rem;margin:.55rem 0 0;color:var(--teal);font-weight:750}.queue-panel{top:84px}.queue-button{grid-template-columns:1fr auto}.queue-button small{grid-column:1/-1}.queue-button .queue-meta{color:var(--muted);font-size:.7rem}.work-ticket.empty{min-height:520px;display:grid;place-items:center}.empty-state{text-align:center;color:var(--muted)}.empty-state>span{font-size:2rem}.empty-state h2{margin:.3rem 0;color:var(--navy)}.priority-badge{padding:.35rem .6rem;color:#fff;background:var(--red);border-radius:7px;font-weight:850}.record-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.record-facts div{padding:.65rem;background:#f3f6f8;border-radius:8px}.record-facts small,.record-facts b{display:block}.record-facts small{color:var(--muted)}.quality-check{padding:1rem;background:#eef7fb;border:1px solid #c0dce9;border-radius:10px}.quality-check h3,.quality-check p{margin:.1rem 0}.check-row{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-top:.7rem}.check-row label{padding:.5rem;background:#fff;border-radius:7px}.activity-section{margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--line)}.activity-section h3{color:var(--navy)}.activity-stream{display:grid;gap:.55rem}.activity-item{padding:.7rem;border-left:3px solid #9eb5c5;background:#f5f7f8;border-radius:0 8px 8px 0}.activity-item time{display:block;color:var(--muted);font-size:.7rem}.activity-item p{margin:.2rem 0;white-space:pre-wrap}.empty-list{padding:1rem;color:var(--muted);text-align:center}.hidden{display:none!important}@media(max-width:960px){.welcome-card{grid-template-columns:1fr}.view{grid-template-columns:1fr}.case-panel,.queue-panel{position:static;max-height:none}.case-list,.queue-list{display:flex;overflow-x:auto}.case-button,.queue-button{min-width:250px;border-right:1px solid #e8edf0}.record-facts{grid-template-columns:1fr 1fr}}@media(max-width:620px){.topbar{align-items:flex-start}.session-strip>span:not(.live-dot){display:none}.app-shell{padding:.65rem}.welcome-card{padding:1rem}.two-part-flow,.workspace-tabs,.form-grid,.check-row{grid-template-columns:1fr}.workspace-tabs{gap:.45rem}.tab{min-height:62px}.form-grid label.wide{grid-column:auto}.caller-topline{align-items:flex-start;flex-wrap:wrap}.case-level{margin-left:0}.form-actions{flex-direction:column-reverse}.button{width:100%}.record-facts{grid-template-columns:1fr}.work-head,.form-title{flex-direction:column}.panel-heading{align-items:flex-start}.panel-heading select{max-width:100%}}
+
+.team-welcome{min-height:560px}.team-name-field{display:block;max-width:430px;margin:1.25rem 0 .75rem;color:var(--navy);font-weight:800}.team-name-field input{display:block;width:100%;margin-top:.35rem;padding:.8rem;border:1px solid #9fb2bf;border-radius:9px}.start-shift{padding:.8rem 1.2rem}.team-brief{padding:1.5rem;background:var(--navy);color:#fff;border-radius:18px;box-shadow:0 18px 40px rgba(23,50,77,.2)}.team-brief h2{margin:.3rem 0}.team-brief p{color:#d7e3ec}.team-illustration{display:block;font-size:3.2rem}.professor-job{padding:.75rem;background:rgba(255,255,255,.1);border-radius:9px}.shift-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin:0 0 1rem;padding:0;list-style:none}.shift-progress li{display:flex;align-items:center;gap:.5rem;padding:.7rem;color:var(--muted);background:#e7edf1;border-radius:10px;font-size:.8rem;font-weight:800}.shift-progress span{display:grid;place-items:center;width:25px;height:25px;background:#cbd6dd;border-radius:50%}.shift-progress li.active{color:#fff;background:var(--navy)}.shift-progress li.active span{color:var(--navy);background:#7dd8cd}.guided-view{grid-template-columns:minmax(225px,285px) minmax(0,820px);justify-content:center}.instructor-demo{box-shadow:none}.demo-note{margin:0;padding:1rem;color:var(--muted);background:#f5f7f8;font-size:.76rem}.ring-screen{text-align:center;padding:2rem 1rem}.ring-screen h2{margin:.6rem 0 .15rem;color:var(--navy)}.ring-screen p{margin:.2rem auto 1rem;max-width:460px;color:var(--muted)}.ring-pulse{display:grid;place-items:center;width:84px;height:84px;margin:auto;color:#fff;background:var(--blue);border-radius:50%;font-size:2rem;animation:ringPulse 1.5s infinite}.answer-button{color:#fff;background:var(--teal);border:1px solid var(--teal);min-width:180px}.interview-instruction{margin:.9rem 0;padding:.8rem;color:#234235;background:#edf8f3;border-radius:9px}.caller-card #beginTicket{margin-top:1rem}@keyframes ringPulse{0%,100%{box-shadow:0 0 0 0 rgba(23,105,170,.28)}50%{box-shadow:0 0 0 18px rgba(23,105,170,0)}}
+.team-name-field small{display:block;margin-top:.3rem;color:var(--muted);font-weight:500}.start-shift:disabled{cursor:not-allowed;opacity:.45}
+.released-case-summary{display:grid;gap:.2rem;padding:1rem;color:var(--navy);background:#eef7fb}.released-case-summary span{color:var(--muted);font-size:.78rem}.prototype-controls summary{padding:.8rem 1rem;color:var(--muted);font-size:.78rem;cursor:pointer}.prototype-controls .panel-heading{padding:.7rem 1rem}.prototype-controls .case-list{max-height:280px;overflow:auto}
+@media(max-width:620px){.team-welcome{min-height:0}.shift-progress{display:block}.shift-progress li{display:none}.shift-progress li.active{display:flex}.instructor-demo{order:2}.ring-screen{padding:1.5rem .3rem}}
+.workflow-ribbon{display:grid;grid-template-columns:repeat(5,1fr);margin:1rem 0;border:1px solid var(--line);border-radius:9px;overflow:hidden}.workflow-ribbon span{padding:.55rem .35rem;text-align:center;color:var(--muted);background:#f5f7f8;border-right:1px solid var(--line);font-size:.72rem;font-weight:800;text-transform:uppercase}.workflow-ribbon span:last-child{border-right:0}.investigation-console{margin:1rem 0;padding:1rem;background:#f7f9fa;border:1px solid #cad6dd;border-radius:12px}.console-heading{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}.console-heading h3,.console-heading p{margin:.1rem 0}.console-heading>span{padding:.4rem .65rem;color:#285d54;background:#dff2ec;border-radius:999px;font-size:.72rem;font-weight:800;white-space:nowrap}.evidence-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:1rem 0}.evidence-tool{display:grid;grid-template-columns:auto 1fr;gap:.05rem .45rem;text-align:left;padding:.7rem;color:var(--navy);background:#fff;border:1px solid #b9c7d0;border-radius:9px}.evidence-tool>span{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;color:#fff;background:var(--navy);border-radius:6px}.evidence-tool b{font-size:.76rem}.evidence-tool small{color:var(--muted);font-size:.65rem}.evidence-tool.reviewed{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}.evidence-tool.reviewed>span{background:var(--teal)}.evidence-result{min-height:105px;padding:.85rem;background:#101820;color:#e8f0f5;border-radius:8px}.evidence-result small,.evidence-result b{display:block}.evidence-result small{color:#83cbbb;text-transform:uppercase;font-size:.65rem;font-weight:800}.evidence-result pre{margin:.45rem 0 0;white-space:pre-wrap;font:inherit;font-size:.78rem;line-height:1.45}.decision-field{display:block;margin-top:.9rem}.decision-field small{color:var(--muted)}.decision-field textarea{display:block;width:100%;margin-top:.3rem;border:1px solid #9fb2bf;border-radius:8px;padding:.7rem}.review-button{color:#fff;background:#285d54;border:1px solid #285d54}.priority-p1{background:#a51d2d}.priority-p2{background:#c75300}.priority-p3{background:#936d00}.priority-p4,.priority-p5{background:#476476}
+@media(max-width:960px){.evidence-tools{grid-template-columns:1fr 1fr}}@media(max-width:620px){.workflow-ribbon{grid-template-columns:1fr}.workflow-ribbon span{display:none}.workflow-ribbon span:nth-child(3){display:block;border-right:0}.console-heading{display:block}.console-heading>span{display:inline-block;margin-top:.5rem}.evidence-tools{grid-template-columns:1fr}.investigation-console{padding:.75rem}.evidence-result{max-height:220px;overflow:auto}}
+
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to workspace</a>
+  <header class="topbar">
+    <a class="brand" href="#workspace" aria-label="CoolHack Service Desk home">
+      <span class="brand-mark" aria-hidden="true">CH</span>
+      <span><strong>CoolHack</strong><small>Service Desk Simulator</small></span>
+    </a>
+    <div class="session-strip">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span id="sessionLabel">Connecting to team workspace…</span>
+      <button class="text-button" id="resetDemo" type="button">Reset demo</button>
+    </div>
+  </header>
+
+  <main id="workspace" class="app-shell">
+    <section class="welcome-card team-welcome" id="welcomeCard">
+      <div>
+        <p class="eyebrow">CoolHack Service Desk · Team workspace</p>
+        <h1>Your team is starting a help-desk shift.</h1>
+        <p>No real person will call. The simulator plays the employee, and your team decides together what to ask, what to document, and how to handle the ticket.</p>
+        <div class="team-name-field" id="teamIdentity">Checking your CoolHack team…</div>
+        <button class="button primary start-shift" id="startShift" type="button" disabled>Start team shift</button>
+        <p class="form-message" id="cloudMessage" role="status">Please wait while the shared team workspace loads.</p>
+      </div>
+      <div class="team-brief">
+        <span class="team-illustration" aria-hidden="true">👥</span>
+        <h2>One team. One shared case.</h2>
+        <p>Work together in any way that suits your team. Suggested roles—interviewer, ticket writer, researcher, and quality checker—are completely optional.</p>
+        <p class="professor-job"><b>Professor:</b> release → observe → review.</p>
+      </div>
+    </section>
+
+    <ol class="shift-progress hidden" id="shiftProgress" aria-label="Team case progress">
+      <li class="active" data-progress="call"><span>1</span> Answer call</li>
+      <li data-progress="interview"><span>2</span> Interview</li>
+      <li data-progress="create"><span>3</span> Create ticket</li>
+      <li data-progress="work"><span>4</span> Work ticket</li>
+      <li data-progress="review"><span>5</span> Team review</li>
+    </ol>
+
+    <nav class="workspace-tabs hidden" id="workspaceTabs" aria-label="Service desk workspace">
+      <button class="tab active" type="button" data-view="create" aria-selected="true">
+        <span aria-hidden="true">＋</span><b>Create Ticket</b><small>Act as the help-desk technician</small>
+      </button>
+      <button class="tab" type="button" data-view="queue" aria-selected="false">
+        <span aria-hidden="true">▤</span><b>Work Queue</b><small>Act as the assigned analyst</small><em id="queueCount">0</em>
+      </button>
+    </nav>
+
+    <section class="view guided-view" id="createView" data-view-panel="create" hidden>
+      <aside class="case-panel instructor-demo">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Team assignment</p><h2>One case released</h2></div>
+        </div>
+        <div class="released-case-summary"><b id="releasedCaseLabel">Case 01</b><span>Your team sees only this call.</span></div>
+        <details class="prototype-controls">
+          <summary>Professor preview controls</summary>
+          <div class="panel-heading">
+          <label class="compact-field">Professor demo
+            <select id="levelFilter">
+              <option value="all">All levels</option>
+              <option value="1">1 · Foundations</option>
+              <option value="2">2 · Security</option>
+              <option value="3">3 · Complex</option>
+            </select>
+          </label>
+          </div>
+          <div class="case-list" id="caseList"></div>
+          <p class="demo-note">Choose another case here only to test the prototype. Students will not have this control.</p>
+        </details>
+      </aside>
+
+      <div class="ticket-stage">
+        <article class="caller-card ringing" id="callerCard">
+          <div class="caller-topline"><span class="phone-icon" aria-hidden="true">☎</span><div><p id="callStatus">Incoming employee call…</p><h2 id="caseTitle">Your team has a call</h2></div><span class="case-level" id="caseLevel">Released case</span></div>
+          <div class="ring-screen" id="ringScreen"><div class="ring-pulse" aria-hidden="true">☎</div><h2>Incoming call</h2><p>Discuss who will speak for the team, then answer when you are ready.</p><button class="button answer-button" id="answerCall" type="button">Answer call</button></div>
+          <blockquote id="callerStatement" hidden></blockquote>
+          <div class="interview-instruction hidden" id="interviewInstruction"><b>Team task:</b> Choose the questions your team would ask. The caller reveals information only when asked.</div>
+          <div class="call-actions" id="questionChips" aria-label="Questions to ask" hidden></div>
+          <div class="caller-response" id="callerResponse" role="status" hidden></div>
+          <button class="button primary hidden" id="beginTicket" type="button">We are ready to create the ticket</button>
+        </article>
+
+        <form class="ticket-form hidden" id="ticketForm">
+          <div class="form-title"><div><p class="eyebrow">Shared team record</p><h2>Create the ticket together</h2><p>Use what the caller told your team. The next analyst should understand the issue without hearing the call.</p></div><span class="record-number">Not yet submitted</span></div>
+          <div class="form-grid">
+            <label>Caller<input id="caller" required readonly></label>
+            <label>Contact method<select id="contactMethod" required><option>Phone</option><option>Walk-in</option><option>Email</option><option>Monitoring alert</option></select></label>
+            <label class="wide">Short description<input id="shortDescription" maxlength="100" placeholder="What is affected + what is happening" required><small><span id="shortCount">0</span>/100 characters</small></label>
+            <label class="wide">Description<textarea id="description" rows="5" placeholder="Record the symptoms, start time, scope, error messages, and useful context. Do not include passwords." required></textarea></label>
+            <label>Record type<select id="recordType" required><option value="">Choose…</option><option>Incident</option><option>Service Request</option><option>Potential Security Incident</option></select></label>
+            <label>Category<select id="category" required><option value="">Choose…</option><option>Access & Identity</option><option>Email & Collaboration</option><option>Hardware</option><option>Network</option><option>Software</option><option>Security</option><option>Business Application</option></select></label>
+            <label>Affected service or device<input id="affectedItem" placeholder="Example: VPN or LAP-1042" required></label>
+            <label>Assignment group<select id="assignmentGroup" required><option value="">Choose…</option><option>Service Desk</option><option>Identity & Access</option><option>Endpoint Support</option><option>Network Operations</option><option>Messaging Support</option><option>Application Support</option><option>Security Operations Center</option></select></label>
+            <label>Impact<select id="impact" required><option value="">Choose…</option><option value="1">1 · High — many users/critical service</option><option value="2">2 · Medium — group or important function</option><option value="3">3 · Low — one user/limited function</option></select></label>
+            <label>Urgency<select id="urgency" required><option value="">Choose…</option><option value="1">1 · High — cannot wait</option><option value="2">2 · Medium — work impaired</option><option value="3">3 · Low — workaround available</option></select></label>
+            <label>Calculated priority<input id="priority" value="Select impact and urgency" readonly></label>
+            <label>State<input value="New" readonly></label>
+          </div>
+          <div class="privacy-reminder"><b>Before submitting:</b> Is the record factual, useful to the next analyst, and free of passwords or unnecessary personal information?</div>
+          <div class="form-actions"><button class="button secondary" type="button" id="saveDraft">Save draft</button><button class="button primary" type="submit">Submit to work queue</button></div>
+          <p class="form-message" id="createMessage" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="view" id="queueView" data-view-panel="queue" hidden>
+      <aside class="queue-panel">
+        <div class="panel-heading"><div><p class="eyebrow">Assigned to your team</p><h2>My Work Queue</h2></div><select id="queueFilter" aria-label="Filter queue"><option value="all">All tickets</option><option>New</option><option>In Progress</option><option>Pending</option><option>Resolved</option></select></div>
+        <div id="queueList" class="queue-list"></div>
+      </aside>
+      <article class="work-ticket empty" id="workTicket">
+        <div class="empty-state"><span aria-hidden="true">▤</span><h2>Select a ticket</h2><p>Open a record from the queue to review its intake quality and begin work.</p></div>
+      </article>
+    </section>
+  </main>
+
+  <template id="workTicketTemplate">
+    <div class="work-head"><div><p class="eyebrow">Active record</p><h2 data-ticket-number></h2><p data-ticket-summary></p></div><span class="priority-badge" data-priority></span></div>
+    <div class="workflow-ribbon" aria-label="Incident lifecycle"><span>Logged</span><span>Triage</span><span>Investigate</span><span>Restore</span><span>Review</span></div>
+    <div class="record-facts" data-record-facts></div>
+    <div class="quality-check"><h3>Intake quality check</h3><p>Before troubleshooting, decide whether the record gives the next analyst enough information.</p><div class="check-row"><label><input type="checkbox" data-quality="scope"> Scope is clear</label><label><input type="checkbox" data-quality="symptoms"> Symptoms are specific</label><label><input type="checkbox" data-quality="routing"> Routing makes sense</label><label><input type="checkbox" data-quality="safe"> No sensitive data exposed</label></div></div>
+    <section class="investigation-console">
+      <div class="console-heading"><div><p class="eyebrow">Available company tools</p><h3>Investigation console</h3><p>Open the evidence sources your team needs. Each action is recorded in the activity history.</p></div><span data-evidence-progress>0 reviewed</span></div>
+      <div class="evidence-tools" data-evidence-tools></div>
+      <div class="evidence-result" data-evidence-result><b>No evidence opened yet.</b><p>Choose a relevant source. Real analysts do not guess—and they do not run every tool without a reason.</p></div>
+      <label class="wide decision-field">Team assessment <small>What does the evidence support?</small><textarea data-assessment rows="3" placeholder="State the likely cause or incident finding and cite the evidence that supports it."></textarea></label>
+    </section>
+    <form class="work-form">
+      <div class="form-grid">
+        <label>State<select data-work-state><option>New</option><option>In Progress</option><option>Pending</option><option>Resolved</option><option>Awaiting Review</option><option disabled>Closed · professor only</option></select></label>
+        <label>Team contact<input data-assignee placeholder="Screen name of teammate updating"></label>
+        <label class="wide">Additional comment <small>Caller-visible; adds a new journal entry</small><textarea data-comments rows="3" placeholder="Give the caller a clear, professional update. Do not expose internal security details."></textarea></label>
+        <label class="wide internal-field">New work note <small>Internal; adds a permanent journal entry</small><textarea data-notes rows="5" placeholder="Action taken → result observed → next step or handoff. Do not rewrite earlier notes."></textarea></label>
+        <label>Transfer group<select data-transfer-group><option value="">No transfer</option><option>Service Desk</option><option>Identity & Access</option><option>Endpoint Support</option><option>Network Operations</option><option>Messaging Support</option><option>Application Support</option><option>Security Operations Center</option><option>Major Incident Management</option></select></label>
+        <label>Transfer reason<select data-transfer-reason><option value="">Choose when transferring</option><option>Specialist access required</option><option>Security containment required</option><option>Major incident coordination required</option><option>Incorrect initial assignment</option><option>Vendor action required</option></select></label>
+        <label>Resolution code<select data-resolution-code><option value="">Not resolved</option><option>Solved (Permanently)</option><option>Solved (Workaround)</option><option>Transferred to Correct Group</option><option>Duplicate</option><option>Unable to Reproduce</option></select></label>
+        <label class="wide">Resolution notes<textarea data-resolution-notes rows="3" placeholder="Root cause/finding → action taken → how restoration or containment was verified"></textarea></label>
+      </div>
+      <div class="form-actions"><button class="button secondary" type="button" data-escalate>Prepare transfer</button><button class="button primary" type="submit">Save journal update</button><button class="button review-button" type="button" data-submit-review>Submit resolved ticket for review</button></div>
+      <p class="form-message" data-work-message role="status"></p>
+    </form>
+    <section class="activity-section"><h3>Activity history</h3><div class="activity-stream" data-activity></div></section>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+// These are public, browser-safe Supabase connection values.
+// Never place a database password or service_role key in this file.
+window.CoolHackConfig = {
+  supabaseUrl: "https://txrehgwrosqmejqsmahm.supabase.co",
+  supabaseAnonKey: "sb_publishable_7E8UCdzLpZ4gSpeBXvsyTA_G9ZdfvKQ"
+};
+
+  </script>
+  <script>window.CoolHackStandaloneDemo = true;</script>
+  <script>
+(() => {
+  "use strict";
+
+  const cases = [
+    [1,"Password reset request","Jordan Lee","I cannot remember my password, and I have a meeting in twenty minutes.","Access & Identity","Identity & Access",[["Can you verify your username and department?","I am jlee in Finance. I can verify through the approved employee process."],["What exactly happens when you try to sign in?","The portal says the username or password is incorrect. I have not seen a lockout message."],["Do you still have access to your registered verification method?","Yes, I have my company phone and can complete MFA."],["May I have your password?","No. A service-desk technician should never ask me to disclose it."]]],
+    [1,"Account locked after repeated attempts","Casey Morgan","My account suddenly stopped working. I tried the password many times.","Access & Identity","Identity & Access",[["What message do you see?","It says the account is locked after too many unsuccessful attempts."],["Which systems are affected?","Email, the employee portal, and the laptop sign-in all use this account."],["Did you make all of the attempts?","Yes. I changed my password yesterday and kept trying the old one."],["Is anyone else affected?","No, only me."]]],
+    [1,"Office printer unavailable","Taylor Reed","The printer is broken again. I need these documents now.","Hardware","Endpoint Support",[["What is the printer name or location?","PRN-FIN-03 beside the Finance copy room."],["What happens when you print?","The job stays in the queue and shows Offline."],["Can other people print to it?","Two coworkers say it is offline for them too."],["Are any warning lights or messages visible?","The display says Network unavailable. There is paper and no jam."]]],
+    [1,"Laptop cannot connect to Wi-Fi","Avery Brooks","My laptop will not connect to the office Wi-Fi, but my phone works.","Network","Network Operations",[["Which network are you selecting?","The approved CoolHack-Staff wireless network."],["What error appears?","It says Cannot connect to this network."],["Did it work previously?","Yes, yesterday. The laptop installed updates overnight."],["Is anyone else affected?","The people beside me are connected normally."]]],
+    [1,"Email will not send","Morgan Hayes","My email is stuck and will not send to a customer.","Email & Collaboration","Messaging Support",[["Can you receive messages?","Yes, new messages are arriving."],["Is there an error or is it in the Outbox?","It remains in the Outbox and says the attachment is too large."],["How large is the attachment?","About 38 MB."],["Does a smaller test message send?","Yes, a message without the attachment sent immediately."]]],
+    [1,"Approved software request","Riley Chen","My new employee needs the design application installed today.","Software","Service Desk",[["What is the employee's role and device?","Junior designer using assigned laptop LAP-1187."],["Has the manager approved the request?","Yes, the approval is in the onboarding request."],["Is a license already assigned?","I do not know; licensing must check."],["What is the business need?","The employee starts client design work tomorrow morning."]]],
+    [1,"Shared-folder access request","Jamie Patel","I need access to the Payroll shared folder like everyone else on my team.","Access & Identity","Identity & Access",[["Who owns or approves access to the folder?","The Payroll manager is the data owner."],["Is there an approved access request?","Not yet. I was told to call the desk."],["What access level is required?","Read-only for monthly reconciliation."],["Should we copy another employee's permissions?","No. My access should be approved for my job, not copied automatically."]]],
+    [1,"Monitor shows No Signal","Drew Foster","My screen is black and says No Signal, so I think the computer died.","Hardware","Endpoint Support",[["Is the computer powered on?","Yes. The laptop screen works and I can hear notification sounds."],["Which input is selected on the monitor?","DisplayPort, but the dock is connected through HDMI."],["Are the cables secure?","The HDMI cable at the dock feels loose."],["Did anything change recently?","The desk was moved yesterday."]]],
+    [1,"Slow computer complaint","Skyler James","Everything on my computer is painfully slow today.","Hardware","Endpoint Support",[["When did the problem begin?","This morning after I opened a very large spreadsheet."],["Is one application slow or the whole device?","Mostly the spreadsheet and browser; other applications respond."],["Have you restarted?","Not for eleven days because I have many tabs open."],["Do you see any warnings?","The disk has less than 2 GB free."]]],
+    [1,"VPN connection failure","Parker Adams","I am at home and the VPN refuses to connect.","Network","Network Operations",[["What exact message appears?","Authentication failed: certificate expired."],["Does normal internet access work?","Yes, websites load normally."],["When did VPN last work?","Friday, before the laptop was off for a week."],["Are you using the company laptop?","Yes, asset LAP-1022."]]],
+    [2,"Suspicious password-reset email","Sam Rivera","I received a password reset message, but I did not request one.","Security","Security Operations Center",[["Did you click any link or open an attachment?","No. I called before touching anything."],["What is the sender address?","security-update@coolhack-support.example, not our normal domain."],["Does the message create urgency?","Yes. It says my account will be disabled in fifteen minutes."],["Can you forward it safely?","I can use the approved Report Phishing button without opening links."]]],
+    [2,"User clicked a phishing link","Alex Kim","I clicked a delivery link and the page looked strange. I closed it.","Security","Security Operations Center",[["Did you enter any information?","Yes, I entered my work username and password before noticing the address."],["Did you approve any MFA prompt?","No. One arrived, but I denied it."],["Is the device still connected?","Yes, and I have stopped using it."],["When did this happen?","About six minutes ago."]]],
+    [2,"Unexpected MFA prompts","Robin Walker","My phone keeps asking me to approve a sign-in that is not mine.","Security","Security Operations Center",[["How many prompts and when?","Seven prompts in the last ten minutes."],["Did you approve any?","I may have approved the first one by habit."],["Have you shared or reused your password?","I reused a similar password on a shopping site last year."],["Can you still access the account?","Yes, but I have not changed anything yet."]]],
+    [2,"Missing company laptop","Cameron Bell","My company laptop is missing after my flight.","Security","Security Operations Center",[["When and where was it last seen?","At the airport security checkpoint about an hour ago."],["Was it powered off and encrypted?","It was asleep. Company laptops are supposed to use full-disk encryption."],["Was sensitive work stored locally?","A client report was saved for offline review."],["Have you reported it to airport security?","Yes, and I have the reference number."]]],
+    [2,"Unknown USB drive","Quinn Davis","I found a USB drive labeled Payroll in the parking lot. Should I plug it in to identify the owner?","Security","Security Operations Center",[["Did anyone connect it to a device?","No. It is still on my desk."],["Where exactly was it found?","Near the employee entrance this morning."],["Has it been handled safely?","Only by the edges, but no chain-of-custody record exists yet."],["Should it be tested on a spare laptop?","Not by normal staff. Security should collect and analyze it safely."]]],
+    [2,"Antivirus alert","Devon Price","A red antivirus message says a threat was blocked. Can I ignore it?","Security","Security Operations Center",[["What is the alert name?","Trojan.Generic in a file named invoice_viewer.exe."],["What were you doing when it appeared?","Opening an invoice attachment from an unfamiliar vendor."],["Did the file run?","I double-clicked it; then the antivirus alert appeared."],["Are there other symptoms?","A command window flashed briefly before the alert."]]],
+    [2,"Browser redirects","Reese Coleman","My browser keeps sending searches to strange websites.","Security","Security Operations Center",[["When did this begin?","After I installed a free PDF converter yesterday."],["Does it affect more than one browser?","Yes, both approved browsers."],["Are there new extensions?","There is one called QuickSearch that I do not recognize."],["Has antivirus been run?","Not yet."]]],
+    [2,"Sensitive email sent externally","Harper Long","I accidentally emailed a confidential spreadsheet to the wrong outside address.","Security","Security Operations Center",[["What classification was the file?","Confidential: employee compensation."],["When was it sent?","Four minutes ago."],["Was it encrypted or password protected?","No."],["Have you contacted the recipient?","No. I called the desk first."]]],
+    [2,"Former employee account active","Emerson Grant","An employee who left last week still appears in our shared application.","Security","Identity & Access",[["What was the termination date?","Last Friday at 5:00 p.m."],["Is the account only listed or has it been used?","The audit screen shows a login early this morning."],["What access did the employee have?","Vendor payment approval."],["Has HR or the manager confirmed the departure?","Yes, the offboarding ticket says completed."]]],
+    [2,"Files have strange extensions","Finley Scott","All my project files now end in .locked and a message wants payment.","Security","Security Operations Center",[["Is the device still connected to the network?","Yes, through both Wi-Fi and a dock."],["Are shared-drive files affected?","The project share also has renamed files."],["When did it begin?","About fifteen minutes after I opened a resume attachment."],["Has anyone else reported it?","A teammate just messaged that the shared folder will not open."]]],
+    [3,"Business application outage","Operations Desk","Several people cannot reach the order system, and customers are waiting.","Business Application","Application Support",[["How many users and locations are affected?","At least 24 users at two offices."],["What error appears?","503 Service Unavailable."],["When did it begin?","At 9:12 a.m., immediately after a planned release."],["Is there a workaround?","Staff can record orders manually for about thirty minutes."]]],
+    [3,"Executive mobile-device issue","Executive Assistant","The COO's phone cannot access email before an important trip. Fix it now.","Email & Collaboration","Messaging Support",[["Is only email affected?","Calls and internet work; company email requests repeated sign-in."],["Was the device replaced or updated?","It updated overnight."],["Can identity be verified through the approved process?","Yes, but do not bypass verification because the caller is an executive."],["Are other executives affected?","No reports yet."]]],
+    [3,"Failed logins from unfamiliar location","Identity Monitoring","A user has repeated failed logins from another country.","Security","Security Operations Center",[["Was there a successful login?","One successful login followed 34 failures."],["Is the employee traveling?","The travel register shows the employee is working in Houston."],["Was MFA used?","The successful event records MFA approval."],["What account privileges exist?","The user can approve purchasing requests."]]],
+    [3,"Department folder inaccessible","Legal Operations","The entire Legal team suddenly lost access to its shared folder.","Access & Identity","Identity & Access",[["How many people are affected?","The full team of 18."],["What changed recently?","An access-group cleanup finished thirty minutes ago."],["Can administrators reach the data?","Storage is online and administrators can open it."],["Is there a workaround?","No approved alternate location contains the current files."]]],
+    [3,"Possible business email compromise","Accounts Payable","Our CEO emailed new banking instructions for an urgent vendor payment.","Security","Security Operations Center",[["Does the request follow the payment process?","No. It asks us to skip the second approval."],["Does the sender address exactly match?","The display name is right, but the domain uses a look-alike letter."],["Has anyone transferred money?","No. The analyst paused the payment."],["Can the request be verified independently?","Yes, using the known executive contact process, not by replying."]]],
+    [3,"Unusual web-server traffic","Monitoring System","The public web server is making large outbound connections at 2:00 a.m.","Security","Security Operations Center",[["What is the destination?","An unapproved external IP over port 443."],["Is this normal backup traffic?","No matching job exists in the approved schedule."],["Are there related alerts?","A new administrator account and web-shell signature appeared first."],["Is the site still available?","Yes, but response time is degrading."]]],
+    [3,"Unauthorized remote-access tool","Endpoint Monitoring","Remote-control software appeared on a sales laptop.","Security","Security Operations Center",[["Is the software approved?","No. It is not in the application catalog."],["Who installed it?","The user says a caller claiming to be IT guided the installation."],["Is a session active?","Telemetry shows an external session connected now."],["What did the caller request?","The user was told to open banking reports for troubleshooting."]]],
+    [3,"Vendor account outside maintenance window","Access Monitoring","A vendor account accessed production at midnight outside its approved window.","Security","Security Operations Center",[["What was the approved window?","Saturday from 6:00 to 8:00 p.m.; this is Wednesday."],["What actions occurred?","Database queries and a large export."],["Has the vendor confirmed the activity?","The vendor manager says no work was scheduled."],["Is the account still active?","Yes, the session remains open."]]],
+    [3,"Possible denial-of-service condition","Network Monitoring","The customer portal is slow while inbound traffic has increased twentyfold.","Network","Network Operations",[["Is the traffic from one source?","It comes from thousands of distributed addresses."],["Are legitimate users affected?","Yes. Checkout requests are timing out."],["Are servers compromised?","No evidence yet; CPU is high because of request volume."],["Are protections enabled?","The standard rate limit is active but insufficient."]]],
+    [3,"Multiple alerts, one incident","SOC Monitoring","We have an impossible-travel alert, mailbox rule change, and unusual file download for one user.","Security","Security Operations Center",[["What is the event order?","Successful foreign login, mailbox rule creation, then 3.2 GB downloaded."],["Did the user approve MFA?","The user reports approving a prompt while distracted."],["Could the alerts be unrelated?","Possibly, but the shared identity and timeline suggest one incident."],["What access does the user have?","Sales proposals and customer contact records."]]]
+  ].map((item,index)=>({id:index+1,level:item[0],title:item[1],caller:item[2],statement:item[3],suggestedCategory:item[4],suggestedGroup:item[5],questions:item[6]}));
+
+  function evidenceFor(item){
+    const answers=item.questions.map(pair=>pair[1]);
+    const common=[
+      {id:"intake",icon:"☎",name:"Caller interview",source:"Recorded intake",result:answers.map((answer,index)=>`Q${index+1}: ${answer}`).join("\n")},
+      {id:"knowledge",icon:"▣",name:"Knowledge & procedure",source:"Approved support library",result:`Procedure match: ${item.suggestedCategory}. Verify identity when required, preserve evidence, use least privilege, document each action, and route to ${item.suggestedGroup}. Never request passwords or bypass approval.`}
+    ];
+    const profiles={
+      "Access & Identity":[
+        {id:"identity",icon:"◎",name:"Identity audit",source:"IAM console",result:`Account and access events reviewed for “${item.title}.” Relevant observation: ${answers[1]||answers[0]} No password content is available to analysts.`},
+        {id:"change",icon:"↺",name:"Access/change records",source:"Change management",result:`Recent approvals and changes reviewed. Relevant observation: ${answers[2]||"No matching approved change was found in the available window."}`}
+      ],
+      "Security":[
+        {id:"telemetry",icon:"⌁",name:"Endpoint / identity telemetry",source:"EDR and IAM",result:`Correlated security events for “${item.title}.” ${answers[1]||answers[0]} Timeline correlation: ${answers[3]||"additional validation required."}`},
+        {id:"intel",icon:"◇",name:"Threat & exposure check",source:"SIEM / threat intelligence",result:`Indicators and related alerts reviewed. ${answers[2]||"No confirmed related alert yet."} Treat the evidence as suspicious until containment and scope are verified.`}
+      ],
+      "Network":[
+        {id:"network",icon:"⌁",name:"Network health",source:"NMS and firewall",result:`Connectivity and traffic reviewed for “${item.title}.” ${answers[1]||answers[0]} Scope observation: ${answers[2]||"Scope is not yet established."}`},
+        {id:"changes",icon:"↺",name:"Network changes",source:"CMDB / change calendar",result:`Configuration and maintenance records checked. ${answers[3]||"No related approved change is visible."}`}
+      ],
+      "Hardware":[
+        {id:"asset",icon:"▤",name:"Asset record",source:"CMDB / endpoint inventory",result:`Affected asset context reviewed. ${answers[0]} Last known condition: ${answers[3]||answers[1]}`},
+        {id:"diagnostic",icon:"⌁",name:"Device diagnostics",source:"Endpoint tools",result:`Remote health and symptom check completed. ${answers[1]} Related physical or capacity observation: ${answers[2]||"No additional fault reported."}`}
+      ],
+      "Email & Collaboration":[
+        {id:"mail",icon:"✉",name:"Mail trace",source:"Messaging console",result:`Message flow and authentication events reviewed. ${answers[1]||answers[0]} Comparison test: ${answers[3]||"No comparison available."}`},
+        {id:"identity",icon:"◎",name:"Identity session check",source:"IAM console",result:`Account session and device context reviewed. ${answers[2]||"No unusual account event is visible in the supplied window."}`}
+      ],
+      "Software":[
+        {id:"endpoint",icon:"▤",name:"Endpoint inventory",source:"Software center / EDR",result:`Application and device context reviewed. ${answers[0]} User-observed behavior: ${answers[1]||item.statement}`},
+        {id:"catalog",icon:"✓",name:"Catalog & license check",source:"Service catalog",result:`Approval, entitlement, and compatibility checked. ${answers[2]||"Entitlement requires verification."} Business need: ${answers[3]||"Not recorded."}`}
+      ],
+      "Business Application":[
+        {id:"app",icon:"⌁",name:"Application monitoring",source:"APM dashboard",result:`Service health reviewed. ${answers[0]} Error/timing evidence: ${answers[1]} ${answers[2]}`},
+        {id:"change",icon:"↺",name:"Release & change log",source:"Change calendar",result:`Recent production activity correlated with the report. ${answers[2]} Workaround status: ${answers[3]}`}
+      ]
+    };
+    return [...(profiles[item.suggestedCategory]||profiles.Software),...common];
+  }
+
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  const storeKey = "coolhack-service-desk-demo-v1";
+  const cfg = window.CoolHackConfig;
+  const db = cfg && window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey) : null;
+  let currentUser = null;
+  let teamId = null;
+  let teamName = "Your team";
+  let cloudReady = false;
+  let cloudSaveTimer = null;
+  let workspaceChannel = null;
+  let state = loadState();
+  let activeCaseId = state.activeCaseId || 1;
+  let activeTicketId = null;
+  let callAnswered = false;
+
+  function loadState(){
+    try { return JSON.parse(localStorage.getItem(storeKey)) || {tickets:[],drafts:{},counter:1024,activeCaseId:1}; }
+    catch { return {tickets:[],drafts:{},counter:1024,activeCaseId:1}; }
+  }
+  function saveState(){
+    state.activeCaseId=activeCaseId;
+    localStorage.setItem(storeKey,JSON.stringify(state));
+    updateQueueCount();
+    if(!cloudReady||!db||!teamId||!currentUser)return;
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer=setTimeout(async()=>{
+      const workspace={tickets:state.tickets,drafts:state.drafts,counter:state.counter,activeCaseId};
+      const {error}=await db.from("service_desk_workspaces").upsert({team_id:teamId,case_id:activeCaseId,workspace,last_editor:currentUser.id,updated_at:now()},{onConflict:"team_id,case_id"});
+      if(error)$("#cloudMessage").textContent=`Shared save failed: ${error.message}`;
+      else $("#sessionLabel").textContent=`${teamName} · Shared and saved`;
+    },250);
+  }
+  function now(){ return new Date().toISOString(); }
+  function displayTime(value){ return new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(new Date(value)); }
+  function priority(impact,urgency){
+    if(!impact||!urgency) return "";
+    const matrix={"1-1":1,"1-2":2,"1-3":3,"2-1":2,"2-2":3,"2-3":4,"3-1":3,"3-2":4,"3-3":5};
+    return `P${matrix[`${impact}-${urgency}`]}`;
+  }
+
+  function renderCaseList(){
+    const filter=$("#levelFilter").value;
+    const visible=cases.filter(item=>filter==="all"||String(item.level)===filter);
+    $("#caseList").innerHTML=visible.map(item=>`<button class="case-button ${item.id===activeCaseId?"active":""}" type="button" data-case="${item.id}"><span class="case-number">${String(item.id).padStart(2,"0")}</span><b>${esc(item.title)}</b><span class="level-dot">L${item.level}</span><small>${item.level===1?"Foundation":item.level===2?"Security awareness":"Complex workplace case"}</small></button>`).join("");
+    $$("[data-case]").forEach(button=>button.addEventListener("click",()=>selectCase(Number(button.dataset.case))));
+  }
+
+  function selectCase(id){
+    activeCaseId=id; saveState(); renderCaseList();
+    const item=cases.find(entry=>entry.id===id);
+    $("#releasedCaseLabel").textContent=`Case ${String(id).padStart(2,"0")} · ${item.title}`;
+    $("#caseTitle").textContent=`Case ${String(id).padStart(2,"0")} · ${item.title}`;
+    $("#caseLevel").textContent=`Level ${item.level}`;
+    $("#callerStatement").textContent=`“${item.statement}”`;
+    $("#caller").value=item.caller;
+    $("#questionChips").innerHTML=item.questions.map((pair,index)=>`<button class="question-chip" type="button" data-question="${index}">${esc(pair[0])}</button>`).join("");
+    $("#callerResponse").hidden=true;
+    $$("[data-question]").forEach(button=>button.addEventListener("click",()=>{
+      button.classList.add("asked");
+      $("#callerResponse").innerHTML=`<b>Caller:</b> ${esc(item.questions[Number(button.dataset.question)][1])}`;
+      $("#callerResponse").hidden=false;
+    }));
+    loadDraft(id);
+    if(!$("#createView").hidden) resetCallStage();
+  }
+
+  function updateProgress(stage){
+    const order=["call","interview","create","work","review"];
+    $$('[data-progress]').forEach(item=>item.classList.toggle("active",item.dataset.progress===stage));
+    $("#shiftProgress").setAttribute("data-stage",String(order.indexOf(stage)+1));
+  }
+
+  function resetCallStage(){
+    callAnswered=false;
+    $("#ringScreen").classList.remove("hidden");
+    $("#callerStatement").hidden=true;
+    $("#interviewInstruction").classList.add("hidden");
+    $("#questionChips").hidden=true;
+    $("#callerResponse").hidden=true;
+    $("#beginTicket").classList.add("hidden");
+    $("#ticketForm").classList.add("hidden");
+    $("#callStatus").textContent="Incoming employee call…";
+    updateProgress("call");
+  }
+
+  function startShift(){
+    $("#sessionLabel").textContent=`${teamName} · Shared shift`;
+    $("#welcomeCard").classList.add("hidden");
+    $("#shiftProgress").classList.remove("hidden");
+    $("#workspaceTabs").classList.remove("hidden");
+    $("#createView").hidden=false;
+    $("#createView").classList.add("active");
+    resetCallStage();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function answerCall(){
+    callAnswered=true;
+    $("#ringScreen").classList.add("hidden");
+    $("#callerStatement").hidden=false;
+    $("#interviewInstruction").classList.remove("hidden");
+    $("#questionChips").hidden=false;
+    $("#beginTicket").classList.remove("hidden");
+    $("#callStatus").textContent="Call connected · Discuss each question as a team";
+    updateProgress("interview");
+  }
+
+  function beginTicket(){
+    if(!callAnswered)return;
+    $("#ticketForm").classList.remove("hidden");
+    updateProgress("create");
+    $("#ticketForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function getFormData(){
+    return {caseId:activeCaseId,caller:$("#caller").value,contactMethod:$("#contactMethod").value,shortDescription:$("#shortDescription").value.trim(),description:$("#description").value.trim(),recordType:$("#recordType").value,category:$("#category").value,affectedItem:$("#affectedItem").value.trim(),assignmentGroup:$("#assignmentGroup").value,impact:$("#impact").value,urgency:$("#urgency").value,priority:priority($("#impact").value,$("#urgency").value)};
+  }
+  function fillForm(data={}){
+    const item=cases.find(entry=>entry.id===activeCaseId);
+    $("#caller").value=item.caller;
+    ["contactMethod","shortDescription","description","recordType","category","affectedItem","assignmentGroup","impact","urgency"].forEach(id=>{ if(data[id]!=null) $(`#${id}`).value=data[id]; else if(id!=="contactMethod") $(`#${id}`).value=""; });
+    updatePriority(); updateShortCount();
+  }
+  function loadDraft(caseId){ fillForm(state.drafts[caseId]||{}); }
+  function updatePriority(){ $("#priority").value=priority($("#impact").value,$("#urgency").value)||"Select impact and urgency"; }
+  function updateShortCount(){ $("#shortCount").textContent=$("#shortDescription").value.length; }
+
+  function saveDraft(){ state.drafts[activeCaseId]=getFormData(); saveState(); $("#createMessage").textContent=cloudReady?"Draft saved to the shared team workspace.":"Preview draft saved on this device."; }
+
+  function submitTicket(event){
+    event.preventDefault();
+    const data=getFormData();
+    const ticket={...data,id:crypto.randomUUID(),number:`INC${String(state.counter++).padStart(7,"0")}`,state:"New",assignee:"",comments:"",notes:"",assessment:"",evidenceReviewed:[],resolutionCode:"",resolutionNotes:"",reviewStatus:"Working",createdAt:now(),updatedAt:now(),activity:[{at:now(),type:"Created",text:`Ticket created by service desk and routed to ${data.assignmentGroup}.`}],quality:{}};
+    state.tickets.unshift(ticket); delete state.drafts[activeCaseId]; saveState();
+    $("#createMessage").textContent=`${ticket.number} submitted to ${ticket.assignmentGroup}. It is now in the work queue.`;
+    fillForm(); renderQueue();
+    updateProgress("work");
+    switchView("queue");
+    activeTicketId=ticket.id;
+    renderQueue(); openTicket(ticket.id);
+  }
+
+  function switchView(name){
+    $$(".tab").forEach(tab=>{const active=tab.dataset.view===name;tab.classList.toggle("active",active);tab.setAttribute("aria-selected",String(active));});
+    $$('[data-view-panel]').forEach(panel=>{const active=panel.dataset.viewPanel===name;panel.classList.toggle("active",active);panel.hidden=!active;});
+    if(name==="queue"){ renderQueue(); updateProgress("work"); }
+  }
+
+  function updateQueueCount(){ $("#queueCount").textContent=state.tickets.filter(ticket=>ticket.state!=="Resolved").length; }
+  function renderQueue(){
+    const filter=$("#queueFilter").value;
+    const visible=state.tickets.filter(ticket=>filter==="all"||ticket.state===filter);
+    $("#queueList").innerHTML=visible.length?visible.map(ticket=>`<button class="queue-button ${ticket.id===activeTicketId?"active":""}" type="button" data-ticket="${ticket.id}"><b>${esc(ticket.number)} · ${esc(ticket.shortDescription)}</b><span class="priority-badge">${esc(ticket.priority)}</span><small>${esc(ticket.assignmentGroup)} · ${esc(ticket.state)} · ${displayTime(ticket.updatedAt)}</small></button>`).join(""):`<p class="empty-list">No tickets match this queue.</p>`;
+    $$('[data-ticket]').forEach(button=>button.addEventListener("click",()=>openTicket(button.dataset.ticket)));
+  }
+
+  function openTicket(id){
+    activeTicketId=id; renderQueue();
+    const ticket=state.tickets.find(item=>item.id===id); if(!ticket)return;
+    const template=$("#workTicketTemplate").content.cloneNode(true);
+    const host=$("#workTicket"); host.className="work-ticket"; host.replaceChildren(template);
+    host.querySelector("[data-ticket-number]").textContent=ticket.number;
+    host.querySelector("[data-ticket-summary]").textContent=ticket.shortDescription;
+    host.querySelector("[data-priority]").textContent=ticket.priority;
+    host.querySelector("[data-priority]").classList.add(`priority-${String(ticket.priority).toLowerCase()}`);
+    host.querySelector("[data-record-facts]").innerHTML=[["Caller",ticket.caller],["Type",ticket.recordType],["Category",ticket.category],["Affected item",ticket.affectedItem],["Impact",ticket.impact],["Urgency",ticket.urgency],["Assignment group",ticket.assignmentGroup],["Created",displayTime(ticket.createdAt)]].map(([label,value])=>`<div><small>${esc(label)}</small><b>${esc(value)}</b></div>`).join("")+`<div style="grid-column:1/-1"><small>Description</small><b>${esc(ticket.description)}</b></div>`;
+    Object.entries(ticket.quality||{}).forEach(([key,value])=>{const input=host.querySelector(`[data-quality="${key}"]`);if(input)input.checked=value;});
+    host.querySelector("[data-work-state]").value=ticket.state;
+    host.querySelector("[data-assignee]").value=ticket.assignee||"";
+    host.querySelector("[data-comments]").value="";
+    host.querySelector("[data-notes]").value="";
+    host.querySelector("[data-assessment]").value=ticket.assessment||"";
+    host.querySelector("[data-resolution-code]").value=ticket.resolutionCode||"";
+    host.querySelector("[data-resolution-notes]").value=ticket.resolutionNotes||"";
+    renderEvidence(host,ticket);
+    renderActivity(host,ticket);
+    host.querySelector(".work-form").addEventListener("submit",event=>saveTicketUpdate(event,ticket.id));
+    host.querySelector("[data-escalate]").addEventListener("click",()=>{host.querySelector("[data-work-state]").value="Pending";host.querySelector("[data-transfer-group]").focus();host.querySelector("[data-work-message]").textContent="Choose the destination and reason, then add a work note describing the evidence and requested action.";});
+    host.querySelector("[data-submit-review]").addEventListener("click",()=>submitForReview(ticket.id));
+    const locked=["Awaiting Review","Closed"].includes(ticket.state);
+    if(locked){host.querySelectorAll("input,textarea,select,button").forEach(control=>control.disabled=true);host.querySelector("[data-work-message]").textContent=ticket.state==="Closed"?"Professor approved this record. It is closed and read-only.":"Submitted for professor review. The record is read-only unless it is returned.";}
+  }
+
+  function renderEvidence(host,ticket){
+    const item=cases.find(entry=>entry.id===ticket.caseId)||cases[0];
+    const reviewed=Array.isArray(ticket.evidenceReviewed)?ticket.evidenceReviewed:[];
+    const tools=evidenceFor(item);
+    host.querySelector("[data-evidence-progress]").textContent=`${reviewed.length} of ${tools.length} reviewed`;
+    host.querySelector("[data-evidence-tools]").innerHTML=tools.map(tool=>`<button type="button" class="evidence-tool ${reviewed.includes(tool.id)?"reviewed":""}" data-evidence="${esc(tool.id)}"><span>${tool.icon}</span><b>${esc(tool.name)}</b><small>${esc(tool.source)}</small></button>`).join("");
+    host.querySelectorAll("[data-evidence]").forEach(button=>button.addEventListener("click",()=>{
+      const tool=tools.find(entry=>entry.id===button.dataset.evidence); if(!tool)return;
+      host.querySelector("[data-evidence-result]").innerHTML=`<small>${esc(tool.source)}</small><b>${esc(tool.name)}</b><pre>${esc(tool.result)}</pre>`;
+      ticket.evidenceReviewed=Array.isArray(ticket.evidenceReviewed)?ticket.evidenceReviewed:[];
+      if(!ticket.evidenceReviewed.includes(tool.id)){
+        ticket.evidenceReviewed.push(tool.id); ticket.activity.push({at:now(),type:"Evidence reviewed",text:`Opened ${tool.name} (${tool.source}).`}); ticket.updatedAt=now(); saveState(); renderEvidence(host,ticket); renderActivity(host,ticket);
+      }
+    }));
+  }
+
+  function renderActivity(host,ticket){ host.querySelector("[data-activity]").innerHTML=[...ticket.activity].reverse().map(item=>`<article class="activity-item"><time>${displayTime(item.at)} · ${esc(item.type)}</time><p>${esc(item.text)}</p></article>`).join(""); }
+
+  function saveTicketUpdate(event,id){
+    event.preventDefault(); const host=$("#workTicket"); const ticket=state.tickets.find(item=>item.id===id);
+    const newState=host.querySelector("[data-work-state]").value; const newComment=host.querySelector("[data-comments]").value.trim(); const newNote=host.querySelector("[data-notes]").value.trim(); const resolutionCode=host.querySelector("[data-resolution-code]").value; const resolutionNotes=host.querySelector("[data-resolution-notes]").value.trim(); const assessment=host.querySelector("[data-assessment]").value.trim(); const transferGroup=host.querySelector("[data-transfer-group]").value; const transferReason=host.querySelector("[data-transfer-reason]").value; const editor=host.querySelector("[data-assignee]").value.trim()||"Team member";
+    if(transferGroup&&(!transferReason||!newNote)){host.querySelector("[data-work-message]").textContent="A transfer needs a destination, reason, and work note describing the handoff.";return;}
+    if(newState==="Resolved"&&(!resolutionCode||!resolutionNotes)){host.querySelector("[data-work-message]").textContent="A resolved ticket needs both a resolution code and meaningful resolution notes.";return;}
+    if(newState!==ticket.state)ticket.activity.push({at:now(),type:"State change",text:`${editor} changed state from ${ticket.state} to ${newState}.`});
+    if(newComment)ticket.activity.push({at:now(),type:"Caller-visible comment",text:`${editor}: ${newComment}`});
+    if(newNote)ticket.activity.push({at:now(),type:"Internal work note",text:`${editor}: ${newNote}`});
+    if(transferGroup){ticket.activity.push({at:now(),type:"Assignment transfer",text:`${editor} transferred the record from ${ticket.assignmentGroup} to ${transferGroup}. Reason: ${transferReason}.`});ticket.assignmentGroup=transferGroup;}
+    ticket.state=newState; ticket.assignee=editor; ticket.comments=[ticket.comments,newComment].filter(Boolean).join("\n\n"); ticket.notes=[ticket.notes,newNote].filter(Boolean).join("\n\n"); ticket.assessment=assessment; ticket.resolutionCode=resolutionCode; ticket.resolutionNotes=resolutionNotes; ticket.updatedAt=now(); ticket.quality={}; host.querySelectorAll("[data-quality]").forEach(input=>ticket.quality[input.dataset.quality]=input.checked);
+    saveState(); renderQueue(); openTicket(id); $("#workTicket [data-work-message]").textContent=`${ticket.number} updated successfully.`;
+  }
+
+  function submitForReview(id){
+    const host=$("#workTicket"); const ticket=state.tickets.find(item=>item.id===id); if(!ticket)return;
+    const missing=[];
+    if(Object.values(ticket.quality||{}).filter(Boolean).length<4)missing.push("all four intake checks");
+    if((ticket.evidenceReviewed||[]).length<2)missing.push("at least two evidence sources");
+    if(!(host.querySelector("[data-assessment]").value.trim()||ticket.assessment))missing.push("a supported team assessment");
+    if(host.querySelector("[data-work-state]").value!=="Resolved"&&ticket.state!=="Resolved")missing.push("state set to Resolved and saved");
+    if(!ticket.resolutionCode||!ticket.resolutionNotes)missing.push("saved resolution code and verification notes");
+    if(missing.length){host.querySelector("[data-work-message]").textContent=`Not ready for review: complete ${missing.join(", ")}.`;return;}
+    ticket.state="Awaiting Review"; ticket.reviewStatus="Submitted"; ticket.updatedAt=now(); ticket.activity.push({at:now(),type:"Review submission",text:`${ticket.assignee||"Team"} submitted the resolved record for professor quality review.`}); saveState(); renderQueue(); openTicket(id); updateProgress("review");
+  }
+
+  function resetDemo(){
+    if(cloudReady){ $("#cloudMessage").textContent="Shared team records cannot be erased from the student screen."; return; }
+    if(!confirm("Reset all demo tickets and drafts stored in this browser?"))return;
+    localStorage.removeItem(storeKey); state=loadState(); activeCaseId=1; activeTicketId=null; renderCaseList(); selectCase(1); renderQueue(); updateQueueCount(); switchView("create");
+  }
+
+  function applyCloudWorkspace(row){
+    if(!row?.workspace)return;
+    state={
+      tickets:Array.isArray(row.workspace.tickets)?row.workspace.tickets:[],
+      drafts:row.workspace.drafts||{},
+      counter:Number(row.workspace.counter)||1024,
+      activeCaseId:Number(row.case_id)||activeCaseId
+    };
+    activeCaseId=Number(row.case_id)||activeCaseId;
+    selectCase(activeCaseId);
+    renderQueue(); updateQueueCount();
+  }
+
+  async function initSharedWorkspace(){
+    const cloudMessage=$("#cloudMessage");
+    if(window.CoolHackStandaloneDemo){
+      teamName="Preview Team";
+      $("#teamIdentity").innerHTML="<b>Preview Team</b><small> This phone-safe preview runs in one browser. The published classroom version synchronizes the same workspace for every teammate.</small>";
+      $("#startShift").disabled=false;
+      cloudMessage.textContent="Interactive preview ready. Start the shift, answer the call, and complete the ticket.";
+      $("#sessionLabel").textContent="Interactive preview · Saved on this device";
+      return;
+    }
+    if(!db){
+      cloudMessage.innerHTML='The team connection is unavailable. <a href="index.html#classroom">Return to CoolHack sign-in</a>.';
+      return;
+    }
+    const session=await db.auth.getSession();
+    currentUser=session.data.session?.user||null;
+    if(!currentUser){
+      cloudMessage.innerHTML='Sign in through your class link first, then open the Service Desk. <a href="index.html#classroom">Go to CoolHack sign-in</a>.';
+      $("#sessionLabel").textContent="Sign-in required";
+      return;
+    }
+    const membership=await db.from("team_members")
+      .select("team_id,teams(id,name,section_id,sections(released_service_case))")
+      .eq("user_id",currentUser.id).maybeSingle();
+    if(membership.error||!membership.data?.teams){
+      cloudMessage.textContent=membership.error?.message||"No team was found for this account. Join a team from your class link first.";
+      return;
+    }
+    teamId=membership.data.team_id;
+    teamName=membership.data.teams.name;
+    const released=Number(membership.data.teams.sections?.released_service_case||0);
+    $("#teamIdentity").innerHTML=`<b>${esc(teamName)}</b><small> All teammates share the same call, ticket, queue, and activity history.</small>`;
+    $(".prototype-controls").hidden=true;
+    $("#resetDemo").hidden=true;
+    if(!released){
+      cloudMessage.textContent="Your professor has not released a Service Desk case yet.";
+      $("#sessionLabel").textContent=`${teamName} · Waiting for a case`;
+      return;
+    }
+    activeCaseId=released;
+    const existing=await db.from("service_desk_workspaces").select("*").eq("team_id",teamId).eq("case_id",released).maybeSingle();
+    if(existing.error){ cloudMessage.textContent=existing.error.message; return; }
+    if(existing.data&&Number(existing.data.case_id)===released){
+      applyCloudWorkspace(existing.data);
+    }else{
+      state={tickets:[],drafts:{},counter:1024,activeCaseId:released};
+      activeCaseId=released;
+      const created=await db.from("service_desk_workspaces").upsert({team_id:teamId,case_id:released,workspace:state,last_editor:currentUser.id,updated_at:now()},{onConflict:"team_id,case_id"}).select().single();
+      if(created.error){ cloudMessage.textContent=created.error.message; return; }
+      applyCloudWorkspace(created.data);
+    }
+    cloudReady=true;
+    selectCase(released);
+    $("#startShift").disabled=false;
+    cloudMessage.textContent=`Case ${String(released).padStart(2,"0")} is ready. Start when your team is together.`;
+    $("#sessionLabel").textContent=`${teamName} · Shared workspace ready`;
+    workspaceChannel=db.channel(`service-desk-${teamId}`)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"service_desk_workspaces",filter:`team_id=eq.${teamId}`},payload=>{
+        if(Number(payload.new.case_id)!==activeCaseId)return;
+        if(payload.new.last_editor===currentUser.id)return;
+        applyCloudWorkspace(payload.new);
+        $("#sessionLabel").textContent=`${teamName} · Updated by a teammate`;
+      }).subscribe();
+  }
+
+  $$(".tab").forEach(tab=>tab.addEventListener("click",()=>switchView(tab.dataset.view)));
+  $("#levelFilter").addEventListener("change",renderCaseList);
+  $("#queueFilter").addEventListener("change",renderQueue);
+  $("#impact").addEventListener("change",updatePriority); $("#urgency").addEventListener("change",updatePriority);
+  $("#shortDescription").addEventListener("input",updateShortCount);
+  $("#saveDraft").addEventListener("click",saveDraft); $("#ticketForm").addEventListener("submit",submitTicket);
+  $("#resetDemo").addEventListener("click",resetDemo);
+  $("#startShift").addEventListener("click",startShift);
+  $("#answerCall").addEventListener("click",answerCall);
+  $("#beginTicket").addEventListener("click",beginTicket);
+  renderCaseList(); selectCase(activeCaseId); renderQueue(); updateQueueCount();
+  initSharedWorkspace();
+})();
+
+  </script>
+</body>
+</html>
