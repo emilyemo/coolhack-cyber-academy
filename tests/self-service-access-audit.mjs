@@ -37,8 +37,8 @@ for (const required of [
   "The database enforces this boundary",
   "Shared work is visible to your team and professor",
   'db.rpc("set_section_released_mission"',
-  "Reveal selected scenario",
-  "Hide scenario",
+  "Release mission",
+  "Hide mission",
   'new CustomEvent("coolhack:mission-release"',
   "Scenario 1 professor launch guide",
   "What do we know from the evidence",
@@ -173,7 +173,12 @@ assert.ok(!classroom.includes("CoolHack could not confirm the signed-in session.
 assert.ok(!classroom.includes("const existing=await db.auth.getSession()"), "username sign-in must not sign out a valid session before installing its replacement");
 assert.equal((classroom.match(/await render\(\);/g) || []).length >= 3, true, "account access must open the dashboard directly from the accepted session");
 assert.ok(index.includes("@supabase/supabase-js@2.112.0"), "Supabase browser dependency must be pinned");
-assert.ok(index.includes("classroom.js?v=calm-capstone-1"), "calm capstone cache marker is missing");
+assert.ok(index.includes("classroom.js?v=professor-mission-preview-1"), "professor mission-preview cache marker is missing");
+assert.ok(classroom.includes("Current mission students can see"), "professor dashboard must identify the released mission");
+assert.ok(classroom.includes("Preview scenario"), "professor dashboard must offer a scenario preview");
+assert.ok(classroom.includes("Change released mission"), "professor dashboard must make mission changes obvious");
+assert.ok(classroom.includes("Work active"), "team workspace status must not use the ambiguous Open label");
+assert.ok(!classroom.includes('mission_locked?"Locked":"Open"'), "ambiguous Open workspace status remains");
 assert.ok(index.includes("const missionExtensions = ["), "Missions 2–6 need complete exercise data");
 assert.equal((index.match(/roleplayAreas:/g) || []).length, 5, "Missions 2–6 each need a mission-specific role-play");
 assert.equal((index.match(/employerStatement:/g) || []).length, 5, "Missions 2–6 each need a career connection");

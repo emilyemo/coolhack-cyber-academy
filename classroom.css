@@ -46,6 +46,14 @@
 .scenario-release { display:grid; gap:.45rem; margin:.65rem 0; padding:.7rem; background:#e8f7f5; border:1px solid #8bd5ce; border-radius:10px; }
 .scenario-release label { margin:0; color:#12333a; font-size:.78rem; font-weight:850; }
 .scenario-release select { margin:.25rem 0 0; }
+.current-mission-card { display:grid; gap:.45rem; margin:.75rem 0 .35rem; padding:.85rem; background:#fff; border:2px solid #1f7a70; border-radius:10px; }
+.current-mission-card h4,.current-mission-card p { margin:0; }
+.current-mission-card details { margin-top:.2rem; }
+.current-mission-card summary { width:max-content; list-style:none; cursor:pointer; }
+.current-mission-card summary::-webkit-details-marker { display:none; }
+.scenario-preview { margin-top:.55rem; padding:.75rem; background:#f4f8f7; border-left:4px solid #1f7a70; border-radius:6px; }
+.scenario-preview small { display:block; margin-top:.45rem; }
+.current-mission-card.mission-hidden { border-color:#b9b8b0; background:#f5f4ef; }
 .scenario-waiting { max-width:720px; margin:1.25rem auto; border-top:6px solid #d99a18; }
 .professor-briefing { margin:1rem 0; border-top:6px solid #ef6f51; }
 .professor-briefing details { margin:.7rem 0; padding:.7rem .85rem; background:#fff4df; border:1px solid #e8c77c; border-radius:10px; }
