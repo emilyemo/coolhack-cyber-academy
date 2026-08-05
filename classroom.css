@@ -265,3 +265,74 @@
     font-size:.82rem;
   }
 }
+
+.capstone-mission-mode header,
+.capstone-mission-mode .hero,
+.capstone-mission-mode .clock-panel,
+.capstone-mission-mode #classroom-access,
+.capstone-mission-mode .app-tabs,
+.capstone-mission-mode .acronym-guide,
+.capstone-mission-mode [data-view]:not(#missions),
+.capstone-mission-mode footer { display:none !important; }
+.capstone-mission-mode main { padding-top:1rem; }
+.capstone-mission-mode #missions { display:block !important; }
+.capstone-return { margin:0 0 1rem; }
+
+/* Calm capstone workspace: one workplace decision at a time. */
+.capstone-shell { max-width:980px; margin:1rem auto 2rem; color:#202b2d; }
+.capstone-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1rem; padding:1.15rem 1.25rem; background:#fff; border:1px solid #cfdcda; border-radius:16px; box-shadow:0 12px 30px rgba(18,71,79,.08); }
+.capstone-head h3 { margin:.2rem 0; font-size:clamp(1.5rem,4vw,2.25rem); }
+.capstone-head p { margin:0; color:#5a6563; font-weight:750; }
+.team-drawer { max-width:360px; padding:.55rem .75rem; background:#f5faf9; border:1px solid #b9d6d2; border-radius:10px; }
+.team-drawer summary,.team-evidence summary { color:#076b75; cursor:pointer; font-weight:850; }
+.team-drawer p { font-size:.82rem; font-weight:500; }
+.team-drawer .roster { margin:.7rem 0; padding-left:1.1rem; }
+.capstone-steps { display:grid; grid-template-columns:repeat(6,1fr); gap:.45rem; margin:0 0 1rem; }
+.capstone-steps button { display:flex; min-width:0; align-items:center; gap:.4rem; padding:.65rem .55rem; color:#51605e; background:#edf3f2; border:1px solid #ccd9d7; border-radius:11px; cursor:pointer; font:inherit; font-size:.76rem; font-weight:800; }
+.capstone-steps button b { display:grid; flex:0 0 1.55rem; width:1.55rem; height:1.55rem; place-items:center; color:#fff; background:#80918e; border-radius:50%; }
+.capstone-steps button.active { color:#fff; background:#087f8c; border-color:#087f8c; }
+.capstone-steps button.active b { color:#087f8c; background:#fff; }
+.capstone-stage { min-height:420px; padding:clamp(1.1rem,3vw,2rem); background:#fff; border:1px solid #cfdcda; border-top:6px solid #087f8c; border-radius:16px; box-shadow:0 18px 44px rgba(18,71,79,.10); }
+.capstone-stage[hidden] { display:none !important; }
+.capstone-stage h3 { margin:.25rem 0 .5rem; font-size:clamp(1.35rem,3vw,1.85rem); }
+.capstone-stage>p { max-width:700px; color:#566260; }
+.capstone-stage textarea { min-height:120px; }
+.capstone-stage .btn { margin:.5rem .45rem .25rem 0; }
+.stage-count { color:#84402f; font-size:.75rem; font-weight:900; letter-spacing:.1em; text-transform:uppercase; }
+.team-evidence { margin:1rem 0; padding:.85rem; background:#f5faf9; border:1px solid #b9d6d2; border-radius:11px; }
+.team-evidence #teamNotes { margin-top:.7rem; }
+.completion-banner { display:grid; gap:.25rem; margin-top:1rem; padding:1rem; color:#164b42; background:#e8f7f1; border:1px solid #92cfbc; border-radius:12px; }
+
+/* Professor essentials first; supporting material stays out of the operating view. */
+.staff-dashboard .admin-stats,
+.staff-dashboard .guided-workflow,
+.staff-dashboard .staff-visibility,
+.staff-dashboard .professor-briefing { display:none; }
+.staff-dashboard #createSection { grid-column:1/-1; max-width:720px; }
+.staff-dashboard #createSection + .classroom-card { display:none; }
+.staff-dashboard .admin-panel-grid + .admin-panel-grid { display:none; }
+.staff-dashboard .operations-board { border-top:6px solid #087f8c; }
+.staff-dashboard .section-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.staff-dashboard .section-summary article { padding:1rem; background:#fff; border-color:#cfdcda; }
+.staff-dashboard .section-code-actions .btn { width:100%; min-height:48px; font-size:.9rem; }
+.team-management-drawer { margin-top:1rem; padding:.9rem; background:#f5faf9; border:1px solid #b9d6d2; border-radius:12px; }
+.team-management-drawer>summary { color:#076b75; cursor:pointer; font-size:1rem; font-weight:900; }
+.team-management-drawer[open]>summary { margin-bottom:1rem; }
+
+@media (max-width:760px) {
+  .capstone-head { align-items:stretch; flex-direction:column; }
+  .team-drawer { max-width:none; }
+  .capstone-steps { display:flex; overflow-x:auto; padding-bottom:.35rem; scroll-snap-type:x proximity; }
+  .capstone-steps button { flex:0 0 108px; scroll-snap-align:start; }
+  .capstone-stage { min-height:0; }
+  .staff-dashboard .section-summary { grid-template-columns:1fr; }
+}
+
+@media (max-width:600px) {
+  .capstone-shell { margin:.65rem 0 1.5rem; }
+  .capstone-head,.capstone-stage { padding:1rem; border-radius:13px; }
+  .capstone-stage .btn { width:100%; margin:.4rem 0; }
+  .capstone-stage textarea { min-height:145px; }
+  .account-bar { margin-bottom:.65rem; padding:.65rem .75rem; }
+  .account-bar p { margin:0; font-size:.8rem; }
+}

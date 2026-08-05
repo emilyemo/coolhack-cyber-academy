@@ -165,7 +165,8 @@
   }
 
   function authScreen() {
-    document.body.classList.remove("role-landing");
+    document.body.classList.add("role-landing");
+    document.body.classList.remove("staff-dashboard", "capstone-mission-mode");
     if (!portal) {
       renderWelcome();
       return;
@@ -327,6 +328,8 @@
   }
 
   async function studentScreen() {
+    document.body.classList.add("role-landing");
+    document.body.classList.remove("staff-dashboard", "capstone-mission-mode");
     const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked,sections(released_mission))").eq("user_id",currentUser.id).maybeSingle();
     if (m.error) throw m.error;
     membership = m.data;
@@ -357,24 +360,93 @@
     roster = rosterResult.data || [];
     const report = reportResult.data || {};
     const myNote = (notesResult.data || []).find(n => n.author_id === currentUser.id)?.note_text || "";
-    mount.innerHTML = accountBar(`<span class="cloud-state" id="cloudState">Cloud connected</span> `) + `
-      <div class="instructions-lead"><strong>${esc(membership.teams.name)} · Mission ${mission}</strong><br>Your seat: ${esc(membership.assigned_role || "Not assigned")}.</div>
-      <div class="visibility-guide"><strong>Who can see this work?</strong><span>Teammates see the roster, live role notes, and shared report.</span><span>Your private reflection is visible only to you, your assigned professor, and the platform administrator.</span></div>
-      <div class="classroom-grid">
-        <aside class="classroom-card"><h3>Team roster</h3><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong><br>${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><h3>Live role notes</h3><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc(roster.find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No notes yet.</p>"}</div></aside>
-        <div>
-          <div class="classroom-card"><h3>My role notes</h3><label for="liveRoleNotes">What I observe and recommend</label><textarea id="liveRoleNotes" ${membership.teams.mission_locked?"disabled":""}>${esc(myNote)}</textarea></div>
-          <form class="classroom-card" id="sharedReport">
-            <h3>Shared team report</h3>
-            ${["findings","timeline","decision","unknowns","ai_transcript","ai_feedback","ai_security_brief"].map(k=>`<label for="cloud_${k}">${k==="decision"?"Initial decision, final decision, and what changed — cite the evidence":k==="unknowns"?"Unknowns, next owner, and 60-second SOC shift briefing":k==="ai_feedback"?"AI supervisor feedback, readiness score, and team response":k==="ai_security_brief"?"AI Security Brief — risk, asset, evidence, control, and human owner":k.replaceAll("_"," ")}</label><textarea id="cloud_${k}" data-report-field="${k}" ${membership.teams.mission_locked?"disabled":""}>${esc(report[k]||"")}</textarea>`).join("")}
-            <p class="cloud-state">Everyone on this team can see this report. Coordinate before editing the same section.</p>
-          </form>
-          <div class="classroom-card"><h3>My private career reflection</h3><p>Your teammates cannot read this reflection. Your instructor can. Explain your personal contribution, the concept this mission revised, what changed in your thinking, and how you would describe the simulation honestly in an interview.</p><textarea id="privateReflection" ${reflectionResult.data?.submitted_at?"disabled":""}>${esc(reflectionResult.data?.reflection_text||"")}</textarea></div>
+    const disabled = membership.teams.mission_locked ? "disabled" : "";
+    mount.innerHTML = accountBar(`<span class="cloud-state" id="cloudState">Saved</span> `) + `
+      <section class="capstone-shell" aria-labelledby="capstoneMissionTitle">
+        <header class="capstone-head">
+          <div><span class="card-kicker">Current assignment</span><h3 id="capstoneMissionTitle">Mission ${mission}</h3><p>${esc(membership.teams.name)} · ${esc(membership.assigned_role || "Role not assigned")}</p></div>
+          <details class="team-drawer"><summary>Team details</summary><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong> — ${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><p>Shared work is visible to your team and professor. Your reflection is private from teammates.</p></details>
+        </header>
+        <nav class="capstone-steps" aria-label="Mission steps">
+          ${["Brief","Evidence","Decide","Ask AI","Final response","Reflect"].map((label,index)=>`<button type="button" data-capstone-step="${index}" class="${index===0?"active":""}" aria-current="${index===0?"step":"false"}"><b>${index+1}</b><span>${label}</span></button>`).join("")}
+        </nav>
+        <div class="capstone-stage" data-capstone-panel="0">
+          <span class="stage-count">Step 1 of 6</span><h3>Read the mission brief</h3><p>Open the current case, read the workplace incident, and make sure every teammate understands the assignment before discussing solutions.</p>
+          <button class="btn primary" type="button" data-open-current-mission>Open Mission ${mission}</button>
+          <button class="btn stage-next" type="button" data-next-capstone="1">We understand the brief →</button>
         </div>
-      </div>`;
+        <div class="capstone-stage" data-capstone-panel="1" hidden>
+          <span class="stage-count">Step 2 of 6</span><h3>Inspect the evidence</h3><p>Record only what your role can support. Refer to artifact numbers and separate facts from assumptions.</p>
+          <label for="liveRoleNotes">My evidence note and recommendation</label><textarea id="liveRoleNotes" ${disabled}>${esc(myNote)}</textarea>
+          <details class="team-evidence"><summary>Read teammates' evidence notes</summary><div id="teamNotes">${(notesResult.data||[]).map(n=>`<p data-note-author="${n.author_id}"><strong>${esc(roster.find(r=>r.user_id===n.author_id)?.profiles?.display_name||"Team member")}:</strong> ${esc(n.note_text)}</p>`).join("")||"<p>No teammate notes yet.</p>"}</div></details>
+          <button class="btn primary stage-next" type="button" data-next-capstone="2">Make our team decision →</button>
+        </div>
+        <form id="sharedReport">
+          <div class="capstone-stage" data-capstone-panel="2" hidden>
+            <span class="stage-count">Step 3 of 6</span><h3>Make the team’s initial decision</h3><p>Discuss the evidence before using AI. Your decision must be defensible, not merely unanimous.</p>
+            <label for="cloud_findings">Confirmed findings and artifact numbers</label><textarea id="cloud_findings" data-report-field="findings" ${disabled}>${esc(report.findings||"")}</textarea>
+            <label for="cloud_timeline">Short incident timeline</label><textarea id="cloud_timeline" data-report-field="timeline" ${disabled}>${esc(report.timeline||"")}</textarea>
+            <label for="cloud_decision">Initial decision, final decision, and what changed</label><textarea id="cloud_decision" data-report-field="decision" ${disabled}>${esc(report.decision||"")}</textarea>
+            <button class="btn primary stage-next" type="button" data-next-capstone="3">Challenge our reasoning with AI →</button>
+          </div>
+          <div class="capstone-stage" data-capstone-panel="3" hidden>
+            <span class="stage-count">Step 4 of 6</span><h3>Meet the AI supervisor</h3><p>Use the mission’s AI supervisor prompt. Answer one question at a time, verify every claim against the original evidence, and never paste real personal or institutional information.</p>
+            <label for="cloud_ai_transcript">Paste the team’s AI supervisor conversation</label><textarea id="cloud_ai_transcript" data-report-field="ai_transcript" ${disabled}>${esc(report.ai_transcript||"")}</textarea>
+            <label for="cloud_ai_feedback">What did the AI challenge, and what did your team verify?</label><textarea id="cloud_ai_feedback" data-report-field="ai_feedback" ${disabled}>${esc(report.ai_feedback||"")}</textarea>
+            <button class="btn primary stage-next" type="button" data-next-capstone="4">Prepare our final response →</button>
+          </div>
+          <div class="capstone-stage" data-capstone-panel="4" hidden>
+            <span class="stage-count">Step 5 of 6</span><h3>Submit a professional final response</h3><p>State what changed after the AI review, what remains unknown, and what the next SOC shift must do.</p>
+            <label for="cloud_unknowns">Unknowns, next owner, and 60-second SOC shift briefing</label><textarea id="cloud_unknowns" data-report-field="unknowns" ${disabled}>${esc(report.unknowns||"")}</textarea>
+            <label for="cloud_ai_security_brief">Final AI Security Brief: risk, asset, evidence, control, and human owner</label><textarea id="cloud_ai_security_brief" data-report-field="ai_security_brief" ${disabled}>${esc(report.ai_security_brief||"")}</textarea>
+            <button class="btn primary stage-next" type="button" data-next-capstone="5">Complete my reflection →</button>
+          </div>
+        </form>
+        <div class="capstone-stage" data-capstone-panel="5" hidden>
+          <span class="stage-count">Step 6 of 6</span><h3>My private career reflection</h3><p>This is private from teammates. Explain what you contributed, what changed in your thinking, and how you would describe this work honestly in an interview.</p>
+          <label for="privateReflection">My individual reflection</label><textarea id="privateReflection" ${reflectionResult.data?.submitted_at?"disabled":""}>${esc(reflectionResult.data?.reflection_text||"")}</textarea>
+          <div class="completion-banner"><strong>Mission work saves automatically.</strong><span>Your professor can review the team response and your individual reflection.</span></div>
+        </div>
+      </section>`;
     bindSignOut();
+    bindCapstoneSteps(mission);
     bindStudentSaving(teamId, mission);
     subscribe(teamId, mission);
+  }
+
+  function bindCapstoneSteps(mission) {
+    const showStep = index => {
+      document.querySelectorAll("[data-capstone-panel]").forEach(panel => panel.hidden = Number(panel.dataset.capstonePanel) !== index);
+      document.querySelectorAll("[data-capstone-step]").forEach(button => {
+        const active = Number(button.dataset.capstoneStep) === index;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-current", active ? "step" : "false");
+      });
+      document.querySelector(`[data-capstone-panel="${index}"]`)?.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    document.querySelectorAll("[data-capstone-step]").forEach(button => button.addEventListener("click", () => showStep(Number(button.dataset.capstoneStep))));
+    document.querySelectorAll("[data-next-capstone]").forEach(button => button.addEventListener("click", () => showStep(Number(button.dataset.nextCapstone))));
+    document.querySelector("[data-open-current-mission]")?.addEventListener("click", () => {
+      document.body.classList.remove("role-landing");
+      document.body.classList.add("capstone-mission-mode");
+      const missionSection = document.querySelector("#missions");
+      if (missionSection && !missionSection.querySelector("[data-return-workspace]")) {
+        const returnButton = document.createElement("button");
+        returnButton.type = "button";
+        returnButton.className = "btn capstone-return";
+        returnButton.dataset.returnWorkspace = "";
+        returnButton.textContent = "← Return to team workspace";
+        returnButton.addEventListener("click", () => {
+          document.body.classList.remove("capstone-mission-mode");
+          document.body.classList.add("role-landing");
+          document.querySelector("#classroom-access")?.scrollIntoView({behavior:"smooth",block:"start"});
+        });
+        missionSection.prepend(returnButton);
+      }
+      document.querySelector('[data-open-view="missions"]')?.click();
+      missionSection?.scrollIntoView({behavior:"smooth",block:"start"});
+      window.dispatchEvent(new CustomEvent("coolhack:mission-release",{detail:{mission}}));
+    });
   }
 
   function bindStudentSaving(teamId, mission) {
@@ -418,6 +490,8 @@
   }
 
   async function staffScreen() {
+  document.body.classList.add("role-landing", "staff-dashboard");
+  document.body.classList.remove("capstone-mission-mode");
   const isAdmin=profile.app_role==="platform_admin";
     const sectionFields="id,name,class_link_token,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
   const accessPromise=isAdmin
@@ -486,7 +560,7 @@
       <details><summary>AI security discussion prompts</summary><ul>${guide.prompts.map(prompt=>`<li>${esc(prompt)}</li>`).join("")}</ul></details>
       <details><summary>What students should be able to say afterward</summary><p>${esc(guide.takeaway)}</p><p>Ask one student from each team to answer: <strong>What is the AI risk, what control reduces it, and which human remains accountable?</strong></p></details>
     </section>`).join("")}
-    <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">Live operations</span><h3>Sections, teams, and mission progress</h3></div><label for="sectionFilter">Show section<select id="sectionFilter"><option value="all">All available sections</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
+    <section class="classroom-card operations-board"><div class="operations-head"><div><span class="card-kicker">My classes</span><h3>Student links and mission release</h3></div><label for="sectionFilter">Show class<select id="sectionFilter"><option value="all">All my classes</option>${sections.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></label></div>
       <div class="section-summary">${sections.map(section=>`
         <article data-section-summary="${section.id}">
           <strong>${esc(section.name)}</strong>
@@ -496,7 +570,7 @@
           <div class="scenario-release"><label>Weekly scenario<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Hidden</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Scenario ${n}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change revealed scenario":"Reveal selected scenario"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide scenario</button>`:""}<small>${Number(section.released_mission)>0?`Students can access Scenario ${section.released_mission} only.`:"All scenarios are hidden from students."}</small></div>
           <div class="section-danger-actions"><button class="btn compact danger" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button><small>Archives the class without deleting student work.</small></div>
         </article>`).join("")||"<p>No active classes yet.</p>"}</div>
-      <div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div>
+      <details class="team-management-drawer"><summary>View teams and submissions</summary><div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin)}</div><div id="staffReview" aria-live="polite"></div></details>
     </section>
     ${isAdmin?`<details class="classroom-card access-audit"><summary><span><span class="card-kicker">Access audit</span><strong>Recent successful sign-ins</strong></span><span>${accessEvents.length} records</span></summary><p>CoolHack records role-based access without displaying student emails.</p><div class="audit-list">${accessEvents.map(event=>`<article><strong>${esc(event.profiles?.display_name||"Account")}</strong><span>${esc(event.app_role)} · ${esc(event.portal)}</span><time datetime="${esc(event.accessed_at)}">${esc(formatAccessTime(event.accessed_at))}</time></article>`).join("")||"<p>No successful sign-ins have been recorded yet.</p>"}</div></details>`:""}`;
   bindSignOut();

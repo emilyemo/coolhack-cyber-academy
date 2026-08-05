@@ -35,7 +35,7 @@ for (const required of [
   'db.rpc("create_professor_section"',
   "Preview student entrance",
   "The database enforces this boundary",
-  "Teammates see the roster",
+  "Shared work is visible to your team and professor",
   'db.rpc("set_section_released_mission"',
   "Reveal selected scenario",
   "Hide scenario",
@@ -135,6 +135,10 @@ assert.ok(css.includes(".role-entry-grid"), "welcome-page layout is missing");
 assert.ok(css.includes(".access-audit"), "access-audit layout is missing");
 assert.ok(css.includes(".visibility-guide"), "visibility guidance is missing");
 assert.ok(css.includes(".scenario-release"), "scenario-release controls are missing");
+assert.ok(css.includes(".capstone-steps"), "calm step-by-step capstone navigation is missing");
+assert.ok(classroom.includes('data-capstone-panel="5"'), "all six capstone stages are required");
+assert.ok(classroom.includes("bindCapstoneSteps(mission)"), "capstone stage controls are not connected");
+assert.ok(classroom.includes("View teams and submissions"), "professor team review must use a collapsed drawer");
 
 for (const required of [
   "released_mission",
@@ -169,7 +173,7 @@ assert.ok(!classroom.includes("CoolHack could not confirm the signed-in session.
 assert.ok(!classroom.includes("const existing=await db.auth.getSession()"), "username sign-in must not sign out a valid session before installing its replacement");
 assert.equal((classroom.match(/await render\(\);/g) || []).length >= 3, true, "account access must open the dashboard directly from the accepted session");
 assert.ok(index.includes("@supabase/supabase-js@2.112.0"), "Supabase browser dependency must be pinned");
-assert.ok(index.includes("classroom.js?v=browser-native-session-1"), "browser-native session cache marker is missing");
+assert.ok(index.includes("classroom.js?v=calm-capstone-1"), "calm capstone cache marker is missing");
 assert.ok(index.includes("const missionExtensions = ["), "Missions 2–6 need complete exercise data");
 assert.equal((index.match(/roleplayAreas:/g) || []).length, 5, "Missions 2–6 each need a mission-specific role-play");
 assert.equal((index.match(/employerStatement:/g) || []).length, 5, "Missions 2–6 each need a career connection");
