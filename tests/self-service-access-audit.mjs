@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 
 const classroom = readFileSync(new URL("../classroom.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../classroom.css", import.meta.url), "utf8");
+const serviceDesk = readFileSync(new URL("../service-desk.js", import.meta.url), "utf8");
+const serviceDeskHtml = readFileSync(new URL("../service-desk.html", import.meta.url), "utf8");
 const migration = readFileSync(
   new URL("../supabase/self-service-professor-migration.sql", import.meta.url),
   "utf8",
@@ -177,6 +179,12 @@ assert.ok(index.includes("classroom.js?v=professor-mission-preview-1"), "profess
 assert.ok(classroom.includes("Current mission students can see"), "professor dashboard must identify the released mission");
 assert.ok(classroom.includes("Preview scenario"), "professor dashboard must offer a scenario preview");
 assert.ok(classroom.includes("Change released mission"), "professor dashboard must make mission changes obvious");
+assert.ok(classroom.includes("All 30 cases are always available"), "Service Desk must be independent of professor case release");
+assert.ok(classroom.includes("Professor Help Center"), "professor dashboard must explain the independent Service Desk workflow");
+assert.ok(!classroom.includes("data-service-release"), "professor dashboard must not contain Service Desk release controls");
+assert.ok(!serviceDesk.includes("released_service_case"), "student Service Desk must not depend on a released case");
+assert.ok(serviceDesk.includes("await openSharedCase(1)"), "shared Service Desk must open independently with the first case");
+assert.ok(serviceDeskHtml.includes("30 workplace calls"), "student simulator must expose the full case queue");
 assert.ok(classroom.includes("Work active"), "team workspace status must not use the ambiguous Open label");
 assert.ok(!classroom.includes('mission_locked?"Locked":"Open"'), "ambiguous Open workspace status remains");
 assert.ok(index.includes("const missionExtensions = ["), "Missions 2–6 need complete exercise data");

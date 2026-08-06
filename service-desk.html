@@ -37,7 +37,7 @@
         <span class="team-illustration" aria-hidden="true">👥</span>
         <h2>One team. One shared case.</h2>
         <p>Work together in any way that suits your team. Suggested roles—interviewer, ticket writer, researcher, and quality checker—are completely optional.</p>
-        <p class="professor-job"><b>Professor:</b> release → observe → review.</p>
+        <p class="professor-job"><b>Professor:</b> observe team progress and review completed work.</p>
       </div>
     </section>
 
@@ -61,13 +61,8 @@
     <section class="view guided-view" id="createView" data-view-panel="create" hidden>
       <aside class="case-panel instructor-demo">
         <div class="panel-heading">
-          <div><p class="eyebrow">Team assignment</p><h2>One case released</h2></div>
-        </div>
-        <div class="released-case-summary"><b id="releasedCaseLabel">Case 01</b><span>Your team sees only this call.</span></div>
-        <details class="prototype-controls">
-          <summary>Professor preview controls</summary>
-          <div class="panel-heading">
-          <label class="compact-field">Professor demo
+          <div><p class="eyebrow">Incident queue</p><h2>30 workplace calls</h2></div>
+          <label class="compact-field">Difficulty
             <select id="levelFilter">
               <option value="all">All levels</option>
               <option value="1">1 · Foundations</option>
@@ -75,15 +70,14 @@
               <option value="3">3 · Complex</option>
             </select>
           </label>
-          </div>
-          <div class="case-list" id="caseList"></div>
-          <p class="demo-note">Choose another case here only to test the prototype. Students will not have this control.</p>
-        </details>
+        </div>
+        <div class="released-case-summary"><b id="releasedCaseLabel">Case 01</b><span>Select any call and work through it as a team.</span></div>
+        <div class="case-list" id="caseList"></div>
       </aside>
 
       <div class="ticket-stage">
         <article class="caller-card ringing" id="callerCard">
-          <div class="caller-topline"><span class="phone-icon" aria-hidden="true">☎</span><div><p id="callStatus">Incoming employee call…</p><h2 id="caseTitle">Your team has a call</h2></div><span class="case-level" id="caseLevel">Released case</span></div>
+          <div class="caller-topline"><span class="phone-icon" aria-hidden="true">☎</span><div><p id="callStatus">Incoming employee call…</p><h2 id="caseTitle">Your team has a call</h2></div><span class="case-level" id="caseLevel">Case level</span></div>
           <div class="ring-screen" id="ringScreen"><div class="ring-pulse" aria-hidden="true">☎</div><h2>Incoming call</h2><p>Discuss who will speak for the team, then answer when you are ready.</p><button class="button answer-button" id="answerCall" type="button">Answer call</button></div>
           <blockquote id="callerStatement" hidden></blockquote>
           <div class="interview-instruction hidden" id="interviewInstruction"><b>Team task:</b> Choose the questions your team would ask. The caller reveals information only when asked.</div>

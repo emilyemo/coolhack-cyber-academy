@@ -339,7 +339,7 @@
   async function studentScreen() {
     document.body.classList.add("role-landing");
     document.body.classList.remove("staff-dashboard", "capstone-mission-mode");
-    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked,sections(released_mission,released_service_case))").eq("user_id",currentUser.id).maybeSingle();
+    const m = await db.from("team_members").select("team_id,assigned_role,teams(id,name,active_mission,mission_locked,sections(released_mission))").eq("user_id",currentUser.id).maybeSingle();
     if (m.error) throw m.error;
     membership = m.data;
     if (!membership) {
@@ -348,11 +348,11 @@
     }
     const teamId = membership.team_id;
     const mission = Number(membership.teams.sections?.released_mission || 0);
-    const serviceCase = Number(membership.teams.sections?.released_service_case || 0);
     window.CoolHackReleasedMission = mission;
     window.dispatchEvent(new CustomEvent("coolhack:mission-release",{detail:{mission}}));
-    if (!mission && !serviceCase) {
+    if (!mission) {
       mount.innerHTML = accountBar() + `
+        <div class="classroom-card scenario-waiting"><span class="card-kicker">Service Desk simulator</span><h3>All 30 workplace cases are ready</h3><p>Your team can enter independently, select any incident, and continue from its saved work.</p><div class="hero-actions"><a class="btn primary" href="service-desk.html">Open shared Service Desk</a></div></div>
         <div class="classroom-card scenario-waiting">
           <span class="card-kicker">Weekly activity</span>
           <h3>Your professor has not revealed this week's scenario yet</h3>
@@ -360,10 +360,6 @@
         </div>`;
       bindSignOut();
       return;
-    }
-    if (!mission && serviceCase) {
-      mount.innerHTML = accountBar() + `<div class="classroom-card scenario-waiting"><span class="card-kicker">Service Desk team shift</span><h3>Case ${String(serviceCase).padStart(2,"0")} is ready</h3><p>Open the shared simulator when your team is together. You will answer one employee call, create one incident, investigate it, and submit the resolved record for professor review.</p><div class="hero-actions"><a class="btn primary" href="service-desk.html">Open shared Service Desk</a></div></div>`;
-      bindSignOut(); return;
     }
     const [rosterResult, notesResult, reportResult, reflectionResult] = await Promise.all([
       db.from("team_members").select("user_id,assigned_role,profiles(display_name)").eq("team_id",teamId),
@@ -381,7 +377,7 @@
           <div><span class="card-kicker">Current assignment</span><h3 id="capstoneMissionTitle">Mission ${mission}</h3><p>${esc(membership.teams.name)} · ${esc(membership.assigned_role || "Role not assigned")}</p></div>
           <details class="team-drawer"><summary>Team details</summary><ul class="roster">${roster.map(x=>`<li><strong>${esc(x.profiles?.display_name)}</strong> — ${esc(x.assigned_role||"Role pending")}</li>`).join("")}</ul><p>Shared work is visible to your team and professor. Your reflection is private from teammates.</p></details>
         </header>
-        ${serviceCase?`<div class="classroom-card"><span class="card-kicker">Service Desk team shift</span><h3>Case ${String(serviceCase).padStart(2,"0")} is open</h3><p>Your team shares one call, ticket, investigation record, and review submission.</p><div class="hero-actions"><a class="btn primary" href="service-desk.html">Open shared Service Desk</a></div></div>`:""}
+        <div class="classroom-card"><span class="card-kicker">Service Desk team shift</span><h3>All 30 workplace cases are open</h3><p>Your team selects cases independently. Each call, ticket, investigation record, and review submission is shared and saved.</p><div class="hero-actions"><a class="btn primary" href="service-desk.html">Open shared Service Desk</a></div></div>
         <nav class="capstone-steps" aria-label="Mission steps">
           ${["Brief","Evidence","Decide","Ask AI","Final response","Reflect"].map((label,index)=>`<button type="button" data-capstone-step="${index}" class="${index===0?"active":""}" aria-current="${index===0?"step":"false"}"><b>${index+1}</b><span>${label}</span></button>`).join("")}
         </nav>
@@ -508,7 +504,7 @@
   document.body.classList.add("role-landing", "staff-dashboard");
   document.body.classList.remove("capstone-mission-mode");
   const isAdmin=profile.app_role==="platform_admin";
-    const sectionFields="id,name,class_link_token,instructor_id,is_active,released_mission,released_service_case,profiles!sections_instructor_id_fkey(display_name)";
+    const sectionFields="id,name,class_link_token,instructor_id,is_active,released_mission,profiles!sections_instructor_id_fkey(display_name)";
   const accessPromise=isAdmin
     ? db.from("access_events").select("id,portal,app_role,accessed_at,profiles(display_name)").order("accessed_at",{ascending:false}).limit(30)
     : Promise.resolve({data:[],error:null});
@@ -546,6 +542,16 @@
       <div class="classroom-card"><span class="card-kicker">Student self-service</span><h3>One link—no codes</h3><p>Post the class link in Canvas. One student creates the team; the others select its name and join.</p></div>
       <div class="classroom-card"><span class="card-kicker">Professor control</span><h3>Professor manages the live roster</h3><p>Teams appear automatically. The professor sees only this class and assigns the four distinct seats.</p></div>
     </div>
+    ${!isAdmin?`<details class="classroom-card professor-help-center" open>
+      <summary><span><span class="card-kicker">Professor Help Center</span><strong>How the Service Desk activity works</strong></span></summary>
+      <p><strong>Your classroom job:</strong> Post the class link once, then observe. You do not release cases, assign a case, operate the incoming call, or save students' work.</p>
+      <div class="admin-panel-grid">
+        <div><h4>What students do</h4><ol><li>Sign in through your class link and join a team.</li><li>Open the Service Desk and select any of the 30 calls.</li><li>Answer the simulated call and ask the available interview questions.</li><li>Create, investigate, document, resolve, and submit the ticket.</li></ol></div>
+        <div><h4>What you can see</h4><ol><li>Open <b>View teams and submissions</b>.</li><li>Select a team to inspect its saved cases, evidence, notes, status, and resolution.</li><li>Approve strong submitted work or return it for correction.</li><li>You see only classes created by your professor account.</li></ol></div>
+      </div>
+      <details><summary>Common student questions</summary><p><b>Who is calling?</b> The simulator plays the employee. Students tap <i>Answer call</i>.</p><p><b>Which case should we choose?</b> Any case in the queue unless you give the class a preferred starting number.</p><p><b>Will changing cases erase our work?</b> No. Every team and case has its own retained shared record.</p><p><b>Can teammates work together?</b> Yes. They share the same case workspace and activity history.</p><p><b>What do Impact and Urgency mean?</b> Impact is how widely the issue affects the organization; urgency is how quickly action is needed. The system calculates priority from both.</p></details>
+      <details><summary>When should I intervene?</summary><p>Intervene only when a team asks for help, enters inappropriate information, or submits unsupported work. The built-in prompts guide the normal workflow without a lecture.</p></details>
+    </details>`:""}
     ${sections.some(section=>Number(section.released_mission)===1)?`
       <section class="classroom-card professor-briefing">
         <span class="card-kicker">Scenario 1 professor launch guide</span>
@@ -586,7 +592,7 @@
           <div class="section-code-actions"><button class="btn compact primary" type="button" data-copy-link="${esc(section.class_link_token)}">Copy class link</button></div>
           ${Number(section.released_mission)>0?`<div class="current-mission-card"><span class="card-kicker">Current mission students can see</span><h4>Mission ${section.released_mission}: ${esc(missionCatalog[Number(section.released_mission)]?.title||"")}</h4><p>${esc(missionCatalog[Number(section.released_mission)]?.subtitle||"")}</p><details><summary class="btn compact">Preview scenario</summary><div class="scenario-preview"><p>${esc(missionCatalog[Number(section.released_mission)]?.scenario||"")}</p><small>This is the opening brief. Students receive the evidence and guided workspace after entering their team.</small></div></details></div>`:`<div class="current-mission-card mission-hidden"><span class="card-kicker">Current mission</span><h4>No mission released</h4><p>Students cannot see a scenario yet.</p></div>`}
           <div class="scenario-release"><label>Change released mission<select data-section-mission="${section.id}"><option value="0" ${Number(section.released_mission)===0?"selected":""}>Choose a mission</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${Number(section.released_mission)===n?"selected":""}>Mission ${n}: ${esc(missionCatalog[n].title)}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-scenario-reveal="${section.id}">${Number(section.released_mission)>0?"Change mission":"Release mission"}</button>${Number(section.released_mission)>0?`<button class="btn compact" type="button" data-scenario-hide="${section.id}">Hide mission</button>`:""}</div>
-          <div class="scenario-release"><label>Service Desk case<select data-service-case="${section.id}"><option value="">Hidden</option>${Array.from({length:30},(_,i)=>i+1).map(n=>`<option value="${n}" ${Number(section.released_service_case)===n?"selected":""}>Case ${String(n).padStart(2,"0")}</option>`).join("")}</select></label><button class="btn compact primary" type="button" data-service-release="${section.id}">${section.released_service_case?"Change released case":"Release case"}</button><a class="btn compact" href="service-desk.html">Open simulator</a><small>${section.released_service_case?`Teams share Case ${String(section.released_service_case).padStart(2,"0")} in real time.`:"No Service Desk case is visible to students."}</small></div>
+          <div class="scenario-release"><strong>Service Desk simulator</strong><span>All 30 cases are always available. Teams select and work them independently while you observe.</span><a class="btn compact" href="service-desk.html">Open simulator</a></div>
           <div class="section-danger-actions"><button class="btn compact danger" type="button" data-section-archive="${section.id}" data-section-name="${esc(section.name)}">Archive section</button><small>Archives the class without deleting student work.</small></div>
         </article>`).join("")||"<p>No active classes yet.</p>"}</div>
       <details class="team-management-drawer"><summary>View teams and submissions</summary><div id="teamOperations">${renderTeamOperations(teams,sections,members,professors,isAdmin,serviceDeskWorkspaces)}</div><div id="staffReview" aria-live="polite"></div></details>
@@ -623,7 +629,6 @@
     }));
     document.querySelectorAll("[data-scenario-reveal]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-section-mission="${button.dataset.scenarioReveal}"]`);const mission=Number(select?.value||0);if(!mission){showOperationResult("Choose a scenario before revealing it.",true);return;}const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioReveal,requested_mission:mission});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-scenario-hide]").forEach(button=>button.addEventListener("click",async()=>{const result=await db.rpc("set_section_released_mission",{requested_section:button.dataset.scenarioHide,requested_mission:0});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
-    document.querySelectorAll("[data-service-release]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-service-case="${button.dataset.serviceRelease}"]`);const chosen=select?.value?Number(select.value):null;const result=await db.rpc("release_service_desk_case",{requested_section:button.dataset.serviceRelease,requested_case:chosen});if(result.error)showOperationResult(result.error.message,true);else staffScreen();}));
     document.querySelectorAll("[data-desk-review]").forEach(button=>button.addEventListener("click",async()=>{
       const row=serviceDeskWorkspaces.find(item=>item.team_id===button.dataset.deskTeam&&(item.workspace?.tickets||[]).some(ticket=>ticket.id===button.dataset.deskTicket));const workspace=structuredClone(row?.workspace||{});const ticket=(workspace.tickets||[]).find(item=>item.id===button.dataset.deskTicket);
       if(!ticket){showOperationResult("That Service Desk ticket could not be found.",true);return;}

@@ -122,8 +122,19 @@
     $$("[data-case]").forEach(button=>button.addEventListener("click",()=>selectCase(Number(button.dataset.case))));
   }
 
-  function selectCase(id){
-    activeCaseId=id; saveState(); renderCaseList();
+  async function selectCase(id){
+    if(cloudReady&&id!==activeCaseId){
+      await openSharedCase(id);
+      return;
+    }
+    activeCaseId=id;
+    if(!cloudReady) saveState();
+    renderSelectedCase();
+  }
+
+  function renderSelectedCase(){
+    renderCaseList();
+    const id=activeCaseId;
     const item=cases.find(entry=>entry.id===id);
     $("#releasedCaseLabel").textContent=`Case ${String(id).padStart(2,"0")} · ${item.title}`;
     $("#caseTitle").textContent=`Case ${String(id).padStart(2,"0")} · ${item.title}`;
@@ -139,6 +150,22 @@
     }));
     loadDraft(id);
     if(!$("#createView").hidden) resetCallStage();
+  }
+
+  async function openSharedCase(id){
+    const cloudMessage=$("#cloudMessage");
+    cloudMessage.textContent=`Opening Case ${String(id).padStart(2,"0")}…`;
+    const existing=await db.from("service_desk_workspaces").select("*").eq("team_id",teamId).eq("case_id",id).maybeSingle();
+    if(existing.error){cloudMessage.textContent=existing.error.message;return;}
+    if(existing.data){
+      applyCloudWorkspace(existing.data);
+    }else{
+      const fresh={tickets:[],drafts:{},counter:1024,activeCaseId:id};
+      const created=await db.from("service_desk_workspaces").upsert({team_id:teamId,case_id:id,workspace:fresh,last_editor:currentUser.id,updated_at:now()},{onConflict:"team_id,case_id"}).select().single();
+      if(created.error){cloudMessage.textContent=created.error.message;return;}
+      applyCloudWorkspace(created.data);
+    }
+    cloudMessage.textContent=`Case ${String(id).padStart(2,"0")} opened. Previous cases remain saved.`;
   }
 
   function updateProgress(stage){
@@ -316,7 +343,7 @@
       activeCaseId:Number(row.case_id)||activeCaseId
     };
     activeCaseId=Number(row.case_id)||activeCaseId;
-    selectCase(activeCaseId);
+    renderSelectedCase();
     renderQueue(); updateQueueCount();
   }
 
@@ -342,7 +369,7 @@
       return;
     }
     const membership=await db.from("team_members")
-      .select("team_id,teams(id,name,section_id,sections(released_service_case))")
+      .select("team_id,teams(id,name,section_id)")
       .eq("user_id",currentUser.id).maybeSingle();
     if(membership.error||!membership.data?.teams){
       cloudMessage.textContent=membership.error?.message||"No team was found for this account. Join a team from your class link first.";
@@ -350,31 +377,12 @@
     }
     teamId=membership.data.team_id;
     teamName=membership.data.teams.name;
-    const released=Number(membership.data.teams.sections?.released_service_case||0);
     $("#teamIdentity").innerHTML=`<b>${esc(teamName)}</b><small> All teammates share the same call, ticket, queue, and activity history.</small>`;
-    $(".prototype-controls").hidden=true;
     $("#resetDemo").hidden=true;
-    if(!released){
-      cloudMessage.textContent="Your professor has not released a Service Desk case yet.";
-      $("#sessionLabel").textContent=`${teamName} · Waiting for a case`;
-      return;
-    }
-    activeCaseId=released;
-    const existing=await db.from("service_desk_workspaces").select("*").eq("team_id",teamId).eq("case_id",released).maybeSingle();
-    if(existing.error){ cloudMessage.textContent=existing.error.message; return; }
-    if(existing.data&&Number(existing.data.case_id)===released){
-      applyCloudWorkspace(existing.data);
-    }else{
-      state={tickets:[],drafts:{},counter:1024,activeCaseId:released};
-      activeCaseId=released;
-      const created=await db.from("service_desk_workspaces").upsert({team_id:teamId,case_id:released,workspace:state,last_editor:currentUser.id,updated_at:now()},{onConflict:"team_id,case_id"}).select().single();
-      if(created.error){ cloudMessage.textContent=created.error.message; return; }
-      applyCloudWorkspace(created.data);
-    }
     cloudReady=true;
-    selectCase(released);
+    await openSharedCase(1);
     $("#startShift").disabled=false;
-    cloudMessage.textContent=`Case ${String(released).padStart(2,"0")} is ready. Start when your team is together.`;
+    cloudMessage.textContent="All 30 cases are ready. Start with any case when your team is together.";
     $("#sessionLabel").textContent=`${teamName} · Shared workspace ready`;
     workspaceChannel=db.channel(`service-desk-${teamId}`)
       .on("postgres_changes",{event:"UPDATE",schema:"public",table:"service_desk_workspaces",filter:`team_id=eq.${teamId}`},payload=>{
